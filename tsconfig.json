@@ -19,9 +19,12 @@
     "paths": {
       "@src/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
-      "@recoil/*": ["./src/recoil/*"],
+      "@recoil/*": ["src/common/recoil/*"],
       "@pages/*": ["./src/pages/*"],
-      "@images/*": ["./src/images/*"]
+      "@images/*": ["./src/common/images/*"],
+      "@utils/*": ["src/common/utils/*"],
+      "@types/*": ["src/common/types/*"],
+      "@common/*": ["src/common/*"]
     }
   },
   "include": ["src/**/*"]

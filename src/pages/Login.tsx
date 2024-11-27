@@ -4,8 +4,8 @@ import React from "react";
 import { Box } from "@mui/material";
 
 // Images
-const logo = "/images/cathy-garden.png";
-const kakaoLogin = "/images/kakao/kakao_login_large_wide.png";
+import logo from "../images/cathy-garden.png";
+import kakaoLogin from "../images/kakao/kakao_login_large_wide.png";
 
 export default function Login() {
   return (

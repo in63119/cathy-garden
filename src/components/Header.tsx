@@ -1,9 +1,7 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React from "react";
 
 // MUI css
 import { Box, Typography } from "@mui/material";
-import NetworkCheckIcon from "@mui/icons-material/NetworkCheck";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 export default function Header() {
   return (

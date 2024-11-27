@@ -21,7 +21,7 @@
       "@components/*": ["./src/components/*"],
       "@recoil/*": ["./src/recoil/*"],
       "@pages/*": ["./src/pages/*"],
-      "@images/*": ["./public/images/*"]
+      "@images/*": ["./src/images/*"]
     }
   },
   "include": ["src/**/*"]

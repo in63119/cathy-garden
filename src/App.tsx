@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 
 // recoil
 import { useRecoilValue } from "recoil";
@@ -23,6 +23,7 @@ function App() {
         {isLoading.isLoading ? <Loading /> : null}
 
         <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>

@@ -4,11 +4,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 // recoil
 import { useRecoilValue, useRecoilState } from "recoil";
-import { loadingState } from "./recoil/loading";
+import { loadingState } from "@recoil/loading";
 
 // component
-import Header from "./components/Header";
-import Loading from "./components/Loading";
+import Header from "@components/Header";
+import Loading from "@components/Loading";
+
+// page
+import Login from "@pages/Login";
 
 function App() {
   const isLoading = useRecoilValue(loadingState);
@@ -18,6 +21,10 @@ function App() {
       <BrowserRouter>
         <Header />
         {isLoading.isLoading ? <Loading /> : null}
+
+        <Routes>
+          <Route path="/login" element={<Login />} />
+        </Routes>
       </BrowserRouter>
     </div>
   );

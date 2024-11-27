@@ -1,0 +1,37 @@
+{
+  "name": "cathy-garden-contract",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run --network kaiaTestnet utils/deploy.ts",
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ignition": "^0.15.8",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@nomicfoundation/ignition-core": "^0.15.8",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/chai": "^4.2.0",
+    "@types/mocha": "^9.1.0",
+    "chai": "^4.2.0",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.16",
+    "hardhat-gas-reporter": "^1.0.8",
+    "prettier": "^3.4.1",
+    "prettier-plugin-solidity": "^1.4.1",
+    "solidity-coverage": "^0.8.1",
+    "typechain": "^8.3.0"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.1.0"
+  }
+}

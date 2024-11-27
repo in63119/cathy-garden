@@ -1,0 +1,13 @@
+{
+  "abi": [
+    { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+    {
+      "inputs": [],
+      "name": "get",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "address": "0xAf253eFE5Ca9c5904871f02D26F9B747A9FF2Da6"
+}

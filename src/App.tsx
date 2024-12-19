@@ -6,7 +6,6 @@ import { PageUrls } from "@common/constants/page-urls";
 // recoil
 import { useRecoilValue } from "recoil";
 import { loadingState } from "@src/common/recoil/loading";
-// import {}
 
 // component
 import Header from "@components/Header";

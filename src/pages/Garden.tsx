@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { PageUrls } from "@common/constants/page-urls";
 
 // MUI css
 import { Box } from "@mui/material";
@@ -13,6 +15,17 @@ import { useRecoilValue } from "recoil";
 import { kakaoState } from "@recoil/kakao";
 
 export default function Garden() {
+  const kakao = useRecoilValue(kakaoState);
+  const navigate = useNavigate();
+
+  console.log(kakao);
+
+  useEffect(() => {
+    if (!kakao.isLogin) {
+      navigate(PageUrls.INTRO);
+    }
+  }, [kakao.isLogin, navigate]);
+
   return (
     <>
       <Box

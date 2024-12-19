@@ -25,14 +25,43 @@ export const getAuthorize = async (code: string) => {
     const res = await post(`${kakaoBaseUrl}/oauth/token`, data, {
       headers: header,
     });
-    return res;
 
-    // return await get("https://kauth.kakao.com/oauth/authorize");
+    if (res?.status === 200) {
+      const acceseToken = res.data.access_token;
+      const userInfo = await getUserInfo(acceseToken);
+      return userInfo;
+    }
   } catch (error) {
-    console.log(error);
+    console.error("getAuthorize : ", error);
   }
 };
 
 export const kakaoLoginOpen = async () => {
   window.location.href = kakaoUri;
+};
+
+const getUserInfo = async (token: string) => {
+  const header = {
+    "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+    Authorization: `Bearer ${token}`,
+  };
+  const propertyKeys = {
+    property_keys: ["kakao_account.email"],
+  };
+
+  try {
+    const res = await get(`https://kapi.kakao.com/v2/user/me`, {
+      headers: header,
+      propertyKeys,
+    });
+
+    if (res?.status === 200) {
+      return {
+        email: res?.data.kakao_account.email,
+        kakaoId: res?.data.id,
+      };
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageUrls } from "@common/constants/page-urls";
 
 // MUI css
 import { Box } from "@mui/material";
@@ -21,7 +22,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isLogin) {
-      navigate("/garden");
+      navigate(PageUrls.HOUSE.GARDEN);
     }
   }, [isLogin, navigate]);
 

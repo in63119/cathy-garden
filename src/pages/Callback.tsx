@@ -1,5 +1,6 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageUrls } from "@common/constants/page-urls";
 
 // recoil
 import { useRecoilState } from "recoil";
@@ -16,29 +17,22 @@ const Callback = () => {
   const codeFromUri =
     new URL(window.location.href).searchParams.get("code") ?? "";
   const [kakao, setKakao] = useRecoilState(kakaoState);
-
-  console.log(codeFromUri);
+  const [hasRun, setHasRun] = useState(false);
 
   const handleKakao = useCallback(async () => {
-    setKakao((prev) => ({
-      // TODO: TkakaoState 제거
-      ...prev,
-      isLogin: true,
-    }));
-
-    if (kakao.isLogin) {
+    if (!hasRun && codeFromUri.length > 0) {
       const auth = await getAuthorize(codeFromUri);
 
       if (auth) {
-        navigate("/garden");
+        setKakao((prev: TkakaoState) => ({
+          ...prev,
+          kakaoEmail: auth.email,
+          kakaoId: auth.kakaoId,
+          isLogin: true,
+        }));
+        setHasRun(true);
+        navigate(PageUrls.INTRO);
       }
-      //   const result = await postCodeToServer(codeFromUri);
-      //   setKakaoCode((prev: TkakaoState) => ({
-      //     ...prev,
-      //     kakaoEmail: result.email,
-      //     kakaoId: result.kakaoId,
-      //   }));
-      //   navigate(PageUrls.INTRO);
     }
   }, [codeFromUri, kakao.isLogin, navigate, setKakao]);
 

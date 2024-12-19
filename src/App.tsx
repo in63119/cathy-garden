@@ -1,11 +1,11 @@
 import React from "react";
 import "./App.css";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { PageUrls } from "@common/constants/page-urls";
 
 // recoil
 import { useRecoilValue } from "recoil";
 import { loadingState } from "@src/common/recoil/loading";
-// import {}
 
 // component
 import Header from "@components/Header";
@@ -26,10 +26,13 @@ function App() {
         {isLoading.isLoading ? <Loading /> : null}
 
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/callback" element={<Callback />} />
-          <Route path="/garden" element={<Garden />} />
+          <Route
+            path={PageUrls.INTRO}
+            element={<Navigate to={PageUrls.AUTH.LOGIN} replace />}
+          />
+          <Route path={PageUrls.AUTH.LOGIN} element={<Login />} />
+          <Route path={PageUrls.AUTH.CALLBACK} element={<Callback />} />
+          <Route path={PageUrls.HOUSE.GARDEN} element={<Garden />} />
         </Routes>
       </BrowserRouter>
     </div>

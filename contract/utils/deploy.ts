@@ -2,33 +2,24 @@ import { ethers } from "hardhat";
 import { makeAbi } from "./abiGenerator";
 
 async function main() {
-  const Login = await ethers.getContractFactory("Login");
+  const GardenProxy = await ethers.getContractFactory("GardenProxy");
+  const Garden = await ethers.getContractFactory("Garden");
 
   console.log("Deploying Contract...");
 
-  const login = await Login.deploy();
-  await login.waitForDeployment();
+  const garden = await Garden.deploy();
+  await garden.waitForDeployment();
+
+  const gardenProxy = await GardenProxy.deploy(garden.target);
+  await gardenProxy.waitForDeployment();
 
   /* setting */
 
-  // await vendingMachine.setC2eContractAddress(
-  //   "0x75F7D6bEb76125f4eE30f059051f73081020E210"
-  // );
-  // await cyb.setAdmin(deployer.address, true);
-  // await cyb.setProbabilities(8000, 850, 850, 300);
+  await makeAbi("GardenProxy", `${gardenProxy.target}`);
+  console.log("Contract deployed to:", gardenProxy.target);
 
-  /* abi */
-  // await makeAbi("CYB", `${cyb.target}`);
-  // console.log("Contract deployed to:", cyb.target);
-
-  // await makeAbi("MultiSender", `${multiSender.target}`);
-  // console.log("Contract deployed to:", multiSender.target);
-
-  // await makeAbi("C2E", `${c2e.target}`);
-  // console.log("Contract deployed to:", c2e.target);
-
-  await makeAbi("Login", `${login.target}`);
-  console.log("Contract deployed to:", login.target);
+  await makeAbi("Garden", `${gardenProxy.target}`);
+  console.log("Contract deployed to:", garden.target);
 }
 
 main()

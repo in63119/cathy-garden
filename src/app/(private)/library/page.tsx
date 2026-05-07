@@ -4,9 +4,12 @@ import Link from "next/link";
 import { SectionCard } from "@/components/section-card";
 import { readMediaEntries } from "@/lib/media-store";
 import {
+  filterAndSortMediaEntries,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
+  normalizeMediaFilterValue,
+  normalizeMediaSortValue,
 } from "@/lib/media-preview";
 import { createPresignedDownload } from "@/lib/s3";
 
@@ -20,10 +23,27 @@ function formatUploadedAt(value: string) {
   });
 }
 
-export default async function LibraryPage() {
+function buildLibraryHref(params: { filter: string; sort: string }) {
+  return `/library?filter=${encodeURIComponent(params.filter)}&sort=${encodeURIComponent(
+    params.sort
+  )}`;
+}
+
+type LibraryPageProps = {
+  searchParams?: Promise<{
+    filter?: string;
+    sort?: string;
+  }>;
+};
+
+export default async function LibraryPage({ searchParams }: LibraryPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const filter = normalizeMediaFilterValue(params?.filter);
+  const sort = normalizeMediaSortValue(params?.sort);
   const entries = await readMediaEntries();
+  const visibleEntries = filterAndSortMediaEntries(entries, { filter, sort });
   const entriesWithPreview = await Promise.all(
-    entries.map(async (entry) => {
+    visibleEntries.map(async (entry) => {
       const mediaKind = getMediaKindLabel(entry.contentType);
 
       return {
@@ -46,8 +66,62 @@ export default async function LibraryPage() {
       <SectionCard
         eyebrow="Library"
         title="The media library now reflects uploaded archive entries."
-        description="This page is already reading saved upload metadata. The next layer will add thumbnails, previews, and richer browsing."
+        description="This page reads saved upload metadata, supports basic filtering, and keeps the preview load light for video items."
       >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {(["all", "image", "video"] as const).map((option) => (
+              <Link
+                key={option}
+                href={buildLibraryHref({ filter: option, sort })}
+                className="button-link secondary"
+                style={{
+                  background:
+                    filter === option
+                      ? "rgba(111, 139, 98, 0.18)"
+                      : "rgba(255,255,255,0.6)",
+                  borderColor:
+                    filter === option ? "rgba(111, 139, 98, 0.34)" : undefined,
+                }}
+              >
+                {option === "all"
+                  ? "All"
+                  : option === "image"
+                    ? "Photos"
+                    : "Videos"}
+              </Link>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {(["newest", "oldest"] as const).map((option) => (
+              <Link
+                key={option}
+                href={buildLibraryHref({ filter, sort: option })}
+                className="button-link secondary"
+                style={{
+                  background:
+                    sort === option
+                      ? "rgba(111, 139, 98, 0.18)"
+                      : "rgba(255,255,255,0.6)",
+                  borderColor:
+                    sort === option ? "rgba(111, 139, 98, 0.34)" : undefined,
+                }}
+              >
+                {option === "newest" ? "Newest first" : "Oldest first"}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {entries.length === 0 ? (
           <div
             style={{
@@ -65,6 +139,23 @@ export default async function LibraryPage() {
           >
             No uploaded items yet. Use the upload route to add the first photo
             or video to the archive.
+          </div>
+        ) : entriesWithPreview.length === 0 ? (
+          <div
+            style={{
+              minHeight: "220px",
+              borderRadius: "22px",
+              border: "1px dashed var(--border)",
+              padding: "24px",
+              background: "rgba(255,255,255,0.42)",
+              display: "grid",
+              placeItems: "center",
+              color: "var(--muted)",
+              textAlign: "center",
+              lineHeight: 1.7,
+            }}
+          >
+            No items match the current filter.
           </div>
         ) : (
           <div

@@ -1,7 +1,10 @@
 import {
+  filterAndSortMediaEntries,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
+  normalizeMediaFilterValue,
+  normalizeMediaSortValue,
 } from "../../lib/media-preview";
 
 describe("media preview helpers", () => {
@@ -21,5 +24,48 @@ describe("media preview helpers", () => {
     expect(getMediaKindLabel("image/jpeg")).toBe("image");
     expect(getMediaKindLabel("video/mp4")).toBe("video");
     expect(getMediaKindLabel("application/pdf")).toBe("file");
+  });
+
+  test("normalizes filter and sort query values", () => {
+    expect(normalizeMediaFilterValue("image")).toBe("image");
+    expect(normalizeMediaFilterValue("video")).toBe("video");
+    expect(normalizeMediaFilterValue("weird")).toBe("all");
+    expect(normalizeMediaSortValue("oldest")).toBe("oldest");
+    expect(normalizeMediaSortValue("whatever")).toBe("newest");
+  });
+
+  test("filters and sorts media entries", () => {
+    const entries = [
+      {
+        contentType: "video/mp4",
+        uploadedAt: "2026-05-07T12:00:00.000Z",
+      },
+      {
+        contentType: "image/jpeg",
+        uploadedAt: "2026-05-08T12:00:00.000Z",
+      },
+      {
+        contentType: "image/png",
+        uploadedAt: "2026-05-06T12:00:00.000Z",
+      },
+    ];
+
+    expect(
+      filterAndSortMediaEntries(entries, {
+        filter: "image",
+        sort: "newest",
+      }).map((entry) => entry.contentType)
+    ).toEqual(["image/jpeg", "image/png"]);
+
+    expect(
+      filterAndSortMediaEntries(entries, {
+        filter: "all",
+        sort: "oldest",
+      }).map((entry) => entry.uploadedAt)
+    ).toEqual([
+      "2026-05-06T12:00:00.000Z",
+      "2026-05-07T12:00:00.000Z",
+      "2026-05-08T12:00:00.000Z",
+    ]);
   });
 });

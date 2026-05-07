@@ -30,6 +30,11 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("createPresignedDownload");
     expect(libraryPage).toContain("<img");
     expect(libraryPage).toContain("Video preview on detail page");
+    expect(libraryPage).toContain("normalizeMediaFilterValue");
+    expect(libraryPage).toContain("normalizeMediaSortValue");
+    expect(libraryPage).toContain("buildLibraryHref");
+    expect(libraryPage).toContain("Newest first");
+    expect(libraryPage).toContain("Photos");
     expect(mediaDetailPage).toContain('mode="redirect"');
     expect(mediaDetailPage).toContain("createPresignedDownload");
     expect(mediaDetailPage).toContain("<video");

@@ -1,8 +1,10 @@
 "use client";
 
 import { ChangeEvent, startTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
+  completeUploadedMedia,
   formatBytes,
   requestPresignedUpload,
   uploadFileToPresignedUrl,
@@ -32,6 +34,7 @@ type SelectedFileState = {
 };
 
 export function UploadRequestPanel() {
+  const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<SelectedFileState | null>(
     null
   );
@@ -44,8 +47,10 @@ export function UploadRequestPanel() {
     expiresIn: number;
   } | null>(null);
   const [uploadResult, setUploadResult] = useState<{
+    id: string;
     objectKey: string;
     bucket: string;
+    fileName: string;
   } | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -104,11 +109,25 @@ export function UploadRequestPanel() {
             contentType: selectedFile.type,
           });
 
-          setUploadResult({
+          setStatusMessage("Saving media metadata into the archive...");
+
+          const entry = await completeUploadedMedia({
             objectKey: result.objectKey,
             bucket: result.bucket,
+            region: result.region,
+            fileName: result.fileName,
+            contentType: result.contentType,
+            size: result.size,
+          });
+
+          setUploadResult({
+            id: entry.id,
+            objectKey: entry.objectKey,
+            bucket: entry.bucket,
+            fileName: entry.fileName,
           });
           setStatusMessage("Upload completed successfully.");
+          router.refresh();
         })
         .catch((error: Error) => {
           setErrorMessage(errorMessages[error.message] ?? error.message);
@@ -259,6 +278,9 @@ export function UploadRequestPanel() {
           }}
         >
           <strong>File uploaded to S3</strong>
+          <span>
+            Saved as: <code>{uploadResult.fileName}</code>
+          </span>
           <span>
             Bucket: <code>{uploadResult.bucket}</code>
           </span>

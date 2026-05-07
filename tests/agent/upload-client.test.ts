@@ -1,4 +1,5 @@
 import {
+  completeUploadedMedia,
   formatBytes,
   requestPresignedUpload,
   uploadFileToPresignedUrl,
@@ -84,6 +85,49 @@ describe("upload client helpers", () => {
       },
       body: file,
     });
+  });
+
+  test("stores upload metadata after the direct S3 upload finishes", async () => {
+    const fetchMock = jest.spyOn(global, "fetch" as never).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        entry: {
+          id: "entry-1",
+          objectKey: "uploads/2026/05/07/example.jpg",
+          bucket: "garden-bucket",
+          region: "ap-northeast-2",
+          fileName: "example.jpg",
+          contentType: "image/jpeg",
+          size: 1024,
+          uploadedAt: "2026-05-07T12:00:00.000Z",
+        },
+      }),
+    } as Response);
+
+    const result = await completeUploadedMedia({
+      objectKey: "uploads/2026/05/07/example.jpg",
+      bucket: "garden-bucket",
+      region: "ap-northeast-2",
+      fileName: "example.jpg",
+      contentType: "image/jpeg",
+      size: 1024,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/media/complete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        objectKey: "uploads/2026/05/07/example.jpg",
+        bucket: "garden-bucket",
+        region: "ap-northeast-2",
+        fileName: "example.jpg",
+        contentType: "image/jpeg",
+        size: 1024,
+      }),
+    });
+    expect(result.id).toBe("entry-1");
   });
 
   test("throws when the direct S3 upload fails", async () => {

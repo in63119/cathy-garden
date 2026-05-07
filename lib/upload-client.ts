@@ -15,6 +15,17 @@ export type PresignUploadResponse = {
   size: number;
 };
 
+export type MediaEntryResponse = {
+  id: string;
+  objectKey: string;
+  bucket: string;
+  region: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  uploadedAt: string;
+};
+
 export async function requestPresignedUpload(
   payload: PresignRequestPayload
 ): Promise<PresignUploadResponse> {
@@ -51,6 +62,26 @@ export async function uploadFileToPresignedUrl(params: {
   if (!response.ok) {
     throw new Error("s3-upload-failed");
   }
+}
+
+export async function completeUploadedMedia(
+  payload: Omit<MediaEntryResponse, "id" | "uploadedAt">
+) {
+  const response = await fetch("/api/media/complete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error ?? "complete-upload-failed");
+  }
+
+  return data.entry as MediaEntryResponse;
 }
 
 export function formatBytes(bytes: number) {

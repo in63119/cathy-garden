@@ -13,4 +13,13 @@ module.exports = {
       "@types": path.resolve(__dirname, "src/common/types"),
     },
   },
+  jest: {
+    configure: {
+      roots: ["<rootDir>/src", "<rootDir>/tests"],
+      testMatch: [
+        "<rootDir>/src/**/*.test.{js,jsx,ts,tsx}",
+        "<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}",
+      ],
+    },
+  },
 };

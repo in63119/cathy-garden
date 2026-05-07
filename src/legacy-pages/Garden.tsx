@@ -8,9 +8,6 @@ import { Box } from "@mui/material";
 // Images
 import logo from "@images/cathy-garden.png";
 
-// Components
-import TabSelector from "@components/TabSelector";
-
 // Recoil
 import { useRecoilValue } from "recoil";
 import { kakaoState } from "@recoil/kakao";
@@ -37,7 +34,27 @@ export default function Garden() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <TabSelector />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "flex-start",
+            p: 3,
+          }}
+        >
+          <Box
+            sx={{
+              px: 3,
+              py: 1.5,
+              borderRadius: "999px",
+              backgroundColor: "rgba(255,255,255,0.78)",
+              color: "#243126",
+              fontWeight: 700,
+            }}
+          >
+            Cathy Garden Archive
+          </Box>
+        </Box>
       </Box>
     </>
   );

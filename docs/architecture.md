@@ -128,7 +128,6 @@
 
 - [src/common/recoil/kakao.ts](/Users/inbrew/Desktop/cathy-garden/src/common/recoil/kakao.ts)
 - [src/common/recoil/loading.ts](/Users/inbrew/Desktop/cathy-garden/src/common/recoil/loading.ts)
-- [src/common/recoil/tabSelect.ts](/Users/inbrew/Desktop/cathy-garden/src/common/recoil/tabSelect.ts)
 
 현재 판단:
 
@@ -215,9 +214,9 @@
 
 보관함 서비스의 핵심인 S3 업로드와 메타데이터 저장이 아직 없습니다.
 
-### 레거시 UI 흔적
+### 레거시 코드 공존으로 인한 복잡성
 
-일부 상태 및 컴포넌트에는 NFT 방향 흔적이 남아 있습니다.
+NFT/Mint/Market UI 흔적은 제거되었지만, 레거시 CRA 코드와 새 Next.js 골격이 함께 존재하는 전환 비용은 아직 남아 있습니다.
 
 ## 다음에 우선 볼 파일
 

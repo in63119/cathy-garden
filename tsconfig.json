@@ -1,31 +1,67 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-jsx",
+    "incremental": true,
     "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@src/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@recoil/*": ["src/common/recoil/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@images/*": ["./src/common/images/*"],
-      "@utils/*": ["src/common/utils/*"],
-      "@types/*": ["src/common/types/*"],
-      "@common/*": ["src/common/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@src/*": [
+        "./src/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@recoil/*": [
+        "src/common/recoil/*"
+      ],
+      "@pages/*": [
+        "./src/legacy-pages/*"
+      ],
+      "@images/*": [
+        "./src/common/images/*"
+      ],
+      "@utils/*": [
+        "src/common/utils/*"
+      ],
+      "@types/*": [
+        "src/common/types/*"
+      ],
+      "@common/*": [
+        "src/common/*"
+      ]
     }
   },
-  "include": ["src/**/*"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "contract",
+    "node_modules"
+  ]
 }

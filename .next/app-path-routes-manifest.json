@@ -1,0 +1,9 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/library/page": "/library",
+  "/login/page": "/login",
+  "/media/[id]/page": "/media/[id]",
+  "/page": "/",
+  "/upload/page": "/upload"
+}

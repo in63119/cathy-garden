@@ -64,7 +64,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   );
 
   return (
-    <div className="content-shell" style={{ padding: "16px 0 48px" }}>
+    <div className="content-shell page-section">
       <SectionCard
         eyebrow="Library"
         title="The media library now reflects uploaded archive entries."
@@ -79,16 +79,8 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         ) : null}
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <div className="filter-toolbar">
+          <div className="filter-cluster">
             {(["all", "image", "video"] as const).map((option) => (
               <Link
                 key={option}
@@ -104,7 +96,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <div className="filter-cluster">
             {(["newest", "oldest"] as const).map((option) => (
               <Link
                 key={option}
@@ -127,13 +119,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             No items match the current filter.
           </div>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "14px",
-            }}
-          >
+          <div className="library-grid">
             {entriesWithPreview.map((entry) => (
               <article
                 key={entry.id}
@@ -266,7 +252,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div className="action-row">
           <Link href="/upload" className="button-link primary">
             Go to upload
           </Link>

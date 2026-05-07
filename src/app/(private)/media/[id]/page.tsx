@@ -45,24 +45,13 @@ export default async function MediaDetailPage({
   const mediaKind = getMediaKindLabel(entry.contentType);
 
   return (
-    <div className="content-shell" style={{ padding: "16px 0 48px" }}>
+    <div className="content-shell page-section">
       <SectionCard
         eyebrow="Media Detail"
         title={entry.fileName}
         description="This detail page now reads real metadata from the archive manifest and renders the original file through a signed S3 read URL."
       >
-        <div
-          style={{
-            minHeight: "220px",
-            borderRadius: "24px",
-            border: "1px solid var(--border)",
-            background: "rgba(255,255,255,0.7)",
-            display: "grid",
-            padding: "24px",
-            overflow: "hidden",
-            placeItems: "center",
-          }}
-        >
+        <div className="media-detail-preview">
           {isImageContentType(entry.contentType) ? (
             <img
               src={previewUrl}
@@ -115,19 +104,7 @@ export default async function MediaDetailPage({
           ) : null}
         </div>
 
-        <div
-          style={{
-            minHeight: "220px",
-            borderRadius: "24px",
-            border: "1px dashed var(--border)",
-            background: "rgba(255,255,255,0.45)",
-            display: "grid",
-            gap: "8px",
-            padding: "24px",
-            color: "var(--muted)",
-            lineHeight: 1.7,
-          }}
-        >
+        <div className="media-detail-meta">
           <span>
             File name: <strong>{entry.fileName}</strong>
           </span>
@@ -157,7 +134,7 @@ export default async function MediaDetailPage({
           </span>
         </div>
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div className="action-row">
           <Link href="/library" className="button-link secondary">
             Back to library
           </Link>

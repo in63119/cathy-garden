@@ -123,96 +123,30 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             {entriesWithPreview.map((entry) => (
               <article
                 key={entry.id}
-                className="card-soft"
-                style={{
-                  minHeight: "180px",
-                  padding: "14px",
-                  display: "grid",
-                  gap: "8px",
-                }}
+                className="card-soft media-card"
               >
-                <div
-                  style={{
-                    minHeight: "180px",
-                    borderRadius: "18px",
-                    overflow: "hidden",
-                    border: "1px solid var(--border)",
-                    background: "rgba(247, 244, 236, 0.9)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
+                <div className="media-card-figure">
                   {isImageContentType(entry.contentType) ? (
                     <img
                       src={entry.previewUrl ?? ""}
                       alt={entry.fileName}
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
+                      className="media-card-image"
                     />
                   ) : null}
                   {isVideoContentType(entry.contentType) ? (
                     <Link
                       href={`/media/${entry.id}`}
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        display: "grid",
-                        gridTemplateRows: "1fr auto",
-                        background:
-                          "linear-gradient(180deg, rgba(28, 35, 32, 0.92), rgba(74, 95, 82, 0.84))",
-                        color: "#f7f4ec",
-                        padding: "16px",
-                        textDecoration: "none",
-                      }}
+                      className="media-card-video-link"
                     >
-                      <div
-                        style={{
-                          display: "grid",
-                          placeItems: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "60px",
-                            height: "60px",
-                            borderRadius: "999px",
-                            background: "rgba(255,255,255,0.16)",
-                            border: "1px solid rgba(255,255,255,0.25)",
-                            display: "grid",
-                            placeItems: "center",
-                            fontSize: "1.5rem",
-                          }}
-                        >
-                          ▶
-                        </div>
+                      <div style={{ display: "grid", placeItems: "center" }}>
+                        <div className="media-card-play">▶</div>
                       </div>
-                      <div
-                        style={{
-                          display: "grid",
-                          gap: "4px",
-                          alignSelf: "end",
-                        }}
-                      >
-                        <strong
-                          style={{
-                            fontSize: "0.92rem",
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          Video preview on detail page
+                      <div className="media-card-video-copy">
+                        <strong style={{ fontSize: "0.98rem", lineHeight: 1.4 }}>
+                          Video keeps its full quiet moment.
                         </strong>
-                        <span
-                          style={{
-                            fontSize: "0.82rem",
-                            opacity: 0.82,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          Open this item to stream the signed original file.
+                        <span style={{ fontSize: "0.84rem", opacity: 0.86, lineHeight: 1.5 }}>
+                          Open the detail page to watch the signed original.
                         </span>
                       </div>
                     </Link>
@@ -224,29 +158,29 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     </span>
                   ) : null}
                 </div>
-                <strong style={{ fontSize: "1rem", lineHeight: 1.5 }}>
-                  {entry.fileName}
-                </strong>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  Kind: {entry.mediaKind}
-                </span>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  {entry.contentType}
-                </span>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  Uploaded {formatUploadedAt(entry.uploadedAt)}
-                </span>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  S3 key: <code>{entry.objectKey}</code>
-                </span>
-                <Link
-                  href={`/media/${entry.id}`}
-                  className="button-link secondary"
-                  style={{ width: "fit-content", marginTop: "8px" }}
-                >
-                  Open details
-                </Link>
-                <DeleteMediaButton mediaId={entry.id} />
+                <div className="media-card-body">
+                  <div className="media-card-meta">
+                    <span className="media-chip">
+                      {entry.mediaKind === "image" ? "Photo" : "Video"}
+                    </span>
+                    <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+                  </div>
+                  <h2 className="media-card-title">{entry.fileName}</h2>
+                  <p className="media-card-caption">
+                    {entry.mediaKind === "image"
+                      ? "A preserved photo in the private garden archive."
+                      : "A quiet video entry kept with the rest of the archive."}
+                  </p>
+                  <div className="media-card-actions">
+                    <Link
+                      href={`/media/${entry.id}`}
+                      className="button-link secondary"
+                    >
+                      Open details
+                    </Link>
+                    <DeleteMediaButton mediaId={entry.id} />
+                  </div>
+                </div>
               </article>
             ))}
           </div>

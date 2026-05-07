@@ -51,87 +51,95 @@ export default async function MediaDetailPage({
         title={entry.fileName}
         description="This detail page now reads real metadata from the archive manifest and renders the original file through a signed S3 read URL."
       >
-        <div className="media-detail-preview">
-          {isImageContentType(entry.contentType) ? (
-            <img
-              src={previewUrl}
-              alt={entry.fileName}
-              style={{
-                width: "100%",
-                maxHeight: "70vh",
-                objectFit: "contain",
-                borderRadius: "18px",
-              }}
-            />
-          ) : null}
-          {isVideoContentType(entry.contentType) ? (
-            <video
-              controls
-              preload="metadata"
-              style={{
-                width: "100%",
-                maxHeight: "70vh",
-                borderRadius: "18px",
-                background: "#000",
-              }}
-            >
-              <source src={previewUrl} type={entry.contentType} />
-              Your browser does not support inline video preview.
-            </video>
-          ) : null}
-          {!isImageContentType(entry.contentType) &&
-          !isVideoContentType(entry.contentType) ? (
-            <div
-              style={{
-                display: "grid",
-                gap: "12px",
-                justifyItems: "center",
-                color: "var(--muted)",
-                lineHeight: 1.7,
-                textAlign: "center",
-              }}
-            >
-              <strong>No inline preview for this file type.</strong>
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="button-link secondary"
+        <div className="media-detail-stage">
+          <div className="media-detail-preview">
+            {isImageContentType(entry.contentType) ? (
+              <img
+                src={previewUrl}
+                alt={entry.fileName}
+                style={{
+                  width: "100%",
+                  maxHeight: "76vh",
+                  objectFit: "contain",
+                  borderRadius: "18px",
+                }}
+              />
+            ) : null}
+            {isVideoContentType(entry.contentType) ? (
+              <video
+                controls
+                preload="metadata"
+                style={{
+                  width: "100%",
+                  maxHeight: "76vh",
+                  borderRadius: "18px",
+                  background: "#000",
+                }}
               >
-                Open file
-              </a>
-            </div>
-          ) : null}
-        </div>
+                <source src={previewUrl} type={entry.contentType} />
+                Your browser does not support inline video preview.
+              </video>
+            ) : null}
+            {!isImageContentType(entry.contentType) &&
+            !isVideoContentType(entry.contentType) ? (
+              <div
+                style={{
+                  display: "grid",
+                  gap: "12px",
+                  justifyItems: "center",
+                  color: "var(--muted)",
+                  lineHeight: 1.7,
+                  textAlign: "center",
+                }}
+              >
+                <strong>No inline preview for this file type.</strong>
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="button-link secondary"
+                >
+                  Open file
+                </a>
+              </div>
+            ) : null}
+          </div>
 
-        <div className="media-detail-meta">
-          <span>
-            File name: <strong>{entry.fileName}</strong>
-          </span>
-          <span>
-            Media kind: <code>{mediaKind}</code>
-          </span>
-          <span>
-            Content type: <code>{entry.contentType}</code>
-          </span>
-          <span>
-            Uploaded at: <code>{formatUploadedAt(entry.uploadedAt)}</code>
-          </span>
-          <span>
-            S3 key: <code>{entry.objectKey}</code>
-          </span>
-          <span>
-            Bucket: <code>{entry.bucket}</code>
-          </span>
-          <span>
-            Region: <code>{entry.region}</code>
-          </span>
-          <span>
-            Size: <code>{entry.size}</code> bytes
-          </span>
-          <span>
-            Preview URL expires in about <code>5 minutes</code>
-          </span>
+          <div className="media-detail-summary">
+            <div className="media-detail-chips">
+              <span className="media-chip">
+                {mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}
+              </span>
+              <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+              <span className="media-chip">{entry.size} bytes</span>
+            </div>
+            <p className="media-detail-note">
+              {mediaKind === "image"
+                ? "The full image sits at the center first, while archive details stay nearby instead of taking over the page."
+                : "The full video remains the focus, with archive details kept as supporting information below."}
+            </p>
+          </div>
+
+          <div className="media-detail-meta">
+            <span>
+              File name: <strong>{entry.fileName}</strong>
+            </span>
+            <span>
+              Content type: <code>{entry.contentType}</code>
+            </span>
+            <span>
+              S3 key: <code>{entry.objectKey}</code>
+            </span>
+            <span>
+              Bucket: <code>{entry.bucket}</code>
+            </span>
+            <span>
+              Region: <code>{entry.region}</code>
+            </span>
+            <span>
+              Preview URL expires in about <code>5 minutes</code>
+            </span>
+          </div>
         </div>
 
         <div className="action-row">

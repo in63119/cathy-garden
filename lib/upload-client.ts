@@ -26,6 +26,15 @@ export type MediaEntryResponse = {
   uploadedAt: string;
 };
 
+export type UploadBatchItem = {
+  file: File | Blob;
+  fileName: string;
+  contentType: string;
+  size: number;
+};
+
+export type UploadBatchStage = "presign" | "transfer" | "complete";
+
 export async function requestPresignedUpload(
   payload: PresignRequestPayload
 ): Promise<PresignUploadResponse> {
@@ -82,6 +91,83 @@ export async function completeUploadedMedia(
   }
 
   return data.entry as MediaEntryResponse;
+}
+
+export async function uploadMediaBatch(
+  items: UploadBatchItem[],
+  options?: {
+    onStageChange?: (params: {
+      index: number;
+      total: number;
+      fileName: string;
+      stage: UploadBatchStage;
+    }) => void;
+    onPresigned?: (params: {
+      index: number;
+      total: number;
+      fileName: string;
+      result: PresignUploadResponse;
+    }) => void;
+  }
+) {
+  const uploadedEntries: MediaEntryResponse[] = [];
+
+  for (const [index, item] of items.entries()) {
+    const batchIndex = index + 1;
+
+    options?.onStageChange?.({
+      index: batchIndex,
+      total: items.length,
+      fileName: item.fileName,
+      stage: "presign",
+    });
+
+    const presigned = await requestPresignedUpload({
+      fileName: item.fileName,
+      contentType: item.contentType,
+      size: item.size,
+    });
+
+    options?.onPresigned?.({
+      index: batchIndex,
+      total: items.length,
+      fileName: item.fileName,
+      result: presigned,
+    });
+
+    options?.onStageChange?.({
+      index: batchIndex,
+      total: items.length,
+      fileName: item.fileName,
+      stage: "transfer",
+    });
+
+    await uploadFileToPresignedUrl({
+      uploadUrl: presigned.uploadUrl,
+      file: item.file,
+      contentType: item.contentType,
+    });
+
+    options?.onStageChange?.({
+      index: batchIndex,
+      total: items.length,
+      fileName: item.fileName,
+      stage: "complete",
+    });
+
+    const entry = await completeUploadedMedia({
+      objectKey: presigned.objectKey,
+      bucket: presigned.bucket,
+      region: presigned.region,
+      fileName: presigned.fileName,
+      contentType: presigned.contentType,
+      size: presigned.size,
+    });
+
+    uploadedEntries.push(entry);
+  }
+
+  return uploadedEntries;
 }
 
 export function formatBytes(bytes: number) {

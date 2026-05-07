@@ -4,10 +4,8 @@ import { ChangeEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  completeUploadedMedia,
   formatBytes,
-  requestPresignedUpload,
-  uploadFileToPresignedUrl,
+  uploadMediaBatch,
 } from "@/lib/upload-client";
 import {
   ALLOWED_UPLOAD_MIME_TYPES,
@@ -35,9 +33,7 @@ type SelectedFileState = {
 
 export function UploadRequestPanel() {
   const router = useRouter();
-  const [selectedFile, setSelectedFile] = useState<SelectedFileState | null>(
-    null
-  );
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFileState[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [presignResult, setPresignResult] = useState<{
@@ -46,103 +42,123 @@ export function UploadRequestPanel() {
     region: string;
     expiresIn: number;
   } | null>(null);
-  const [uploadResult, setUploadResult] = useState<{
-    id: string;
-    objectKey: string;
-    bucket: string;
-    fileName: string;
-  } | null>(null);
+  const [uploadResults, setUploadResults] = useState<
+    {
+      id: string;
+      objectKey: string;
+      bucket: string;
+      fileName: string;
+    }[]
+  >([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!uploadResult) {
+    if (uploadResults.length === 0) {
       return;
     }
 
+    const lastUploaded = uploadResults[uploadResults.length - 1];
     const timeoutId = window.setTimeout(() => {
       router.push(
-        `/library?uploaded=${encodeURIComponent(uploadResult.fileName)}`
+        `/library?uploaded=${encodeURIComponent(
+          lastUploaded.fileName
+        )}&uploadedCount=${uploadResults.length}`
       );
     }, 1200);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [router, uploadResult]);
+  }, [router, uploadResults]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
 
-    if (!file) {
-      setSelectedFile(null);
+    if (files.length === 0) {
+      setSelectedFiles([]);
       setErrorMessage(null);
       setPresignResult(null);
       return;
     }
 
-    setSelectedFile({
-      file,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
+    setSelectedFiles(
+      files.map((file) => ({
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      }))
+    );
     setErrorMessage(null);
     setPresignResult(null);
-    setUploadResult(null);
+    setUploadResults([]);
     setStatusMessage(null);
   };
 
   const handleUpload = () => {
-    if (!selectedFile) {
-      setErrorMessage("Please choose a file first.");
+    if (selectedFiles.length === 0) {
+      setErrorMessage("Please choose at least one file first.");
       return;
     }
 
     setIsPending(true);
     setErrorMessage(null);
     setPresignResult(null);
-    setUploadResult(null);
-    setStatusMessage("Preparing an upload URL...");
+    setUploadResults([]);
+    setStatusMessage("Preparing upload URLs...");
 
     startTransition(() => {
-      requestPresignedUpload({
-        fileName: selectedFile.name,
-        contentType: selectedFile.type,
-        size: selectedFile.size,
-      })
-        .then(async (result) => {
+      uploadMediaBatch(
+        selectedFiles.map((selectedFile) => ({
+          file: selectedFile.file,
+          fileName: selectedFile.name,
+          contentType: selectedFile.type,
+          size: selectedFile.size,
+        })),
+        {
+          onStageChange: ({ index, total, fileName, stage }) => {
+            if (stage === "presign") {
+              setStatusMessage(`Preparing upload ${index} of ${total}: ${fileName}`);
+              return;
+            }
+
+            if (stage === "transfer") {
+              setStatusMessage(`Uploading ${index} of ${total}: ${fileName}`);
+              return;
+            }
+
+            setStatusMessage(
+              `Saving archive metadata ${index} of ${total}: ${fileName}`
+            );
+          },
+          onPresigned: ({ result }) => {
+            setPresignResult({
+              objectKey: result.objectKey,
+              bucket: result.bucket,
+              region: result.region,
+              expiresIn: result.expiresIn,
+            });
+          },
+        }
+      )
+        .then((entries) => {
+          setUploadResults(
+            entries.map((entry) => ({
+              id: entry.id,
+              objectKey: entry.objectKey,
+              bucket: entry.bucket,
+              fileName: entry.fileName,
+            }))
+          );
           setPresignResult({
-            objectKey: result.objectKey,
-            bucket: result.bucket,
-            region: result.region,
-            expiresIn: result.expiresIn,
+            objectKey: entries[entries.length - 1]?.objectKey ?? "",
+            bucket: entries[entries.length - 1]?.bucket ?? "",
+            region: entries[entries.length - 1]?.region ?? "",
+            expiresIn: 300,
           });
-          setStatusMessage("Uploading the file directly to S3...");
-
-          await uploadFileToPresignedUrl({
-            uploadUrl: result.uploadUrl,
-            file: selectedFile.file,
-            contentType: selectedFile.type,
-          });
-
-          setStatusMessage("Saving media metadata into the archive...");
-
-          const entry = await completeUploadedMedia({
-            objectKey: result.objectKey,
-            bucket: result.bucket,
-            region: result.region,
-            fileName: result.fileName,
-            contentType: result.contentType,
-            size: result.size,
-          });
-
-          setUploadResult({
-            id: entry.id,
-            objectKey: entry.objectKey,
-            bucket: entry.bucket,
-            fileName: entry.fileName,
-          });
-          setStatusMessage("Upload completed successfully. Opening the library...");
+          setStatusMessage(
+            `${entries.length} upload${entries.length > 1 ? "s" : ""} completed successfully. Opening the library...`
+          );
           router.refresh();
         })
         .catch((error: Error) => {
@@ -165,31 +181,41 @@ export function UploadRequestPanel() {
 
       <div style={{ display: "grid", gap: "10px" }}>
         <label htmlFor="upload-file" style={{ fontWeight: 700 }}>
-          Choose a photo or video
+          Choose one or more photos and videos
         </label>
         <input
           id="upload-file"
           type="file"
           className="input-field"
+          multiple
           accept={ALLOWED_UPLOAD_MIME_TYPES.join(",")}
           onChange={handleFileChange}
         />
       </div>
 
-      {selectedFile ? (
+      {selectedFiles.length > 0 ? (
         <div
           style={{
             display: "grid",
-            gap: "4px",
+            gap: "8px",
             color: "var(--muted)",
             lineHeight: 1.6,
           }}
         >
-          <span>
-            File: <strong>{selectedFile.name}</strong>
-          </span>
-          <span>Type: {selectedFile.type || "unknown"}</span>
-          <span>Size: {formatBytes(selectedFile.size)}</span>
+          <strong>
+            {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""} selected
+          </strong>
+          <div style={{ display: "grid", gap: "4px" }}>
+            {selectedFiles.map((selectedFile) => (
+              <span key={`${selectedFile.name}-${selectedFile.size}`}>
+                <strong>{selectedFile.name}</strong>
+                {" · "}
+                {selectedFile.type || "unknown"}
+                {" · "}
+                {formatBytes(selectedFile.size)}
+              </span>
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -212,6 +238,9 @@ export function UploadRequestPanel() {
           Max file size:{" "}
           <code>{Math.floor(MAX_UPLOAD_SIZE_BYTES / (1024 * 1024))} MB</code>
         </span>
+        <span>
+          Batch strategy: <code>multiple files, sequential uploads</code>
+        </span>
       </div>
 
       <button
@@ -225,7 +254,7 @@ export function UploadRequestPanel() {
           cursor: isPending ? "progress" : "pointer",
         }}
       >
-        {isPending ? "Uploading to S3..." : "Upload to S3"}
+        {isPending ? "Uploading to S3..." : "Upload selected files"}
       </button>
 
       {statusMessage ? (
@@ -256,27 +285,29 @@ export function UploadRequestPanel() {
         </div>
       ) : null}
 
-      {uploadResult ? (
+      {uploadResults.length > 0 ? (
         <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
-          <strong>File uploaded to S3</strong>
+          <strong>
+            {uploadResults.length} file{uploadResults.length > 1 ? "s" : ""} uploaded to S3
+          </strong>
           <span>
             The library will open automatically in a moment.
           </span>
-          <span>
-            Saved as: <code>{uploadResult.fileName}</code>
-          </span>
-          <span>
-            Bucket: <code>{uploadResult.bucket}</code>
-          </span>
-          <span>
-            Object key: <code>{uploadResult.objectKey}</code>
-          </span>
+          <div style={{ display: "grid", gap: "4px" }}>
+            {uploadResults.map((uploadResult) => (
+              <span key={uploadResult.id}>
+                Saved as: <code>{uploadResult.fileName}</code>
+              </span>
+            ))}
+          </div>
           <button
             type="button"
             className="button-link secondary"
             onClick={() =>
               router.push(
-                `/library?uploaded=${encodeURIComponent(uploadResult.fileName)}`
+                `/library?uploaded=${encodeURIComponent(
+                  uploadResults[uploadResults.length - 1]?.fileName ?? ""
+                )}&uploadedCount=${uploadResults.length}`
               )
             }
             style={{ width: "fit-content", cursor: "pointer" }}

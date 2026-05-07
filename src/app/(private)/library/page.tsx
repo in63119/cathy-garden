@@ -34,6 +34,7 @@ type LibraryPageProps = {
     filter?: string;
     sort?: string;
     uploaded?: string;
+    uploadedCount?: string;
   }>;
 };
 
@@ -42,6 +43,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const filter = normalizeMediaFilterValue(params?.filter);
   const sort = normalizeMediaSortValue(params?.sort);
   const uploaded = params?.uploaded?.trim() ?? "";
+  const uploadedCount = Number(params?.uploadedCount ?? "0");
   const entries = await readMediaEntries();
   const visibleEntries = filterAndSortMediaEntries(entries, { filter, sort });
   const entriesWithPreview = await Promise.all(
@@ -73,9 +75,16 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         {uploaded ? (
           <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
             <strong>Upload complete</strong>
-            <span>
-              <code>{uploaded}</code> is now part of the archive.
-            </span>
+            {uploadedCount > 1 ? (
+              <span>
+                <code>{uploadedCount}</code> files were added to the archive. The
+                latest item is <code>{uploaded}</code>.
+              </span>
+            ) : (
+              <span>
+                <code>{uploaded}</code> is now part of the archive.
+              </span>
+            )}
           </div>
         ) : null}
 

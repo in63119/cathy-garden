@@ -28,5 +28,8 @@ describe("delete media flow scaffolding", () => {
 
     expect(libraryPage).toContain("DeleteMediaButton");
     expect(mediaDetailPage).toContain('mode="redirect"');
+    expect(mediaDetailPage).toContain("createPresignedDownload");
+    expect(mediaDetailPage).toContain("<video");
+    expect(mediaDetailPage).toContain("<img");
   });
 });

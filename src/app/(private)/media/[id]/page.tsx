@@ -4,6 +4,12 @@ import { notFound } from "next/navigation";
 import { DeleteMediaButton } from "@/components/delete-media-button";
 import { SectionCard } from "@/components/section-card";
 import { getMediaEntryById } from "@/lib/media-store";
+import {
+  getMediaKindLabel,
+  isImageContentType,
+  isVideoContentType,
+} from "@/lib/media-preview";
+import { createPresignedDownload } from "@/lib/s3";
 
 type MediaDetailPageProps = {
   params: Promise<{
@@ -31,13 +37,84 @@ export default async function MediaDetailPage({
     notFound();
   }
 
+  const previewUrl = await createPresignedDownload({
+    bucket: entry.bucket,
+    objectKey: entry.objectKey,
+    contentType: entry.contentType,
+  });
+  const mediaKind = getMediaKindLabel(entry.contentType);
+
   return (
     <div className="content-shell" style={{ padding: "16px 0 48px" }}>
       <SectionCard
         eyebrow="Media Detail"
         title={entry.fileName}
-        description="This detail page now reads real metadata from the archive manifest. The next step can add image/video previews using signed read URLs."
+        description="This detail page now reads real metadata from the archive manifest and renders the original file through a signed S3 read URL."
       >
+        <div
+          style={{
+            minHeight: "220px",
+            borderRadius: "24px",
+            border: "1px solid var(--border)",
+            background: "rgba(255,255,255,0.7)",
+            display: "grid",
+            padding: "24px",
+            overflow: "hidden",
+            placeItems: "center",
+          }}
+        >
+          {isImageContentType(entry.contentType) ? (
+            <img
+              src={previewUrl}
+              alt={entry.fileName}
+              style={{
+                width: "100%",
+                maxHeight: "70vh",
+                objectFit: "contain",
+                borderRadius: "18px",
+              }}
+            />
+          ) : null}
+          {isVideoContentType(entry.contentType) ? (
+            <video
+              controls
+              preload="metadata"
+              style={{
+                width: "100%",
+                maxHeight: "70vh",
+                borderRadius: "18px",
+                background: "#000",
+              }}
+            >
+              <source src={previewUrl} type={entry.contentType} />
+              Your browser does not support inline video preview.
+            </video>
+          ) : null}
+          {!isImageContentType(entry.contentType) &&
+          !isVideoContentType(entry.contentType) ? (
+            <div
+              style={{
+                display: "grid",
+                gap: "12px",
+                justifyItems: "center",
+                color: "var(--muted)",
+                lineHeight: 1.7,
+                textAlign: "center",
+              }}
+            >
+              <strong>No inline preview for this file type.</strong>
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="button-link secondary"
+              >
+                Open file
+              </a>
+            </div>
+          ) : null}
+        </div>
+
         <div
           style={{
             minHeight: "220px",
@@ -53,6 +130,9 @@ export default async function MediaDetailPage({
         >
           <span>
             File name: <strong>{entry.fileName}</strong>
+          </span>
+          <span>
+            Media kind: <code>{mediaKind}</code>
           </span>
           <span>
             Content type: <code>{entry.contentType}</code>
@@ -72,12 +152,23 @@ export default async function MediaDetailPage({
           <span>
             Size: <code>{entry.size}</code> bytes
           </span>
+          <span>
+            Preview URL expires in about <code>5 minutes</code>
+          </span>
         </div>
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <Link href="/library" className="button-link secondary">
             Back to library
           </Link>
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="button-link secondary"
+          >
+            Open original
+          </a>
           <DeleteMediaButton mediaId={entry.id} mode="redirect" />
         </div>
       </SectionCard>

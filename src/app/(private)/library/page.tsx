@@ -1,3 +1,4 @@
+import { DeleteMediaButton } from "@/components/delete-media-button";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/section-card";
@@ -81,6 +82,7 @@ export default async function LibraryPage() {
                 >
                   Open details
                 </Link>
+                <DeleteMediaButton mediaId={entry.id} />
               </article>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   NoSuchKey,
   PutObjectCommand,
@@ -69,6 +70,43 @@ export async function createMediaEntry(input: CreateMediaEntryInput) {
     ...input,
   };
   const nextEntries = [entry, ...entries];
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: getManifestKey(),
+      Body: `${JSON.stringify(sortEntries(nextEntries), null, 2)}\n`,
+      ContentType: "application/json",
+    })
+  );
+
+  return entry;
+}
+
+export async function getMediaEntryById(id: string) {
+  const entries = await readMediaEntries();
+
+  return entries.find((entry) => entry.id === id) ?? null;
+}
+
+export async function deleteMediaEntryById(id: string) {
+  const config = getS3Config();
+  const client = createS3Client();
+  const entries = await readMediaEntries();
+  const entry = entries.find((item) => item.id === id) ?? null;
+
+  if (!entry) {
+    return null;
+  }
+
+  const nextEntries = entries.filter((item) => item.id !== id);
+
+  await client.send(
+    new DeleteObjectCommand({
+      Bucket: entry.bucket || config.bucket,
+      Key: entry.objectKey,
+    })
+  );
 
   await client.send(
     new PutObjectCommand({

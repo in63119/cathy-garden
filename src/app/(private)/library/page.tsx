@@ -3,6 +3,12 @@ import Link from "next/link";
 
 import { SectionCard } from "@/components/section-card";
 import { readMediaEntries } from "@/lib/media-store";
+import {
+  getMediaKindLabel,
+  isImageContentType,
+  isVideoContentType,
+} from "@/lib/media-preview";
+import { createPresignedDownload } from "@/lib/s3";
 
 function formatUploadedAt(value: string) {
   return new Date(value).toLocaleString("en-US", {
@@ -16,6 +22,17 @@ function formatUploadedAt(value: string) {
 
 export default async function LibraryPage() {
   const entries = await readMediaEntries();
+  const entriesWithPreview = await Promise.all(
+    entries.map(async (entry) => ({
+      ...entry,
+      mediaKind: getMediaKindLabel(entry.contentType),
+      previewUrl: await createPresignedDownload({
+        bucket: entry.bucket,
+        objectKey: entry.objectKey,
+        contentType: entry.contentType,
+      }),
+    }))
+  );
 
   return (
     <div className="content-shell" style={{ padding: "16px 0 48px" }}>
@@ -50,22 +67,71 @@ export default async function LibraryPage() {
               gap: "14px",
             }}
           >
-            {entries.map((entry) => (
+            {entriesWithPreview.map((entry) => (
               <article
                 key={entry.id}
                 style={{
                   minHeight: "180px",
                   borderRadius: "22px",
                   border: "1px solid var(--border)",
-                  padding: "18px",
+                  padding: "14px",
                   background: "rgba(255,255,255,0.58)",
                   display: "grid",
                   gap: "8px",
                 }}
               >
+                <div
+                  style={{
+                    minHeight: "180px",
+                    borderRadius: "18px",
+                    overflow: "hidden",
+                    border: "1px solid var(--border)",
+                    background: "rgba(247, 244, 236, 0.9)",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  {isImageContentType(entry.contentType) ? (
+                    <img
+                      src={entry.previewUrl}
+                      alt={entry.fileName}
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  ) : null}
+                  {isVideoContentType(entry.contentType) ? (
+                    <video
+                      muted
+                      controls
+                      preload="metadata"
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        objectFit: "cover",
+                        background: "#000",
+                        display: "block",
+                      }}
+                    >
+                      <source src={entry.previewUrl} type={entry.contentType} />
+                    </video>
+                  ) : null}
+                  {!isImageContentType(entry.contentType) &&
+                  !isVideoContentType(entry.contentType) ? (
+                    <span style={{ color: "var(--muted)", fontWeight: 700 }}>
+                      No preview available
+                    </span>
+                  ) : null}
+                </div>
                 <strong style={{ fontSize: "1rem", lineHeight: 1.5 }}>
                   {entry.fileName}
                 </strong>
+                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
+                  Kind: {entry.mediaKind}
+                </span>
                 <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
                   {entry.contentType}
                 </span>

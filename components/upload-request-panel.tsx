@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, startTransition, useState } from "react";
+import { ChangeEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -53,6 +53,22 @@ export function UploadRequestPanel() {
     fileName: string;
   } | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!uploadResult) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      router.push(
+        `/library?uploaded=${encodeURIComponent(uploadResult.fileName)}`
+      );
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [router, uploadResult]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -126,7 +142,7 @@ export function UploadRequestPanel() {
             bucket: entry.bucket,
             fileName: entry.fileName,
           });
-          setStatusMessage("Upload completed successfully.");
+          setStatusMessage("Upload completed successfully. Opening the library...");
           router.refresh();
         })
         .catch((error: Error) => {
@@ -279,6 +295,9 @@ export function UploadRequestPanel() {
         >
           <strong>File uploaded to S3</strong>
           <span>
+            The library will open automatically in a moment.
+          </span>
+          <span>
             Saved as: <code>{uploadResult.fileName}</code>
           </span>
           <span>
@@ -287,6 +306,18 @@ export function UploadRequestPanel() {
           <span>
             Object key: <code>{uploadResult.objectKey}</code>
           </span>
+          <button
+            type="button"
+            className="button-link secondary"
+            onClick={() =>
+              router.push(
+                `/library?uploaded=${encodeURIComponent(uploadResult.fileName)}`
+              )
+            }
+            style={{ width: "fit-content", cursor: "pointer" }}
+          >
+            Open library now
+          </button>
         </div>
       ) : null}
     </div>

@@ -25,6 +25,10 @@ describe("delete media flow scaffolding", () => {
       path.join(rootDir, "src/app/(private)/media/[id]/page.tsx"),
       "utf8"
     );
+    const uploadPanel = fs.readFileSync(
+      path.join(rootDir, "components/upload-request-panel.tsx"),
+      "utf8"
+    );
 
     expect(libraryPage).toContain("DeleteMediaButton");
     expect(libraryPage).toContain("createPresignedDownload");
@@ -35,9 +39,12 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("buildLibraryHref");
     expect(libraryPage).toContain("Newest first");
     expect(libraryPage).toContain("Photos");
+    expect(libraryPage).toContain("Upload complete");
     expect(mediaDetailPage).toContain('mode="redirect"');
     expect(mediaDetailPage).toContain("createPresignedDownload");
     expect(mediaDetailPage).toContain("<video");
     expect(mediaDetailPage).toContain("<img");
+    expect(uploadPanel).toContain("Open library now");
+    expect(uploadPanel).toContain("Upload completed successfully. Opening the library...");
   });
 });

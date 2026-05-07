@@ -33,6 +33,7 @@ type LibraryPageProps = {
   searchParams?: Promise<{
     filter?: string;
     sort?: string;
+    uploaded?: string;
   }>;
 };
 
@@ -40,6 +41,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const params = searchParams ? await searchParams : undefined;
   const filter = normalizeMediaFilterValue(params?.filter);
   const sort = normalizeMediaSortValue(params?.sort);
+  const uploaded = params?.uploaded?.trim() ?? "";
   const entries = await readMediaEntries();
   const visibleEntries = filterAndSortMediaEntries(entries, { filter, sort });
   const entriesWithPreview = await Promise.all(
@@ -68,6 +70,26 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         title="The media library now reflects uploaded archive entries."
         description="This page reads saved upload metadata, supports basic filtering, and keeps the preview load light for video items."
       >
+        {uploaded ? (
+          <div
+            style={{
+              display: "grid",
+              gap: "6px",
+              padding: "16px",
+              borderRadius: "18px",
+              background: "rgba(240, 248, 236, 0.92)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+              lineHeight: 1.6,
+            }}
+          >
+            <strong>Upload complete</strong>
+            <span>
+              <code>{uploaded}</code> is now part of the archive.
+            </span>
+          </div>
+        ) : null}
+
         <div
           style={{
             display: "flex",

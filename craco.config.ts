@@ -20,6 +20,9 @@ module.exports = {
         "<rootDir>/src/**/*.test.{js,jsx,ts,tsx}",
         "<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}",
       ],
+      moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/$1",
+      },
     },
   },
 };

@@ -4,10 +4,8 @@ import { ChangeEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  completeUploadedMedia,
   formatBytes,
-  requestPresignedUpload,
-  uploadFileToPresignedUrl,
+  uploadMediaBatch,
 } from "@/lib/upload-client";
 import {
   ALLOWED_UPLOAD_MIME_TYPES,
@@ -33,11 +31,18 @@ type SelectedFileState = {
   type: string;
 };
 
+type UploadProgressState = {
+  currentFileName: string;
+  currentIndex: number;
+  totalFiles: number;
+  percentage: number;
+  loaded: number;
+  totalBytes: number;
+};
+
 export function UploadRequestPanel() {
   const router = useRouter();
-  const [selectedFile, setSelectedFile] = useState<SelectedFileState | null>(
-    null
-  );
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFileState[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [presignResult, setPresignResult] = useState<{
@@ -46,108 +51,163 @@ export function UploadRequestPanel() {
     region: string;
     expiresIn: number;
   } | null>(null);
-  const [uploadResult, setUploadResult] = useState<{
-    id: string;
-    objectKey: string;
-    bucket: string;
-    fileName: string;
-  } | null>(null);
+  const [uploadResults, setUploadResults] = useState<
+    {
+      id: string;
+      objectKey: string;
+      bucket: string;
+      fileName: string;
+    }[]
+  >([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(
+    null
+  );
 
   useEffect(() => {
-    if (!uploadResult) {
+    if (uploadResults.length === 0) {
       return;
     }
 
+    const lastUploaded = uploadResults[uploadResults.length - 1];
     const timeoutId = window.setTimeout(() => {
       router.push(
-        `/library?uploaded=${encodeURIComponent(uploadResult.fileName)}`
+        `/library?uploaded=${encodeURIComponent(
+          lastUploaded.fileName
+        )}&uploadedCount=${uploadResults.length}`
       );
     }, 1200);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [router, uploadResult]);
+  }, [router, uploadResults]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
 
-    if (!file) {
-      setSelectedFile(null);
+    if (files.length === 0) {
+      setSelectedFiles([]);
       setErrorMessage(null);
       setPresignResult(null);
+      setUploadProgress(null);
       return;
     }
 
-    setSelectedFile({
-      file,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    });
+    setSelectedFiles(
+      files.map((file) => ({
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      }))
+    );
     setErrorMessage(null);
     setPresignResult(null);
-    setUploadResult(null);
+    setUploadResults([]);
     setStatusMessage(null);
+    setUploadProgress(null);
   };
 
   const handleUpload = () => {
-    if (!selectedFile) {
-      setErrorMessage("Please choose a file first.");
+    if (selectedFiles.length === 0) {
+      setErrorMessage("Please choose at least one file first.");
       return;
     }
 
     setIsPending(true);
     setErrorMessage(null);
     setPresignResult(null);
-    setUploadResult(null);
-    setStatusMessage("Preparing an upload URL...");
+    setUploadResults([]);
+    setStatusMessage("Preparing upload URLs...");
+    setUploadProgress(null);
 
     startTransition(() => {
-      requestPresignedUpload({
-        fileName: selectedFile.name,
-        contentType: selectedFile.type,
-        size: selectedFile.size,
-      })
-        .then(async (result) => {
+      uploadMediaBatch(
+        selectedFiles.map((selectedFile) => ({
+          file: selectedFile.file,
+          fileName: selectedFile.name,
+          contentType: selectedFile.type,
+          size: selectedFile.size,
+        })),
+        {
+          onStageChange: ({ index, total, fileName, stage }) => {
+            if (stage === "presign") {
+              setStatusMessage(`Preparing upload ${index} of ${total}: ${fileName}`);
+              return;
+            }
+
+            if (stage === "transfer") {
+              setStatusMessage(`Uploading ${index} of ${total}: ${fileName}`);
+              setUploadProgress({
+                currentFileName: fileName,
+                currentIndex: index,
+                totalFiles: total,
+                percentage: 0,
+                loaded: 0,
+                totalBytes:
+                  selectedFiles.find((selectedFile) => selectedFile.name === fileName)
+                    ?.size ?? 0,
+              });
+              return;
+            }
+
+            setStatusMessage(
+              `Saving archive metadata ${index} of ${total}: ${fileName}`
+            );
+          },
+          onTransferProgress: ({
+            index,
+            total,
+            fileName,
+            loaded,
+            size,
+            percentage,
+          }) => {
+            setUploadProgress({
+              currentFileName: fileName,
+              currentIndex: index,
+              totalFiles: total,
+              percentage,
+              loaded,
+              totalBytes: size,
+            });
+          },
+          onPresigned: ({ result }) => {
+            setPresignResult({
+              objectKey: result.objectKey,
+              bucket: result.bucket,
+              region: result.region,
+              expiresIn: result.expiresIn,
+            });
+          },
+        }
+      )
+        .then((entries) => {
+          setUploadResults(
+            entries.map((entry) => ({
+              id: entry.id,
+              objectKey: entry.objectKey,
+              bucket: entry.bucket,
+              fileName: entry.fileName,
+            }))
+          );
           setPresignResult({
-            objectKey: result.objectKey,
-            bucket: result.bucket,
-            region: result.region,
-            expiresIn: result.expiresIn,
+            objectKey: entries[entries.length - 1]?.objectKey ?? "",
+            bucket: entries[entries.length - 1]?.bucket ?? "",
+            region: entries[entries.length - 1]?.region ?? "",
+            expiresIn: 300,
           });
-          setStatusMessage("Uploading the file directly to S3...");
-
-          await uploadFileToPresignedUrl({
-            uploadUrl: result.uploadUrl,
-            file: selectedFile.file,
-            contentType: selectedFile.type,
-          });
-
-          setStatusMessage("Saving media metadata into the archive...");
-
-          const entry = await completeUploadedMedia({
-            objectKey: result.objectKey,
-            bucket: result.bucket,
-            region: result.region,
-            fileName: result.fileName,
-            contentType: result.contentType,
-            size: result.size,
-          });
-
-          setUploadResult({
-            id: entry.id,
-            objectKey: entry.objectKey,
-            bucket: entry.bucket,
-            fileName: entry.fileName,
-          });
-          setStatusMessage("Upload completed successfully. Opening the library...");
+          setStatusMessage(
+            `${entries.length} upload${entries.length > 1 ? "s" : ""} completed successfully. Opening the library...`
+          );
+          setUploadProgress(null);
           router.refresh();
         })
         .catch((error: Error) => {
           setErrorMessage(errorMessages[error.message] ?? error.message);
           setStatusMessage(null);
+          setUploadProgress(null);
         })
         .finally(() => {
           setIsPending(false);
@@ -156,16 +216,7 @@ export function UploadRequestPanel() {
   };
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: "16px",
-        borderRadius: "24px",
-        padding: "20px",
-        border: "1px dashed var(--border)",
-        background: "rgba(255,255,255,0.45)",
-      }}
-    >
+    <div className="panel panel-dashed">
       <strong>Request a presigned S3 upload URL</strong>
       <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
         This flow now requests a presigned URL and immediately uploads the
@@ -174,30 +225,41 @@ export function UploadRequestPanel() {
 
       <div style={{ display: "grid", gap: "10px" }}>
         <label htmlFor="upload-file" style={{ fontWeight: 700 }}>
-          Choose a photo or video
+          Choose one or more photos and videos
         </label>
         <input
           id="upload-file"
           type="file"
+          className="input-field"
+          multiple
           accept={ALLOWED_UPLOAD_MIME_TYPES.join(",")}
           onChange={handleFileChange}
         />
       </div>
 
-      {selectedFile ? (
+      {selectedFiles.length > 0 ? (
         <div
           style={{
             display: "grid",
-            gap: "4px",
+            gap: "8px",
             color: "var(--muted)",
             lineHeight: 1.6,
           }}
         >
-          <span>
-            File: <strong>{selectedFile.name}</strong>
-          </span>
-          <span>Type: {selectedFile.type || "unknown"}</span>
-          <span>Size: {formatBytes(selectedFile.size)}</span>
+          <strong>
+            {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""} selected
+          </strong>
+          <div style={{ display: "grid", gap: "4px" }}>
+            {selectedFiles.map((selectedFile) => (
+              <span key={`${selectedFile.name}-${selectedFile.size}`}>
+                <strong>{selectedFile.name}</strong>
+                {" · "}
+                {selectedFile.type || "unknown"}
+                {" · "}
+                {formatBytes(selectedFile.size)}
+              </span>
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -220,6 +282,9 @@ export function UploadRequestPanel() {
           Max file size:{" "}
           <code>{Math.floor(MAX_UPLOAD_SIZE_BYTES / (1024 * 1024))} MB</code>
         </span>
+        <span>
+          Batch strategy: <code>multiple files, sequential uploads</code>
+        </span>
       </div>
 
       <button
@@ -233,37 +298,54 @@ export function UploadRequestPanel() {
           cursor: isPending ? "progress" : "pointer",
         }}
       >
-        {isPending ? "Uploading to S3..." : "Upload to S3"}
+        {isPending ? "Uploading to S3..." : "Upload selected files"}
       </button>
 
       {statusMessage ? (
-        <p style={{ margin: 0, color: "var(--muted)", fontWeight: 700 }}>
-          {statusMessage}
-        </p>
+        <p className="status-text">{statusMessage}</p>
+      ) : null}
+
+      {uploadProgress ? (
+        <div className="card-soft" style={{ display: "grid", gap: "10px", padding: "16px" }}>
+          <strong>
+            Uploading {uploadProgress.currentIndex} of {uploadProgress.totalFiles}:{" "}
+            {uploadProgress.currentFileName}
+          </strong>
+          <div
+            aria-label="Upload progress"
+            style={{
+              width: "100%",
+              height: "12px",
+              borderRadius: "999px",
+              background: "rgba(255,255,255,0.82)",
+              border: "1px solid var(--border)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${uploadProgress.percentage}%`,
+                height: "100%",
+                background:
+                  "linear-gradient(90deg, var(--accent) 0%, var(--accent-strong) 100%)",
+              }}
+            />
+          </div>
+          <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
+            {uploadProgress.percentage}% · {formatBytes(uploadProgress.loaded)} of{" "}
+            {formatBytes(uploadProgress.totalBytes)}
+          </span>
+        </div>
       ) : null}
 
       {errorMessage ? (
-        <p
-          role="alert"
-          style={{ margin: 0, color: "#7f3a2e", fontWeight: 700 }}
-        >
+        <p role="alert" className="error-text">
           {errorMessage}
         </p>
       ) : null}
 
       {presignResult ? (
-        <div
-          style={{
-            display: "grid",
-            gap: "6px",
-            padding: "16px",
-            borderRadius: "18px",
-            background: "rgba(255,255,255,0.72)",
-            border: "1px solid var(--border)",
-            color: "var(--foreground)",
-            lineHeight: 1.6,
-          }}
-        >
+        <div className="card-soft" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
           <strong>Presigned URL prepared</strong>
           <span>
             Object key: <code>{presignResult.objectKey}</code>
@@ -280,38 +362,29 @@ export function UploadRequestPanel() {
         </div>
       ) : null}
 
-      {uploadResult ? (
-        <div
-          style={{
-            display: "grid",
-            gap: "6px",
-            padding: "16px",
-            borderRadius: "18px",
-            background: "rgba(240, 248, 236, 0.92)",
-            border: "1px solid var(--border)",
-            color: "var(--foreground)",
-            lineHeight: 1.6,
-          }}
-        >
-          <strong>File uploaded to S3</strong>
+      {uploadResults.length > 0 ? (
+        <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
+          <strong>
+            {uploadResults.length} file{uploadResults.length > 1 ? "s" : ""} uploaded to S3
+          </strong>
           <span>
             The library will open automatically in a moment.
           </span>
-          <span>
-            Saved as: <code>{uploadResult.fileName}</code>
-          </span>
-          <span>
-            Bucket: <code>{uploadResult.bucket}</code>
-          </span>
-          <span>
-            Object key: <code>{uploadResult.objectKey}</code>
-          </span>
+          <div style={{ display: "grid", gap: "4px" }}>
+            {uploadResults.map((uploadResult) => (
+              <span key={uploadResult.id}>
+                Saved as: <code>{uploadResult.fileName}</code>
+              </span>
+            ))}
+          </div>
           <button
             type="button"
             className="button-link secondary"
             onClick={() =>
               router.push(
-                `/library?uploaded=${encodeURIComponent(uploadResult.fileName)}`
+                `/library?uploaded=${encodeURIComponent(
+                  uploadResults[uploadResults.length - 1]?.fileName ?? ""
+                )}&uploadedCount=${uploadResults.length}`
               )
             }
             style={{ width: "fit-content", cursor: "pointer" }}

@@ -34,6 +34,7 @@ type LibraryPageProps = {
     filter?: string;
     sort?: string;
     uploaded?: string;
+    uploadedCount?: string;
   }>;
 };
 
@@ -42,6 +43,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const filter = normalizeMediaFilterValue(params?.filter);
   const sort = normalizeMediaSortValue(params?.sort);
   const uploaded = params?.uploaded?.trim() ?? "";
+  const uploadedCount = Number(params?.uploadedCount ?? "0");
   const entries = await readMediaEntries();
   const visibleEntries = filterAndSortMediaEntries(entries, { filter, sort });
   const entriesWithPreview = await Promise.all(
@@ -64,55 +66,35 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   );
 
   return (
-    <div className="content-shell" style={{ padding: "16px 0 48px" }}>
+    <div className="content-shell page-section">
       <SectionCard
         eyebrow="Library"
         title="The media library now reflects uploaded archive entries."
         description="This page reads saved upload metadata, supports basic filtering, and keeps the preview load light for video items."
       >
         {uploaded ? (
-          <div
-            style={{
-              display: "grid",
-              gap: "6px",
-              padding: "16px",
-              borderRadius: "18px",
-              background: "rgba(240, 248, 236, 0.92)",
-              border: "1px solid var(--border)",
-              color: "var(--foreground)",
-              lineHeight: 1.6,
-            }}
-          >
+          <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
             <strong>Upload complete</strong>
-            <span>
-              <code>{uploaded}</code> is now part of the archive.
-            </span>
+            {uploadedCount > 1 ? (
+              <span>
+                <code>{uploadedCount}</code> files were added to the archive. The
+                latest item is <code>{uploaded}</code>.
+              </span>
+            ) : (
+              <span>
+                <code>{uploaded}</code> is now part of the archive.
+              </span>
+            )}
           </div>
         ) : null}
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <div className="filter-toolbar">
+          <div className="filter-cluster">
             {(["all", "image", "video"] as const).map((option) => (
               <Link
                 key={option}
                 href={buildLibraryHref({ filter: option, sort })}
-                className="button-link secondary"
-                style={{
-                  background:
-                    filter === option
-                      ? "rgba(111, 139, 98, 0.18)"
-                      : "rgba(255,255,255,0.6)",
-                  borderColor:
-                    filter === option ? "rgba(111, 139, 98, 0.34)" : undefined,
-                }}
+                className={`button-link secondary${filter === option ? " is-active" : ""}`}
               >
                 {option === "all"
                   ? "All"
@@ -123,20 +105,12 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <div className="filter-cluster">
             {(["newest", "oldest"] as const).map((option) => (
               <Link
                 key={option}
                 href={buildLibraryHref({ filter, sort: option })}
-                className="button-link secondary"
-                style={{
-                  background:
-                    sort === option
-                      ? "rgba(111, 139, 98, 0.18)"
-                      : "rgba(255,255,255,0.6)",
-                  borderColor:
-                    sort === option ? "rgba(111, 139, 98, 0.34)" : undefined,
-                }}
+                className={`button-link secondary${sort === option ? " is-active" : ""}`}
               >
                 {option === "newest" ? "Newest first" : "Oldest first"}
               </Link>
@@ -145,143 +119,43 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
 
         {entries.length === 0 ? (
-          <div
-            style={{
-              minHeight: "220px",
-              borderRadius: "22px",
-              border: "1px dashed var(--border)",
-              padding: "24px",
-              background: "rgba(255,255,255,0.42)",
-              display: "grid",
-              placeItems: "center",
-              color: "var(--muted)",
-              textAlign: "center",
-              lineHeight: 1.7,
-            }}
-          >
+          <div className="panel panel-dashed panel-muted">
             No uploaded items yet. Use the upload route to add the first photo
             or video to the archive.
           </div>
         ) : entriesWithPreview.length === 0 ? (
-          <div
-            style={{
-              minHeight: "220px",
-              borderRadius: "22px",
-              border: "1px dashed var(--border)",
-              padding: "24px",
-              background: "rgba(255,255,255,0.42)",
-              display: "grid",
-              placeItems: "center",
-              color: "var(--muted)",
-              textAlign: "center",
-              lineHeight: 1.7,
-            }}
-          >
+          <div className="panel panel-dashed panel-muted">
             No items match the current filter.
           </div>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "14px",
-            }}
-          >
+          <div className="library-grid">
             {entriesWithPreview.map((entry) => (
               <article
                 key={entry.id}
-                style={{
-                  minHeight: "180px",
-                  borderRadius: "22px",
-                  border: "1px solid var(--border)",
-                  padding: "14px",
-                  background: "rgba(255,255,255,0.58)",
-                  display: "grid",
-                  gap: "8px",
-                }}
+                className="card-soft media-card"
               >
-                <div
-                  style={{
-                    minHeight: "180px",
-                    borderRadius: "18px",
-                    overflow: "hidden",
-                    border: "1px solid var(--border)",
-                    background: "rgba(247, 244, 236, 0.9)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
+                <div className="media-card-figure">
                   {isImageContentType(entry.contentType) ? (
                     <img
                       src={entry.previewUrl ?? ""}
                       alt={entry.fileName}
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
+                      className="media-card-image"
                     />
                   ) : null}
                   {isVideoContentType(entry.contentType) ? (
                     <Link
                       href={`/media/${entry.id}`}
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        display: "grid",
-                        gridTemplateRows: "1fr auto",
-                        background:
-                          "linear-gradient(180deg, rgba(28, 35, 32, 0.92), rgba(74, 95, 82, 0.84))",
-                        color: "#f7f4ec",
-                        padding: "16px",
-                        textDecoration: "none",
-                      }}
+                      className="media-card-video-link"
                     >
-                      <div
-                        style={{
-                          display: "grid",
-                          placeItems: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "60px",
-                            height: "60px",
-                            borderRadius: "999px",
-                            background: "rgba(255,255,255,0.16)",
-                            border: "1px solid rgba(255,255,255,0.25)",
-                            display: "grid",
-                            placeItems: "center",
-                            fontSize: "1.5rem",
-                          }}
-                        >
-                          ▶
-                        </div>
+                      <div style={{ display: "grid", placeItems: "center" }}>
+                        <div className="media-card-play">▶</div>
                       </div>
-                      <div
-                        style={{
-                          display: "grid",
-                          gap: "4px",
-                          alignSelf: "end",
-                        }}
-                      >
-                        <strong
-                          style={{
-                            fontSize: "0.92rem",
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          Video preview on detail page
+                      <div className="media-card-video-copy">
+                        <strong style={{ fontSize: "0.98rem", lineHeight: 1.4 }}>
+                          Video keeps its full quiet moment.
                         </strong>
-                        <span
-                          style={{
-                            fontSize: "0.82rem",
-                            opacity: 0.82,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          Open this item to stream the signed original file.
+                        <span style={{ fontSize: "0.84rem", opacity: 0.86, lineHeight: 1.5 }}>
+                          Open the detail page to watch the signed original.
                         </span>
                       </div>
                     </Link>
@@ -293,35 +167,35 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     </span>
                   ) : null}
                 </div>
-                <strong style={{ fontSize: "1rem", lineHeight: 1.5 }}>
-                  {entry.fileName}
-                </strong>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  Kind: {entry.mediaKind}
-                </span>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  {entry.contentType}
-                </span>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  Uploaded {formatUploadedAt(entry.uploadedAt)}
-                </span>
-                <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-                  S3 key: <code>{entry.objectKey}</code>
-                </span>
-                <Link
-                  href={`/media/${entry.id}`}
-                  className="button-link secondary"
-                  style={{ width: "fit-content", marginTop: "8px" }}
-                >
-                  Open details
-                </Link>
-                <DeleteMediaButton mediaId={entry.id} />
+                <div className="media-card-body">
+                  <div className="media-card-meta">
+                    <span className="media-chip">
+                      {entry.mediaKind === "image" ? "Photo" : "Video"}
+                    </span>
+                    <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+                  </div>
+                  <h2 className="media-card-title">{entry.fileName}</h2>
+                  <p className="media-card-caption">
+                    {entry.mediaKind === "image"
+                      ? "A preserved photo in the private garden archive."
+                      : "A quiet video entry kept with the rest of the archive."}
+                  </p>
+                  <div className="media-card-actions">
+                    <Link
+                      href={`/media/${entry.id}`}
+                      className="button-link secondary"
+                    >
+                      Open details
+                    </Link>
+                    <DeleteMediaButton mediaId={entry.id} />
+                  </div>
+                </div>
               </article>
             ))}
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div className="action-row">
           <Link href="/upload" className="button-link primary">
             Go to upload
           </Link>

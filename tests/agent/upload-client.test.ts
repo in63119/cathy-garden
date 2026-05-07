@@ -2,12 +2,16 @@ import {
   completeUploadedMedia,
   formatBytes,
   requestPresignedUpload,
+  uploadMediaBatch,
   uploadFileToPresignedUrl,
 } from "../../lib/upload-client";
 
 describe("upload client helpers", () => {
+  const originalXmlHttpRequest = global.XMLHttpRequest;
+
   afterEach(() => {
     jest.restoreAllMocks();
+    global.XMLHttpRequest = originalXmlHttpRequest;
   });
 
   test("requests a presigned upload URL with the expected payload", async () => {
@@ -65,25 +69,55 @@ describe("upload client helpers", () => {
   });
 
   test("uploads a selected file directly to the presigned URL", async () => {
-    const fetchMock = jest.spyOn(global, "fetch" as never).mockResolvedValue({
-      ok: true,
-    } as Response);
+    const send = jest.fn(function (this: {
+      status: number;
+      onload: null | (() => void);
+      upload: { onprogress: null | ((event: ProgressEvent) => void) };
+    }) {
+      this.upload.onprogress?.({
+        lengthComputable: true,
+        loaded: 3,
+        total: 6,
+      } as ProgressEvent);
+      this.status = 200;
+      this.onload?.();
+    });
+    const open = jest.fn();
+    const setRequestHeader = jest.fn();
+    class MockXMLHttpRequest {
+      status = 0;
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+      upload = { onprogress: null as null | ((event: ProgressEvent) => void) };
+      open = open;
+      setRequestHeader = setRequestHeader;
+      send = send;
+    }
+    global.XMLHttpRequest = MockXMLHttpRequest as never;
     const file = new File(["garden"], "garden.jpg", {
       type: "image/jpeg",
     });
+    const onProgress = jest.fn();
 
     await uploadFileToPresignedUrl({
       uploadUrl: "https://example.com/upload-url",
       file,
       contentType: "image/jpeg",
+      onProgress,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("https://example.com/upload-url", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "image/jpeg",
-      },
-      body: file,
+    expect(open).toHaveBeenCalledWith("PUT", "https://example.com/upload-url");
+    expect(setRequestHeader).toHaveBeenCalledWith("Content-Type", "image/jpeg");
+    expect(send).toHaveBeenCalledWith(file);
+    expect(onProgress).toHaveBeenCalledWith({
+      loaded: 3,
+      total: 6,
+      percentage: 50,
+    });
+    expect(onProgress).toHaveBeenLastCalledWith({
+      loaded: file.size,
+      total: file.size,
+      percentage: 100,
     });
   });
 
@@ -131,9 +165,24 @@ describe("upload client helpers", () => {
   });
 
   test("throws when the direct S3 upload fails", async () => {
-    jest.spyOn(global, "fetch" as never).mockResolvedValue({
-      ok: false,
-    } as Response);
+    const send = jest.fn(function (this: {
+      status: number;
+      onload: null | (() => void);
+      onerror: null | (() => void);
+    }) {
+      this.status = 500;
+      this.onload?.();
+    });
+    class MockXMLHttpRequest {
+      status = 0;
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+      upload = { onprogress: null as null | ((event: ProgressEvent) => void) };
+      open = jest.fn();
+      setRequestHeader = jest.fn();
+      send = send;
+    }
+    global.XMLHttpRequest = MockXMLHttpRequest as never;
     const file = new File(["garden"], "garden.jpg", {
       type: "image/jpeg",
     });
@@ -151,5 +200,131 @@ describe("upload client helpers", () => {
     expect(formatBytes(512)).toBe("512 B");
     expect(formatBytes(1536)).toBe("1.5 KB");
     expect(formatBytes(5 * 1024 * 1024)).toBe("5.0 MB");
+  });
+
+  test("uploads multiple files sequentially and stores metadata for each one", async () => {
+    const send = jest.fn(function (this: {
+      status: number;
+      onload: null | (() => void);
+      upload: { onprogress: null | ((event: ProgressEvent) => void) };
+    }, file: File) {
+      this.upload.onprogress?.({
+        lengthComputable: true,
+        loaded: file.size,
+        total: file.size,
+      } as ProgressEvent);
+      this.status = 200;
+      this.onload?.();
+    });
+    class MockXMLHttpRequest {
+      status = 0;
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+      upload = { onprogress: null as null | ((event: ProgressEvent) => void) };
+      open = jest.fn();
+      setRequestHeader = jest.fn();
+      send = send;
+    }
+    global.XMLHttpRequest = MockXMLHttpRequest as never;
+
+    const fetchMock = jest
+      .spyOn(global, "fetch" as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          uploadUrl: "https://example.com/upload-1",
+          objectKey: "uploads/2026/05/07/one.jpg",
+          bucket: "garden-bucket",
+          region: "ap-northeast-2",
+          expiresIn: 300,
+          contentType: "image/jpeg",
+          fileName: "one.jpg",
+          size: 100,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          entry: {
+            id: "entry-1",
+            objectKey: "uploads/2026/05/07/one.jpg",
+            bucket: "garden-bucket",
+            region: "ap-northeast-2",
+            fileName: "one.jpg",
+            contentType: "image/jpeg",
+            size: 100,
+            uploadedAt: "2026-05-07T12:00:00.000Z",
+          },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          uploadUrl: "https://example.com/upload-2",
+          objectKey: "uploads/2026/05/07/two.jpg",
+          bucket: "garden-bucket",
+          region: "ap-northeast-2",
+          expiresIn: 300,
+          contentType: "image/jpeg",
+          fileName: "two.jpg",
+          size: 200,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          entry: {
+            id: "entry-2",
+            objectKey: "uploads/2026/05/07/two.jpg",
+            bucket: "garden-bucket",
+            region: "ap-northeast-2",
+            fileName: "two.jpg",
+            contentType: "image/jpeg",
+            size: 200,
+            uploadedAt: "2026-05-07T12:00:10.000Z",
+          },
+        }),
+      } as Response);
+
+    const stages: string[] = [];
+    const progressMarks: string[] = [];
+    const results = await uploadMediaBatch(
+      [
+        {
+          file: new File(["one"], "one.jpg", { type: "image/jpeg" }),
+          fileName: "one.jpg",
+          contentType: "image/jpeg",
+          size: 100,
+        },
+        {
+          file: new File(["two"], "two.jpg", { type: "image/jpeg" }),
+          fileName: "two.jpg",
+          contentType: "image/jpeg",
+          size: 200,
+        },
+      ],
+      {
+        onStageChange: ({ index, stage }) => {
+          stages.push(`${index}:${stage}`);
+        },
+        onTransferProgress: ({ index, percentage }) => {
+          progressMarks.push(`${index}:${percentage}`);
+        },
+      }
+    );
+
+    expect(results.map((entry) => entry.id)).toEqual(["entry-1", "entry-2"]);
+    expect(stages).toEqual([
+      "1:presign",
+      "1:transfer",
+      "1:complete",
+      "2:presign",
+      "2:transfer",
+      "2:complete",
+    ]);
+    expect(progressMarks).toContain("1:100");
+    expect(progressMarks).toContain("2:100");
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(send).toHaveBeenCalledTimes(2);
   });
 });

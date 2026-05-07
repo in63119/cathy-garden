@@ -33,7 +33,8 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("DeleteMediaButton");
     expect(libraryPage).toContain("createPresignedDownload");
     expect(libraryPage).toContain("<img");
-    expect(libraryPage).toContain("Video preview on detail page");
+    expect(libraryPage).toContain("media-card");
+    expect(libraryPage).toContain("Video keeps its full quiet moment.");
     expect(libraryPage).toContain("normalizeMediaFilterValue");
     expect(libraryPage).toContain("normalizeMediaSortValue");
     expect(libraryPage).toContain("buildLibraryHref");
@@ -44,7 +45,9 @@ describe("delete media flow scaffolding", () => {
     expect(mediaDetailPage).toContain("createPresignedDownload");
     expect(mediaDetailPage).toContain("<video");
     expect(mediaDetailPage).toContain("<img");
+    expect(mediaDetailPage).toContain("media-detail-summary");
     expect(uploadPanel).toContain("Open library now");
-    expect(uploadPanel).toContain("Upload completed successfully. Opening the library...");
+    expect(uploadPanel).toContain("completed successfully. Opening the library...");
+    expect(uploadPanel).toContain("multiple files, sequential uploads");
   });
 });

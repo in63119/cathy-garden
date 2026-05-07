@@ -49,30 +49,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               id="password"
               name="password"
               type="password"
+              className="input-field"
               autoComplete="current-password"
               placeholder={
                 configured ? "Enter the shared private password" : "Not configured yet"
               }
               disabled={!configured}
               aria-invalid={errorMessage ? true : undefined}
-              style={{
-                borderRadius: "16px",
-                border: "1px solid var(--border)",
-                padding: "14px 16px",
-                background: "rgba(255,255,255,0.78)",
-              }}
             />
           </div>
 
           {errorMessage ? (
-            <p
-              role="alert"
-              style={{
-                margin: 0,
-                color: "#7f3a2e",
-                fontWeight: 700,
-              }}
-            >
+            <p role="alert" className="error-text">
               {errorMessage}
             </p>
           ) : null}

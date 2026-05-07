@@ -25,36 +25,14 @@ export async function SiteHeader() {
     >
       <div className="content-shell">
         <div
-          className="card"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            padding: "14px 18px",
-          }}
+          className="card header-card"
         >
-          <Link
-            href="/"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "2px",
-            }}
-          >
+          <Link href="/" className="header-brand">
             <span className="eyebrow">Private Archive</span>
             <strong style={{ fontSize: "1.25rem" }}>Cathy Garden</strong>
           </Link>
 
-          <nav
-            aria-label="Primary"
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "flex-end",
-              gap: "10px",
-            }}
-          >
+          <nav aria-label="Primary" className="header-nav">
             {links.map((link) => (
               <Link
                 key={link.href}

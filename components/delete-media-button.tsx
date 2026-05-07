@@ -57,21 +57,19 @@ export function DeleteMediaButton({
     <div style={{ display: "grid", gap: "8px" }}>
       <button
         type="button"
-        className="button-link secondary"
+        className="button-link danger"
         onClick={handleDelete}
         disabled={isPending}
         style={{
           width: "fit-content",
           cursor: isPending ? "progress" : "pointer",
-          borderColor: "rgba(127, 58, 46, 0.2)",
-          color: "#7f3a2e",
         }}
       >
         {isPending ? "Deleting..." : "Delete"}
       </button>
 
       {errorMessage ? (
-        <p role="alert" style={{ margin: 0, color: "#7f3a2e", fontWeight: 700 }}>
+        <p role="alert" className="error-text">
           {errorMessage}
         </p>
       ) : null}

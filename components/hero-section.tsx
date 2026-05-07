@@ -9,25 +9,9 @@ type HeroSectionProps = {
 export function HeroSection({ title, description }: HeroSectionProps) {
   return (
     <section
-      className="content-shell"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-        gap: "24px",
-        padding: "16px 0 40px",
-      }}
+      className="content-shell hero-grid"
     >
-      <div
-        className="card"
-        style={{
-          padding: "28px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          gap: "18px",
-          minHeight: "420px",
-        }}
-      >
+      <div className="card hero-copy-card">
         <span className="eyebrow">For Cathy Only</span>
         <h1
           style={{
@@ -50,7 +34,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
           {description}
         </p>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+        <div className="hero-actions">
           <Link href="/library" className="button-link primary">
             Open the library
           </Link>
@@ -60,16 +44,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{
-          padding: "18px",
-          minHeight: "420px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "14px",
-        }}
-      >
+      <div className="card hero-media-card">
         <div style={{ position: "relative", flex: 1, minHeight: "320px", overflow: "hidden", borderRadius: "22px" }}>
           <Image
             src="/logo512.png"

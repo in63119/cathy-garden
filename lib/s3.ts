@@ -37,6 +37,31 @@ export function createS3Client() {
   });
 }
 
+export async function streamToString(
+  stream: NodeJS.ReadableStream | ReadableStream | Blob
+) {
+  if (stream instanceof Blob) {
+    return stream.text();
+  }
+
+  if ("transformToString" in stream && typeof stream.transformToString === "function") {
+    return stream.transformToString();
+  }
+
+  return new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    const readable = stream as NodeJS.ReadableStream;
+
+    readable.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    readable.on("error", reject);
+    readable.on("end", () => {
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    });
+  });
+}
+
 export async function createPresignedUpload(params: {
   fileName: string;
   contentType: string;

@@ -1,5 +1,10 @@
-import { promises as fs } from "fs";
-import path from "path";
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+
+import { createS3Client, getS3Config, streamToString } from "@/lib/s3";
 
 export type MediaEntry = {
   id: string;
@@ -14,44 +19,64 @@ export type MediaEntry = {
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
 
-const MEDIA_INDEX_PATH = path.join(
-  process.cwd(),
-  "data",
-  "media-index.json"
-);
-
-async function ensureMediaIndexFile() {
-  await fs.mkdir(path.dirname(MEDIA_INDEX_PATH), { recursive: true });
-
-  try {
-    await fs.access(MEDIA_INDEX_PATH);
-  } catch {
-    await fs.writeFile(MEDIA_INDEX_PATH, "[]\n", "utf8");
-  }
+function getManifestKey() {
+  return process.env.AWS_S3_MEDIA_MANIFEST_KEY ?? "manifests/media-index.json";
 }
 
-export async function readMediaEntries() {
-  await ensureMediaIndexFile();
-  const raw = await fs.readFile(MEDIA_INDEX_PATH, "utf8");
-  const parsed = JSON.parse(raw) as MediaEntry[];
-
-  return parsed.sort((left, right) =>
+function sortEntries(entries: MediaEntry[]) {
+  return [...entries].sort((left, right) =>
     right.uploadedAt.localeCompare(left.uploadedAt)
   );
 }
 
+export async function readMediaEntries() {
+  const config = getS3Config();
+  const client = createS3Client();
+
+  try {
+    const response = await client.send(
+      new GetObjectCommand({
+        Bucket: config.bucket,
+        Key: getManifestKey(),
+      })
+    );
+
+    const body = response.Body
+      ? await streamToString(response.Body)
+      : "[]";
+    const parsed = JSON.parse(body) as MediaEntry[];
+
+    return sortEntries(parsed);
+  } catch (error) {
+    if (
+      error instanceof NoSuchKey ||
+      (error instanceof Error && error.name === "NoSuchKey")
+    ) {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
 export async function createMediaEntry(input: CreateMediaEntryInput) {
+  const config = getS3Config();
+  const client = createS3Client();
   const entries = await readMediaEntries();
   const entry: MediaEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     uploadedAt: new Date().toISOString(),
     ...input,
   };
+  const nextEntries = [entry, ...entries];
 
-  await fs.writeFile(
-    MEDIA_INDEX_PATH,
-    `${JSON.stringify([entry, ...entries], null, 2)}\n`,
-    "utf8"
+  await client.send(
+    new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: getManifestKey(),
+      Body: `${JSON.stringify(sortEntries(nextEntries), null, 2)}\n`,
+      ContentType: "application/json",
+    })
   );
 
   return entry;

@@ -82,6 +82,8 @@
 - [src/app/(private)/media/[id]/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/media/[id]/page.tsx)
 - [src/app/api/auth/login/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/auth/login/route.ts)
 - [src/app/api/auth/logout/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/auth/logout/route.ts)
+- [src/app/api/upload/presign/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/upload/presign/route.ts)
+- [src/app/api/media/complete/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/media/complete/route.ts)
 
 현재는 기능 구현보다 골격과 정보 구조를 먼저 올린 상태입니다.
 
@@ -172,16 +174,40 @@
 
 ## 스토리지 및 데이터 계층
 
-아직 실제 `S3` 연동이나 데이터베이스는 구현되지 않았습니다.
+현재 저장소는 `S3 원본 파일 + S3 manifest 메타데이터` 구조를 사용합니다.
+
+관련 파일:
+
+- [lib/s3.ts](/Users/inbrew/Desktop/cathy-garden/lib/s3.ts)
+- [lib/upload-policy.ts](/Users/inbrew/Desktop/cathy-garden/lib/upload-policy.ts)
+- [lib/upload-client.ts](/Users/inbrew/Desktop/cathy-garden/lib/upload-client.ts)
+- [lib/media-metadata.ts](/Users/inbrew/Desktop/cathy-garden/lib/media-metadata.ts)
+- [lib/media-store.ts](/Users/inbrew/Desktop/cathy-garden/lib/media-store.ts)
+- [src/app/api/upload/presign/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/upload/presign/route.ts)
+- [src/app/api/media/complete/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/media/complete/route.ts)
+
+현재 동작:
+
+- 서버가 S3 presigned upload URL 발급
+- 브라우저가 presigned URL로 S3에 직접 PUT 업로드
+- 업로드 완료 후 서버가 메타데이터를 저장
+- 메타데이터는 S3의 manifest JSON 오브젝트로 유지
+- 보관함은 해당 manifest를 읽어 렌더
+
+현재 필요한 환경변수:
+
+- `AWS_REGION`
+- `AWS_S3_BUCKET`
+- `AWS_S3_MEDIA_MANIFEST_KEY`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
 
 현재 없는 것:
 
-- S3 presigned URL 발급 API
-- 업로드 완료 처리 API
-- 파일 메타데이터 저장소
-- 사용자/파일 DB 스키마
-
-즉, 현재 저장소는 앱 골격과 테스트 기반은 마련되었지만, 실제 미디어 서비스 기능은 아직 올라가지 않은 상태입니다.
+- 영구 데이터베이스
+- 썸네일 생성
+- 파일 삭제 시 S3 원본/manifest 동기화
+- 상세 페이지의 실제 미디어 조회
 
 ## 테스트 구조
 
@@ -214,7 +240,8 @@
 - 블록체인 워크스페이스는 제거됨
 - 테스트 환경은 정상화됨
 - 인증의 첫 단계는 구현됨
-- S3/DB 기능은 아직 미구현
+- S3 업로드와 S3 manifest 메타데이터 저장은 구현됨
+- DB는 사용하지 않음
 
 ## 현재 남아 있는 제약
 
@@ -226,9 +253,9 @@
 
 현재 인증은 단일 private password 기반입니다. MVP로는 충분하지만, 이후 사용자 식별이나 외부 로그인 확장이 필요하면 다시 설계해야 합니다.
 
-### 업로드 기능 미구현
+### 파일 기반 manifest 구조의 한계
 
-보관함 서비스의 핵심인 S3 업로드와 메타데이터 저장이 아직 없습니다.
+메타데이터는 DB가 아니라 S3의 단일 manifest 오브젝트에 저장됩니다. 1인용 서비스에는 적절하지만, 동시성이나 대규모 검색 요구가 커지면 한계가 있습니다.
 
 ### 레거시 코드 공존으로 인한 복잡성
 
@@ -242,9 +269,9 @@ NFT/Mint/Market UI 흔적은 제거되었지만, 레거시 CRA 코드와 새 Nex
 2. [src/app/login/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/login/page.tsx)
 3. [src/app/(private)/library/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/library/page.tsx)
 4. [src/app/(private)/upload/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/upload/page.tsx)
-5. [lib/auth-server.ts](/Users/inbrew/Desktop/cathy-garden/lib/auth-server.ts)
-6. [package.json](/Users/inbrew/Desktop/cathy-garden/package.json)
-7. [tests/agent/private-auth-utils.test.ts](/Users/inbrew/Desktop/cathy-garden/tests/agent/private-auth-utils.test.ts)
+5. [lib/media-store.ts](/Users/inbrew/Desktop/cathy-garden/lib/media-store.ts)
+6. [lib/s3.ts](/Users/inbrew/Desktop/cathy-garden/lib/s3.ts)
+7. [tests/agent/upload-client.test.ts](/Users/inbrew/Desktop/cathy-garden/tests/agent/upload-client.test.ts)
 
 ## 요약
 
@@ -255,4 +282,4 @@ NFT/Mint/Market UI 흔적은 제거되었지만, 레거시 CRA 코드와 새 Nex
 - 전원주택/정원 중심 UI 방향을 반영한 새 화면 골격
 - 블록체인 워크스페이스를 제거한 개인용 미디어 보관함 전용 저장소
 
-즉 이제부터의 핵심 작업은 구조 정리가 아니라, 인증, 업로드, 보관함 기능을 새 골격 위에 실제로 쌓아 올리는 것입니다.
+즉 이제부터의 핵심 작업은 구조 정리가 아니라, 상세 보기, 삭제, 썸네일, manifest 안정화 같은 미디어 기능을 확장하는 것입니다.

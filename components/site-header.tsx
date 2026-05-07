@@ -1,13 +1,19 @@
 import Link from "next/link";
 
-const links = [
-  { href: "/", label: "Home" },
+import { isAuthenticated } from "@/lib/auth-server";
+
+const publicLinks = [{ href: "/", label: "Home" }];
+const privateLinks = [
   { href: "/library", label: "Library" },
   { href: "/upload", label: "Upload" },
-  { href: "/login", label: "Login" },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const authenticated = await isAuthenticated();
+  const links = authenticated
+    ? [...publicLinks, ...privateLinks]
+    : [...publicLinks, { href: "/login", label: "Login" }];
+
   return (
     <header
       style={{
@@ -58,6 +64,18 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+
+            {authenticated ? (
+              <form action="/api/auth/logout" method="post">
+                <button
+                  type="submit"
+                  className="button-link secondary"
+                  style={{ cursor: "pointer" }}
+                >
+                  Logout
+                </button>
+              </form>
+            ) : null}
           </nav>
         </div>
       </div>

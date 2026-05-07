@@ -67,18 +67,21 @@
 현재 라우트:
 
 - `/` -> 홈
-- `/login` -> 로그인 골격
-- `/library` -> 보관함 골격
-- `/upload` -> 업로드 골격
-- `/media/[id]` -> 미디어 상세 골격
+- `/login` -> private password gate
+- `/library` -> 보호된 보관함
+- `/upload` -> 보호된 업로드 화면
+- `/media/[id]` -> 보호된 미디어 상세 화면
 
 관련 파일:
 
 - [src/app/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/page.tsx)
 - [src/app/login/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/login/page.tsx)
-- [src/app/library/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/library/page.tsx)
-- [src/app/upload/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/upload/page.tsx)
-- [src/app/media/[id]/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/media/[id]/page.tsx)
+- [src/app/(private)/layout.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/layout.tsx)
+- [src/app/(private)/library/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/library/page.tsx)
+- [src/app/(private)/upload/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/upload/page.tsx)
+- [src/app/(private)/media/[id]/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/media/[id]/page.tsx)
+- [src/app/api/auth/login/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/auth/login/route.ts)
+- [src/app/api/auth/logout/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/auth/logout/route.ts)
 
 현재는 기능 구현보다 골격과 정보 구조를 먼저 올린 상태입니다.
 
@@ -137,23 +140,35 @@
 
 ## 인증 구조
 
-현재 실제 구현은 여전히 레거시 Kakao OAuth 흐름에 있습니다.
+현재 새 런타임의 인증은 `private password gate` 방식으로 시작했습니다.
 
 관련 파일:
 
-- [src/common/utils/kakao.ts](/Users/inbrew/Desktop/cathy-garden/src/common/utils/kakao.ts)
-- [src/legacy-pages/Login.tsx](/Users/inbrew/Desktop/cathy-garden/src/legacy-pages/Login.tsx)
-- [src/legacy-pages/Callback.tsx](/Users/inbrew/Desktop/cathy-garden/src/legacy-pages/Callback.tsx)
+- [lib/auth.ts](/Users/inbrew/Desktop/cathy-garden/lib/auth.ts)
+- [lib/auth-server.ts](/Users/inbrew/Desktop/cathy-garden/lib/auth-server.ts)
+- [src/app/login/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/login/page.tsx)
+- [src/app/(private)/layout.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/layout.tsx)
+- [src/app/api/auth/login/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/auth/login/route.ts)
+- [src/app/api/auth/logout/route.ts](/Users/inbrew/Desktop/cathy-garden/src/app/api/auth/logout/route.ts)
 
-현재 한계:
+현재 동작:
 
-- 브라우저 중심 인증
-- 브라우저 저장소 기반 로그인 상태
-- 서버 세션 없음
+- `/login`에서 private password를 전송
+- 서버가 환경변수의 비밀번호와 비교
+- 성공 시 `httpOnly` 쿠키 발급
+- `/library`, `/upload`, `/media/[id]`는 보호 레이아웃에서 인증 검사
+- 로그아웃 시 세션 쿠키 삭제
 
-목표 방향:
+현재 필요한 환경변수:
 
-- private gate 또는 서버 기반 OAuth로 재설계
+- `CATHY_GARDEN_PASSWORD`
+- `CATHY_GARDEN_AUTH_SECRET` 선택 사항
+
+남아 있는 한계:
+
+- 아직 사용자별 계정 체계는 없음
+- 아직 Kakao OAuth는 새 런타임에 재도입하지 않음
+- 아직 보호된 API 라우트는 거의 없음
 
 ## 스토리지 및 데이터 계층
 
@@ -198,7 +213,8 @@
 - 레거시 CRA 코드는 일부 남아 있음
 - 블록체인 워크스페이스는 제거됨
 - 테스트 환경은 정상화됨
-- 실제 인증/S3/DB 기능은 아직 미구현
+- 인증의 첫 단계는 구현됨
+- S3/DB 기능은 아직 미구현
 
 ## 현재 남아 있는 제약
 
@@ -206,9 +222,9 @@
 
 `Next.js` 골격과 CRA 잔존 코드가 함께 있으므로 구조가 아직 완전히 단순하지 않습니다.
 
-### 미완성 인증
+### 단순 인증 모델
 
-로그인 경로는 존재하지만, 실제 private gate나 서버 세션은 아직 구현되지 않았습니다.
+현재 인증은 단일 private password 기반입니다. MVP로는 충분하지만, 이후 사용자 식별이나 외부 로그인 확장이 필요하면 다시 설계해야 합니다.
 
 ### 업로드 기능 미구현
 
@@ -223,12 +239,12 @@ NFT/Mint/Market UI 흔적은 제거되었지만, 레거시 CRA 코드와 새 Nex
 다음 구현 단계에서 먼저 볼 파일은 아래 순서가 효율적입니다.
 
 1. [src/app/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/page.tsx)
-2. [src/app/library/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/library/page.tsx)
-3. [src/app/upload/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/upload/page.tsx)
-4. [components/app-shell.tsx](/Users/inbrew/Desktop/cathy-garden/components/app-shell.tsx)
-5. [package.json](/Users/inbrew/Desktop/cathy-garden/package.json)
-6. [tsconfig.json](/Users/inbrew/Desktop/cathy-garden/tsconfig.json)
-7. [tests/agent/next-app-skeleton.test.ts](/Users/inbrew/Desktop/cathy-garden/tests/agent/next-app-skeleton.test.ts)
+2. [src/app/login/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/login/page.tsx)
+3. [src/app/(private)/library/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/library/page.tsx)
+4. [src/app/(private)/upload/page.tsx](/Users/inbrew/Desktop/cathy-garden/src/app/(private)/upload/page.tsx)
+5. [lib/auth-server.ts](/Users/inbrew/Desktop/cathy-garden/lib/auth-server.ts)
+6. [package.json](/Users/inbrew/Desktop/cathy-garden/package.json)
+7. [tests/agent/private-auth-utils.test.ts](/Users/inbrew/Desktop/cathy-garden/tests/agent/private-auth-utils.test.ts)
 
 ## 요약
 

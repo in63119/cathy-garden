@@ -23,15 +23,22 @@ function formatUploadedAt(value: string) {
 export default async function LibraryPage() {
   const entries = await readMediaEntries();
   const entriesWithPreview = await Promise.all(
-    entries.map(async (entry) => ({
-      ...entry,
-      mediaKind: getMediaKindLabel(entry.contentType),
-      previewUrl: await createPresignedDownload({
-        bucket: entry.bucket,
-        objectKey: entry.objectKey,
-        contentType: entry.contentType,
-      }),
-    }))
+    entries.map(async (entry) => {
+      const mediaKind = getMediaKindLabel(entry.contentType);
+
+      return {
+        ...entry,
+        mediaKind,
+        previewUrl:
+          mediaKind === "image"
+            ? await createPresignedDownload({
+                bucket: entry.bucket,
+                objectKey: entry.objectKey,
+                contentType: entry.contentType,
+              })
+            : null,
+      };
+    })
   );
 
   return (
@@ -93,7 +100,7 @@ export default async function LibraryPage() {
                 >
                   {isImageContentType(entry.contentType) ? (
                     <img
-                      src={entry.previewUrl}
+                      src={entry.previewUrl ?? ""}
                       alt={entry.fileName}
                       style={{
                         width: "100%",
@@ -104,20 +111,67 @@ export default async function LibraryPage() {
                     />
                   ) : null}
                   {isVideoContentType(entry.contentType) ? (
-                    <video
-                      muted
-                      controls
-                      preload="metadata"
+                    <Link
+                      href={`/media/${entry.id}`}
                       style={{
                         width: "100%",
                         height: "180px",
-                        objectFit: "cover",
-                        background: "#000",
-                        display: "block",
+                        display: "grid",
+                        gridTemplateRows: "1fr auto",
+                        background:
+                          "linear-gradient(180deg, rgba(28, 35, 32, 0.92), rgba(74, 95, 82, 0.84))",
+                        color: "#f7f4ec",
+                        padding: "16px",
+                        textDecoration: "none",
                       }}
                     >
-                      <source src={entry.previewUrl} type={entry.contentType} />
-                    </video>
+                      <div
+                        style={{
+                          display: "grid",
+                          placeItems: "center",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            borderRadius: "999px",
+                            background: "rgba(255,255,255,0.16)",
+                            border: "1px solid rgba(255,255,255,0.25)",
+                            display: "grid",
+                            placeItems: "center",
+                            fontSize: "1.5rem",
+                          }}
+                        >
+                          ▶
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: "4px",
+                          alignSelf: "end",
+                        }}
+                      >
+                        <strong
+                          style={{
+                            fontSize: "0.92rem",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          Video preview on detail page
+                        </strong>
+                        <span
+                          style={{
+                            fontSize: "0.82rem",
+                            opacity: 0.82,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          Open this item to stream the signed original file.
+                        </span>
+                      </div>
+                    </Link>
                   ) : null}
                   {!isImageContentType(entry.contentType) &&
                   !isVideoContentType(entry.contentType) ? (

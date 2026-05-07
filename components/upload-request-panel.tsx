@@ -2,7 +2,11 @@
 
 import { ChangeEvent, startTransition, useState } from "react";
 
-import { formatBytes, requestPresignedUpload } from "@/lib/upload-client";
+import {
+  formatBytes,
+  requestPresignedUpload,
+  uploadFileToPresignedUrl,
+} from "@/lib/upload-client";
 import {
   ALLOWED_UPLOAD_MIME_TYPES,
   MAX_UPLOAD_SIZE_BYTES,
@@ -21,6 +25,7 @@ const errorMessages: Record<string, string> = {
 };
 
 type SelectedFileState = {
+  file: File;
   name: string;
   size: number;
   type: string;
@@ -38,6 +43,11 @@ export function UploadRequestPanel() {
     region: string;
     expiresIn: number;
   } | null>(null);
+  const [uploadResult, setUploadResult] = useState<{
+    objectKey: string;
+    bucket: string;
+  } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,15 +60,18 @@ export function UploadRequestPanel() {
     }
 
     setSelectedFile({
+      file,
       name: file.name,
       size: file.size,
       type: file.type,
     });
     setErrorMessage(null);
     setPresignResult(null);
+    setUploadResult(null);
+    setStatusMessage(null);
   };
 
-  const handleRequestPresign = () => {
+  const handleUpload = () => {
     if (!selectedFile) {
       setErrorMessage("Please choose a file first.");
       return;
@@ -67,6 +80,8 @@ export function UploadRequestPanel() {
     setIsPending(true);
     setErrorMessage(null);
     setPresignResult(null);
+    setUploadResult(null);
+    setStatusMessage("Preparing an upload URL...");
 
     startTransition(() => {
       requestPresignedUpload({
@@ -74,16 +89,30 @@ export function UploadRequestPanel() {
         contentType: selectedFile.type,
         size: selectedFile.size,
       })
-        .then((result) => {
+        .then(async (result) => {
           setPresignResult({
             objectKey: result.objectKey,
             bucket: result.bucket,
             region: result.region,
             expiresIn: result.expiresIn,
           });
+          setStatusMessage("Uploading the file directly to S3...");
+
+          await uploadFileToPresignedUrl({
+            uploadUrl: result.uploadUrl,
+            file: selectedFile.file,
+            contentType: selectedFile.type,
+          });
+
+          setUploadResult({
+            objectKey: result.objectKey,
+            bucket: result.bucket,
+          });
+          setStatusMessage("Upload completed successfully.");
         })
         .catch((error: Error) => {
           setErrorMessage(errorMessages[error.message] ?? error.message);
+          setStatusMessage(null);
         })
         .finally(() => {
           setIsPending(false);
@@ -104,8 +133,8 @@ export function UploadRequestPanel() {
     >
       <strong>Request a presigned S3 upload URL</strong>
       <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
-        This first client flow stops after the server returns the presigned URL.
-        The direct browser-to-S3 upload will be the next step.
+        This flow now requests a presigned URL and immediately uploads the
+        selected file directly from the browser to S3.
       </span>
 
       <div style={{ display: "grid", gap: "10px" }}>
@@ -161,7 +190,7 @@ export function UploadRequestPanel() {
       <button
         type="button"
         className="button-link primary"
-        onClick={handleRequestPresign}
+        onClick={handleUpload}
         disabled={isPending}
         style={{
           width: "fit-content",
@@ -169,8 +198,14 @@ export function UploadRequestPanel() {
           cursor: isPending ? "progress" : "pointer",
         }}
       >
-        {isPending ? "Requesting upload URL..." : "Request upload URL"}
+        {isPending ? "Uploading to S3..." : "Upload to S3"}
       </button>
+
+      {statusMessage ? (
+        <p style={{ margin: 0, color: "var(--muted)", fontWeight: 700 }}>
+          {statusMessage}
+        </p>
+      ) : null}
 
       {errorMessage ? (
         <p
@@ -206,6 +241,29 @@ export function UploadRequestPanel() {
           </span>
           <span>
             Expires in: <code>{presignResult.expiresIn}</code> seconds
+          </span>
+        </div>
+      ) : null}
+
+      {uploadResult ? (
+        <div
+          style={{
+            display: "grid",
+            gap: "6px",
+            padding: "16px",
+            borderRadius: "18px",
+            background: "rgba(240, 248, 236, 0.92)",
+            border: "1px solid var(--border)",
+            color: "var(--foreground)",
+            lineHeight: 1.6,
+          }}
+        >
+          <strong>File uploaded to S3</strong>
+          <span>
+            Bucket: <code>{uploadResult.bucket}</code>
+          </span>
+          <span>
+            Object key: <code>{uploadResult.objectKey}</code>
           </span>
         </div>
       ) : null}

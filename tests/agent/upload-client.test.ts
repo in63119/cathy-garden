@@ -1,6 +1,7 @@
 import {
   formatBytes,
   requestPresignedUpload,
+  uploadFileToPresignedUrl,
 } from "../../lib/upload-client";
 
 describe("upload client helpers", () => {
@@ -60,6 +61,46 @@ describe("upload client helpers", () => {
         size: 512,
       })
     ).rejects.toThrow("unsupported-content-type");
+  });
+
+  test("uploads a selected file directly to the presigned URL", async () => {
+    const fetchMock = jest.spyOn(global, "fetch" as never).mockResolvedValue({
+      ok: true,
+    } as Response);
+    const file = new File(["garden"], "garden.jpg", {
+      type: "image/jpeg",
+    });
+
+    await uploadFileToPresignedUrl({
+      uploadUrl: "https://example.com/upload-url",
+      file,
+      contentType: "image/jpeg",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://example.com/upload-url", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "image/jpeg",
+      },
+      body: file,
+    });
+  });
+
+  test("throws when the direct S3 upload fails", async () => {
+    jest.spyOn(global, "fetch" as never).mockResolvedValue({
+      ok: false,
+    } as Response);
+    const file = new File(["garden"], "garden.jpg", {
+      type: "image/jpeg",
+    });
+
+    await expect(
+      uploadFileToPresignedUrl({
+        uploadUrl: "https://example.com/upload-url",
+        file,
+        contentType: "image/jpeg",
+      })
+    ).rejects.toThrow("s3-upload-failed");
   });
 
   test("formats file sizes for display", () => {

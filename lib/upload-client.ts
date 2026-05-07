@@ -35,6 +35,24 @@ export async function requestPresignedUpload(
   return data as PresignUploadResponse;
 }
 
+export async function uploadFileToPresignedUrl(params: {
+  uploadUrl: string;
+  file: File | Blob;
+  contentType: string;
+}) {
+  const response = await fetch(params.uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": params.contentType,
+    },
+    body: params.file,
+  });
+
+  if (!response.ok) {
+    throw new Error("s3-upload-failed");
+  }
+}
+
 export function formatBytes(bytes: number) {
   if (bytes < 1024) {
     return `${bytes} B`;

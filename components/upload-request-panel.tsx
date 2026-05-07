@@ -31,6 +31,15 @@ type SelectedFileState = {
   type: string;
 };
 
+type UploadProgressState = {
+  currentFileName: string;
+  currentIndex: number;
+  totalFiles: number;
+  percentage: number;
+  loaded: number;
+  totalBytes: number;
+};
+
 export function UploadRequestPanel() {
   const router = useRouter();
   const [selectedFiles, setSelectedFiles] = useState<SelectedFileState[]>([]);
@@ -51,6 +60,9 @@ export function UploadRequestPanel() {
     }[]
   >([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(
+    null
+  );
 
   useEffect(() => {
     if (uploadResults.length === 0) {
@@ -78,6 +90,7 @@ export function UploadRequestPanel() {
       setSelectedFiles([]);
       setErrorMessage(null);
       setPresignResult(null);
+      setUploadProgress(null);
       return;
     }
 
@@ -93,6 +106,7 @@ export function UploadRequestPanel() {
     setPresignResult(null);
     setUploadResults([]);
     setStatusMessage(null);
+    setUploadProgress(null);
   };
 
   const handleUpload = () => {
@@ -106,6 +120,7 @@ export function UploadRequestPanel() {
     setPresignResult(null);
     setUploadResults([]);
     setStatusMessage("Preparing upload URLs...");
+    setUploadProgress(null);
 
     startTransition(() => {
       uploadMediaBatch(
@@ -124,12 +139,39 @@ export function UploadRequestPanel() {
 
             if (stage === "transfer") {
               setStatusMessage(`Uploading ${index} of ${total}: ${fileName}`);
+              setUploadProgress({
+                currentFileName: fileName,
+                currentIndex: index,
+                totalFiles: total,
+                percentage: 0,
+                loaded: 0,
+                totalBytes:
+                  selectedFiles.find((selectedFile) => selectedFile.name === fileName)
+                    ?.size ?? 0,
+              });
               return;
             }
 
             setStatusMessage(
               `Saving archive metadata ${index} of ${total}: ${fileName}`
             );
+          },
+          onTransferProgress: ({
+            index,
+            total,
+            fileName,
+            loaded,
+            size,
+            percentage,
+          }) => {
+            setUploadProgress({
+              currentFileName: fileName,
+              currentIndex: index,
+              totalFiles: total,
+              percentage,
+              loaded,
+              totalBytes: size,
+            });
           },
           onPresigned: ({ result }) => {
             setPresignResult({
@@ -159,11 +201,13 @@ export function UploadRequestPanel() {
           setStatusMessage(
             `${entries.length} upload${entries.length > 1 ? "s" : ""} completed successfully. Opening the library...`
           );
+          setUploadProgress(null);
           router.refresh();
         })
         .catch((error: Error) => {
           setErrorMessage(errorMessages[error.message] ?? error.message);
           setStatusMessage(null);
+          setUploadProgress(null);
         })
         .finally(() => {
           setIsPending(false);
@@ -259,6 +303,39 @@ export function UploadRequestPanel() {
 
       {statusMessage ? (
         <p className="status-text">{statusMessage}</p>
+      ) : null}
+
+      {uploadProgress ? (
+        <div className="card-soft" style={{ display: "grid", gap: "10px", padding: "16px" }}>
+          <strong>
+            Uploading {uploadProgress.currentIndex} of {uploadProgress.totalFiles}:{" "}
+            {uploadProgress.currentFileName}
+          </strong>
+          <div
+            aria-label="Upload progress"
+            style={{
+              width: "100%",
+              height: "12px",
+              borderRadius: "999px",
+              background: "rgba(255,255,255,0.82)",
+              border: "1px solid var(--border)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${uploadProgress.percentage}%`,
+                height: "100%",
+                background:
+                  "linear-gradient(90deg, var(--accent) 0%, var(--accent-strong) 100%)",
+              }}
+            />
+          </div>
+          <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
+            {uploadProgress.percentage}% · {formatBytes(uploadProgress.loaded)} of{" "}
+            {formatBytes(uploadProgress.totalBytes)}
+          </span>
+        </div>
       ) : null}
 
       {errorMessage ? (

@@ -71,18 +71,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         description="This page reads saved upload metadata, supports basic filtering, and keeps the preview load light for video items."
       >
         {uploaded ? (
-          <div
-            style={{
-              display: "grid",
-              gap: "6px",
-              padding: "16px",
-              borderRadius: "18px",
-              background: "rgba(240, 248, 236, 0.92)",
-              border: "1px solid var(--border)",
-              color: "var(--foreground)",
-              lineHeight: 1.6,
-            }}
-          >
+          <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
             <strong>Upload complete</strong>
             <span>
               <code>{uploaded}</code> is now part of the archive.
@@ -104,15 +93,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
               <Link
                 key={option}
                 href={buildLibraryHref({ filter: option, sort })}
-                className="button-link secondary"
-                style={{
-                  background:
-                    filter === option
-                      ? "rgba(111, 139, 98, 0.18)"
-                      : "rgba(255,255,255,0.6)",
-                  borderColor:
-                    filter === option ? "rgba(111, 139, 98, 0.34)" : undefined,
-                }}
+                className={`button-link secondary${filter === option ? " is-active" : ""}`}
               >
                 {option === "all"
                   ? "All"
@@ -128,15 +109,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
               <Link
                 key={option}
                 href={buildLibraryHref({ filter, sort: option })}
-                className="button-link secondary"
-                style={{
-                  background:
-                    sort === option
-                      ? "rgba(111, 139, 98, 0.18)"
-                      : "rgba(255,255,255,0.6)",
-                  borderColor:
-                    sort === option ? "rgba(111, 139, 98, 0.34)" : undefined,
-                }}
+                className={`button-link secondary${sort === option ? " is-active" : ""}`}
               >
                 {option === "newest" ? "Newest first" : "Oldest first"}
               </Link>
@@ -145,38 +118,12 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
 
         {entries.length === 0 ? (
-          <div
-            style={{
-              minHeight: "220px",
-              borderRadius: "22px",
-              border: "1px dashed var(--border)",
-              padding: "24px",
-              background: "rgba(255,255,255,0.42)",
-              display: "grid",
-              placeItems: "center",
-              color: "var(--muted)",
-              textAlign: "center",
-              lineHeight: 1.7,
-            }}
-          >
+          <div className="panel panel-dashed panel-muted">
             No uploaded items yet. Use the upload route to add the first photo
             or video to the archive.
           </div>
         ) : entriesWithPreview.length === 0 ? (
-          <div
-            style={{
-              minHeight: "220px",
-              borderRadius: "22px",
-              border: "1px dashed var(--border)",
-              padding: "24px",
-              background: "rgba(255,255,255,0.42)",
-              display: "grid",
-              placeItems: "center",
-              color: "var(--muted)",
-              textAlign: "center",
-              lineHeight: 1.7,
-            }}
-          >
+          <div className="panel panel-dashed panel-muted">
             No items match the current filter.
           </div>
         ) : (
@@ -190,12 +137,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             {entriesWithPreview.map((entry) => (
               <article
                 key={entry.id}
+                className="card-soft"
                 style={{
                   minHeight: "180px",
-                  borderRadius: "22px",
-                  border: "1px solid var(--border)",
                   padding: "14px",
-                  background: "rgba(255,255,255,0.58)",
                   display: "grid",
                   gap: "8px",
                 }}

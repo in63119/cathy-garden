@@ -156,16 +156,7 @@ export function UploadRequestPanel() {
   };
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: "16px",
-        borderRadius: "24px",
-        padding: "20px",
-        border: "1px dashed var(--border)",
-        background: "rgba(255,255,255,0.45)",
-      }}
-    >
+    <div className="panel panel-dashed">
       <strong>Request a presigned S3 upload URL</strong>
       <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
         This flow now requests a presigned URL and immediately uploads the
@@ -179,6 +170,7 @@ export function UploadRequestPanel() {
         <input
           id="upload-file"
           type="file"
+          className="input-field"
           accept={ALLOWED_UPLOAD_MIME_TYPES.join(",")}
           onChange={handleFileChange}
         />
@@ -237,33 +229,17 @@ export function UploadRequestPanel() {
       </button>
 
       {statusMessage ? (
-        <p style={{ margin: 0, color: "var(--muted)", fontWeight: 700 }}>
-          {statusMessage}
-        </p>
+        <p className="status-text">{statusMessage}</p>
       ) : null}
 
       {errorMessage ? (
-        <p
-          role="alert"
-          style={{ margin: 0, color: "#7f3a2e", fontWeight: 700 }}
-        >
+        <p role="alert" className="error-text">
           {errorMessage}
         </p>
       ) : null}
 
       {presignResult ? (
-        <div
-          style={{
-            display: "grid",
-            gap: "6px",
-            padding: "16px",
-            borderRadius: "18px",
-            background: "rgba(255,255,255,0.72)",
-            border: "1px solid var(--border)",
-            color: "var(--foreground)",
-            lineHeight: 1.6,
-          }}
-        >
+        <div className="card-soft" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
           <strong>Presigned URL prepared</strong>
           <span>
             Object key: <code>{presignResult.objectKey}</code>
@@ -281,18 +257,7 @@ export function UploadRequestPanel() {
       ) : null}
 
       {uploadResult ? (
-        <div
-          style={{
-            display: "grid",
-            gap: "6px",
-            padding: "16px",
-            borderRadius: "18px",
-            background: "rgba(240, 248, 236, 0.92)",
-            border: "1px solid var(--border)",
-            color: "var(--foreground)",
-            lineHeight: 1.6,
-          }}
-        >
+        <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
           <strong>File uploaded to S3</strong>
           <span>
             The library will open automatically in a moment.

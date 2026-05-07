@@ -14,6 +14,7 @@ describe("next app skeleton", () => {
       "src/app/(private)/media/[id]/page.tsx",
       "src/app/api/auth/login/route.ts",
       "src/app/api/auth/logout/route.ts",
+      "src/app/api/upload/presign/route.ts",
       "src/app/globals.css",
       "components/app-shell.tsx",
       "components/site-header.tsx",
@@ -21,6 +22,8 @@ describe("next app skeleton", () => {
       "components/section-card.tsx",
       "lib/auth.ts",
       "lib/auth-server.ts",
+      "lib/s3.ts",
+      "lib/upload-policy.ts",
       "next.config.ts",
       "next-env.d.ts",
     ];

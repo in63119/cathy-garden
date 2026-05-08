@@ -60,6 +60,15 @@ export function UploadRequestPanel() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(
     null
   );
+  const selectedFilesTotalSize = selectedFiles.reduce(
+    (totalSize, selectedFile) => totalSize + selectedFile.size,
+    0
+  );
+  const visibleSelectedFiles = selectedFiles.slice(0, 3);
+  const hiddenSelectedFileCount = Math.max(
+    selectedFiles.length - visibleSelectedFiles.length,
+    0
+  );
 
   useEffect(() => {
     if (uploadResults.length === 0) {
@@ -238,25 +247,27 @@ export function UploadRequestPanel() {
       </div>
 
       {selectedFiles.length > 0 ? (
-        <div
-          style={{
-            display: "grid",
-            gap: "8px",
-            color: "var(--muted)",
-            lineHeight: 1.6,
-          }}
-        >
-          <strong>
-            {selectedFiles.length}개 파일 선택됨
-          </strong>
-          <div style={{ display: "grid", gap: "4px" }}>
-            {selectedFiles.map((selectedFile) => (
-              <span key={`${selectedFile.name}-${selectedFile.size}`}>
-                <strong>{selectedFile.name}</strong>
-                {" · "}
-                {formatBytes(selectedFile.size)}
+        <div className="upload-selection-summary">
+          <div className="upload-selection-header">
+            <strong>{selectedFiles.length}개 파일 선택됨</strong>
+            <span>{formatBytes(selectedFilesTotalSize)}</span>
+          </div>
+          <div className="upload-file-list">
+            {visibleSelectedFiles.map((selectedFile) => (
+              <span
+                key={`${selectedFile.name}-${selectedFile.size}`}
+                className="upload-file-row"
+              >
+                <strong title={selectedFile.name}>{selectedFile.name}</strong>
+                <span>{formatBytes(selectedFile.size)}</span>
               </span>
             ))}
+            {hiddenSelectedFileCount > 0 ? (
+              <span className="upload-file-row upload-file-row-muted">
+                <strong>외 {hiddenSelectedFileCount}개 파일</strong>
+                <span>선택됨</span>
+              </span>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -283,27 +294,33 @@ export function UploadRequestPanel() {
         </span>
       </div>
 
-      <button
-        type="button"
-        className="button-link primary"
-        onClick={handleUpload}
-        disabled={isPending}
-        style={{
-          width: "fit-content",
-          border: "none",
-          cursor: isPending ? "progress" : "pointer",
-        }}
-      >
-        {isPending ? "올리는 중..." : "선택한 파일 올리기"}
-      </button>
+      <div className="upload-action-row">
+        <button
+          type="button"
+          className="button-link primary"
+          onClick={handleUpload}
+          disabled={isPending || selectedFiles.length === 0}
+          style={{
+            border: "none",
+            cursor:
+              isPending
+                ? "progress"
+                : selectedFiles.length === 0
+                  ? "not-allowed"
+                  : "pointer",
+          }}
+        >
+          {isPending ? "올리는 중..." : "선택한 파일 올리기"}
+        </button>
+      </div>
 
       {statusMessage ? (
         <p className="status-text">{statusMessage}</p>
       ) : null}
 
       {uploadProgress ? (
-        <div className="card-soft" style={{ display: "grid", gap: "10px", padding: "16px" }}>
-          <strong>
+        <div className="card-soft upload-progress-card">
+          <strong className="upload-progress-title">
             {uploadProgress.totalFiles}개 중 {uploadProgress.currentIndex}번째 업로드 중:{" "}
             {uploadProgress.currentFileName}
           </strong>
@@ -350,7 +367,7 @@ export function UploadRequestPanel() {
           </span>
           <div style={{ display: "grid", gap: "4px" }}>
             {uploadResults.map((uploadResult) => (
-              <span key={uploadResult.id}>
+              <span key={uploadResult.id} className="upload-result-row">
                 저장됨: <code>{uploadResult.fileName}</code>
               </span>
             ))}

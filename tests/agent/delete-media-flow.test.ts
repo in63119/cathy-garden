@@ -73,6 +73,9 @@ describe("delete media flow scaffolding", () => {
     expect(uploadPanel).toContain("지금 보관함 열기");
     expect(uploadPanel).toContain("업로드가 완료되었습니다. 보관함을 여는 중입니다...");
     expect(uploadPanel).toContain("여러 파일을 한 번에 선택할 수 있습니다.");
+    expect(uploadPanel).toContain("visibleSelectedFiles");
+    expect(uploadPanel).toContain("upload-selection-summary");
+    expect(uploadPanel).toContain("외 {hiddenSelectedFileCount}개 파일");
     expect(uploadPanel).toContain("duplicate-upload");
   });
 });

@@ -197,6 +197,68 @@ input {
   background: rgba(255, 248, 245, 0.9);
 }
 
+.upload-selection-summary {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.upload-selection-header,
+.upload-file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.upload-selection-header span,
+.upload-file-row span {
+  white-space: nowrap;
+}
+
+.upload-file-list {
+  display: grid;
+  gap: 8px;
+}
+
+.upload-file-row {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.upload-file-row strong,
+.upload-progress-title,
+.upload-result-row code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-file-row-muted {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.upload-action-row {
+  display: flex;
+  align-items: center;
+}
+
+.upload-progress-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.upload-result-row {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .status-text {
   margin: 0;
   color: var(--muted);
@@ -475,8 +537,20 @@ input {
   .action-row .button-link,
   .action-row form,
   .action-row form .button-link,
-  .filter-cluster .button-link {
+  .filter-cluster .button-link,
+  .upload-action-row .button-link {
     width: 100%;
+  }
+
+  .upload-selection-header,
+  .upload-file-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .upload-selection-header span,
+  .upload-file-row span {
+    white-space: normal;
   }
 
   .filter-toolbar {

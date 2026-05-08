@@ -13,6 +13,7 @@
 - 브라우저는 `/api/upload/presign`에서 발급한 presigned PUT URL로 S3에 직접 업로드한다.
 - 업로드 완료 후 `/api/media/complete`가 manifest에 항목을 추가한다.
 - 보관함과 상세 페이지는 manifest를 읽고, 상세/미리보기에는 presigned GET URL을 사용한다.
+- presigned PUT/GET URL 만료시간은 `PRESIGNED_URL_EXPIRES_IN_SECONDS` 기준 300초다.
 
 ## 환경변수 확인
 
@@ -68,6 +69,6 @@ manifest 갱신은 ETag 조건부 쓰기를 사용하므로 `GetObject`와 `PutO
 - S3 연동에 필요한 환경변수가 누락되면 명시적으로 실패한다.
 - presigned upload는 S3 `PutObjectCommand`를 사용한다.
 - 업로드 object key는 `uploads/...` prefix 아래에 생성된다.
-- presigned URL 만료 시간은 업로드 정책의 상수와 일치한다.
+- presigned upload/download URL 만료 시간은 업로드 정책의 300초 상수와 일치한다.
 
 이 테스트는 실제 AWS 네트워크 호출을 하지 않는다. 실제 bucket, IAM, CORS는 위 기능 확인 절차로 별도 smoke test가 필요하다.

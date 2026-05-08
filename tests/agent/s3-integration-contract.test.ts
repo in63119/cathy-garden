@@ -2,13 +2,14 @@ jest.mock("@aws-sdk/s3-request-presigner", () => ({
   getSignedUrl: jest.fn(),
 }));
 
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import {
   PRESIGNED_URL_EXPIRES_IN_SECONDS,
 } from "../../lib/upload-policy";
 import {
+  createPresignedDownload,
   createPresignedUpload,
   getS3Config,
 } from "../../lib/s3";
@@ -72,6 +73,26 @@ describe("S3 storage integration contract", () => {
       uploadUrl: "https://storage.example.test/upload",
       bucket: "garden-bucket",
       region: "ap-northeast-2",
+      expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+    });
+  });
+
+  test("uses the same short expiry for signed downloads", async () => {
+    await createPresignedDownload({
+      bucket: "garden-bucket",
+      objectKey: "uploads/2026/05/07/garden.jpg",
+      contentType: "image/jpeg",
+    });
+
+    const command = (getSignedUrl as jest.Mock).mock.calls[0][1] as GetObjectCommand;
+    const options = (getSignedUrl as jest.Mock).mock.calls[0][2];
+
+    expect(PRESIGNED_URL_EXPIRES_IN_SECONDS).toBe(300);
+    expect(command).toBeInstanceOf(GetObjectCommand);
+    expect(command.input.Bucket).toBe("garden-bucket");
+    expect(command.input.Key).toBe("uploads/2026/05/07/garden.jpg");
+    expect(command.input.ResponseContentType).toBe("image/jpeg");
+    expect(options).toEqual({
       expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
     });
   });

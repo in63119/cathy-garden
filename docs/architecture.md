@@ -192,6 +192,7 @@
 - 브라우저가 presigned URL로 S3에 직접 PUT 업로드
 - 업로드 완료 후 서버가 메타데이터를 저장
 - 메타데이터는 S3의 manifest JSON 오브젝트로 유지
+- 업로드된 파일의 `File.lastModified` 값을 `takenAt` 메타데이터로 저장
 - 보관함은 해당 manifest를 읽어 렌더
 
 현재 필요한 환경변수:

@@ -7,6 +7,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import {
   PRESIGNED_URL_EXPIRES_IN_SECONDS,
+  buildThumbnailObjectKey,
   buildUploadObjectKey,
 } from "@/lib/upload-policy";
 
@@ -92,6 +93,33 @@ export async function createPresignedUpload(params: {
     bucket: config.bucket,
     region: config.region,
     expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+  };
+}
+
+export async function createPresignedThumbnailUpload(params: {
+  objectKey: string;
+}) {
+  const config = getS3Config();
+  const client = createS3Client();
+  const thumbnailObjectKey = buildThumbnailObjectKey(params.objectKey);
+
+  const command = new PutObjectCommand({
+    Bucket: config.bucket,
+    Key: thumbnailObjectKey,
+    ContentType: "image/jpeg",
+  });
+
+  const uploadUrl = await getSignedUrl(client, command, {
+    expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+  });
+
+  return {
+    uploadUrl,
+    objectKey: thumbnailObjectKey,
+    bucket: config.bucket,
+    region: config.region,
+    expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+    contentType: "image/jpeg",
   };
 }
 

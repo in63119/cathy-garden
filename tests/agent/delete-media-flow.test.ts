@@ -7,7 +7,12 @@ describe("delete media flow scaffolding", () => {
     const requiredFiles = [
       "src/app/api/media/[id]/route.ts",
       "components/delete-media-button.tsx",
+      "components/favorite-media-button.tsx",
+      "components/media-albums-panel.tsx",
+      "components/media-tags-panel.tsx",
+      "components/share-media-panel.tsx",
       "src/app/(private)/media/[id]/page.tsx",
+      "src/app/share/[token]/page.tsx",
     ];
 
     for (const relativePath of requiredFiles) {
@@ -31,17 +36,30 @@ describe("delete media flow scaffolding", () => {
     );
 
     expect(libraryPage).toContain("DeleteMediaButton");
+    expect(libraryPage).toContain("FavoriteMediaButton");
+    expect(libraryPage).toContain("Favorites");
+    expect(libraryPage).toContain("normalizeMediaAlbumFilter");
+    expect(libraryPage).toContain("Album filter");
     expect(libraryPage).toContain("createPresignedDownload");
+    expect(libraryPage).toContain("thumbnailObjectKey");
     expect(libraryPage).toContain("<img");
     expect(libraryPage).toContain("media-card");
     expect(libraryPage).toContain("Video keeps its full quiet moment.");
     expect(libraryPage).toContain("normalizeMediaFilterValue");
+    expect(libraryPage).toContain("normalizeMediaSearchQuery");
+    expect(libraryPage).toContain("normalizeMediaTagFilter");
     expect(libraryPage).toContain("normalizeMediaSortValue");
     expect(libraryPage).toContain("buildLibraryHref");
+    expect(libraryPage).toContain("Search archive");
+    expect(libraryPage).toContain("Search by file name");
     expect(libraryPage).toContain("Newest first");
     expect(libraryPage).toContain("Photos");
     expect(libraryPage).toContain("Upload complete");
     expect(mediaDetailPage).toContain('mode="redirect"');
+    expect(mediaDetailPage).toContain("FavoriteMediaButton");
+    expect(mediaDetailPage).toContain("MediaAlbumsPanel");
+    expect(mediaDetailPage).toContain("MediaTagsPanel");
+    expect(mediaDetailPage).toContain("ShareMediaPanel");
     expect(mediaDetailPage).toContain("createPresignedDownload");
     expect(mediaDetailPage).toContain("<video");
     expect(mediaDetailPage).toContain("<img");
@@ -49,5 +67,6 @@ describe("delete media flow scaffolding", () => {
     expect(uploadPanel).toContain("Open library now");
     expect(uploadPanel).toContain("completed successfully. Opening the library...");
     expect(uploadPanel).toContain("multiple files, sequential uploads");
+    expect(uploadPanel).toContain("duplicate-upload");
   });
 });

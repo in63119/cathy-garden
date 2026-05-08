@@ -38,6 +38,16 @@ export function buildUploadObjectKey(fileName: string, now = new Date()) {
   return `uploads/${datePrefix}/${uniqueSuffix}-${safeFileName}`;
 }
 
+export function buildThumbnailObjectKey(objectKey: string) {
+  const normalizedKey = objectKey.trim();
+
+  if (!normalizedKey.startsWith("uploads/")) {
+    throw new Error("invalid-thumbnail-source-key");
+  }
+
+  return `${normalizedKey.replace(/^uploads\//, "thumbnails/")}.jpg`;
+}
+
 export function validateUploadRequest(input: UploadRequestInput) {
   const fileName = input.fileName?.trim() ?? "";
   const contentType = input.contentType?.trim() ?? "";

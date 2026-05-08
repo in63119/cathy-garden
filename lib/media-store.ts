@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -16,6 +18,13 @@ export type MediaEntry = {
   contentType: string;
   size: number;
   uploadedAt: string;
+  takenAt?: string;
+  favorite?: boolean;
+  tags?: string[];
+  albums?: string[];
+  thumbnailObjectKey?: string;
+  shareToken?: string;
+  sharedAt?: string;
 };
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
@@ -31,8 +40,12 @@ function getManifestKey() {
 
 function sortEntries(entries: MediaEntry[]) {
   return [...entries].sort((left, right) =>
-    right.uploadedAt.localeCompare(left.uploadedAt)
+    getArchiveDate(right).localeCompare(getArchiveDate(left))
   );
+}
+
+function getArchiveDate(entry: Pick<MediaEntry, "uploadedAt" | "takenAt">) {
+  return entry.takenAt ?? entry.uploadedAt;
 }
 
 function normalizeETag(eTag?: string) {
@@ -119,6 +132,10 @@ async function updateManifestWithRetry(
     const state = await readManifestState();
     const nextEntries = updater(state.entries);
 
+    if (nextEntries === state.entries) {
+      return sortEntries(nextEntries);
+    }
+
     try {
       // Use the last observed ETag so concurrent writes fail fast and retry
       // against the latest manifest instead of silently overwriting it.
@@ -158,6 +175,36 @@ export async function getMediaEntryById(id: string) {
   return entries.find((entry) => entry.id === id) ?? null;
 }
 
+export async function getMediaEntryByShareToken(token: string) {
+  const normalizedToken = token.trim();
+
+  if (!normalizedToken) {
+    return null;
+  }
+
+  const entries = await readMediaEntries();
+
+  return entries.find((entry) => entry.shareToken === normalizedToken) ?? null;
+}
+
+export async function findDuplicateMediaEntry(params: {
+  contentType: string;
+  fileName: string;
+  size: number;
+}) {
+  const entries = await readMediaEntries();
+  const normalizedFileName = params.fileName.trim().toLocaleLowerCase();
+
+  return (
+    entries.find(
+      (entry) =>
+        entry.fileName.trim().toLocaleLowerCase() === normalizedFileName &&
+        entry.contentType === params.contentType &&
+        entry.size === params.size
+    ) ?? null
+  );
+}
+
 export async function deleteMediaEntryById(id: string) {
   const config = getS3Config();
   const client = createS3Client();
@@ -174,9 +221,130 @@ export async function deleteMediaEntryById(id: string) {
       Key: entry.objectKey,
     })
   );
+
+  if (entry.thumbnailObjectKey) {
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: entry.bucket || config.bucket,
+        Key: entry.thumbnailObjectKey,
+      })
+    );
+  }
+
   await updateManifestWithRetry((currentEntries) =>
     currentEntries.filter((item) => item.id !== id)
   );
 
   return entry;
+}
+
+export async function updateMediaEntryFavorite(id: string, favorite: boolean) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = {
+        ...entry,
+        favorite,
+      };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
+}
+
+export async function updateMediaEntryTags(id: string, tags: string[]) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = {
+        ...entry,
+        tags,
+      };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
+}
+
+export async function updateMediaEntryAlbums(id: string, albums: string[]) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = {
+        ...entry,
+        albums,
+      };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
+}
+
+export async function updateMediaEntrySharing(id: string, shareEnabled: boolean) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = shareEnabled
+        ? {
+            ...entry,
+            shareToken: entry.shareToken ?? createShareToken(),
+            sharedAt: entry.sharedAt ?? new Date().toISOString(),
+          }
+        : {
+            ...entry,
+            shareToken: undefined,
+            sharedAt: undefined,
+          };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
+}
+
+function createShareToken() {
+  return randomBytes(24).toString("hex");
 }

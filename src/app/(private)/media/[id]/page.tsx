@@ -2,9 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DeleteMediaButton } from "@/components/delete-media-button";
+import { FavoriteMediaButton } from "@/components/favorite-media-button";
+import { MediaAlbumsPanel } from "@/components/media-albums-panel";
+import { MediaTagsPanel } from "@/components/media-tags-panel";
 import { SectionCard } from "@/components/section-card";
+import { ShareMediaPanel } from "@/components/share-media-panel";
 import { getMediaEntryById } from "@/lib/media-store";
 import {
+  getMediaArchiveDate,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
@@ -43,6 +48,7 @@ export default async function MediaDetailPage({
     contentType: entry.contentType,
   });
   const mediaKind = getMediaKindLabel(entry.contentType);
+  const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
 
   return (
     <div className="content-shell page-section">
@@ -110,7 +116,22 @@ export default async function MediaDetailPage({
               <span className="media-chip">
                 {mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}
               </span>
-              <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+              {entry.favorite ? (
+                <span className="media-chip">Favorite</span>
+              ) : null}
+              {(entry.albums ?? []).map((album) => (
+                <span key={album} className="media-chip">
+                  {album}
+                </span>
+              ))}
+              {(entry.tags ?? []).map((tag) => (
+                <span key={tag} className="media-chip">
+                  {tag}
+                </span>
+              ))}
+              <span className="media-chip">
+                {archiveDateLabel} {formatUploadedAt(getMediaArchiveDate(entry))}
+              </span>
               <span className="media-chip">{entry.size} bytes</span>
             </div>
             <p className="media-detail-note">
@@ -130,6 +151,11 @@ export default async function MediaDetailPage({
             <span>
               S3 key: <code>{entry.objectKey}</code>
             </span>
+            {entry.thumbnailObjectKey ? (
+              <span>
+                Thumbnail key: <code>{entry.thumbnailObjectKey}</code>
+              </span>
+            ) : null}
             <span>
               Bucket: <code>{entry.bucket}</code>
             </span>
@@ -137,10 +163,26 @@ export default async function MediaDetailPage({
               Region: <code>{entry.region}</code>
             </span>
             <span>
+              {archiveDateLabel} at:{" "}
+              <strong>{formatUploadedAt(getMediaArchiveDate(entry))}</strong>
+            </span>
+            <span>
+              Uploaded at: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
+            </span>
+            <span>
               Preview URL expires in about <code>5 minutes</code>
             </span>
+            {entry.shareToken ? (
+              <span>
+                Share link: <code>/share/{entry.shareToken}</code>
+              </span>
+            ) : null}
           </div>
         </div>
+
+        <ShareMediaPanel mediaId={entry.id} shareToken={entry.shareToken} />
+        <MediaAlbumsPanel mediaId={entry.id} albums={entry.albums} />
+        <MediaTagsPanel mediaId={entry.id} tags={entry.tags} />
 
         <div className="action-row">
           <Link href="/library" className="button-link secondary">
@@ -154,6 +196,7 @@ export default async function MediaDetailPage({
           >
             Open original
           </a>
+          <FavoriteMediaButton mediaId={entry.id} favorite={entry.favorite} />
           <DeleteMediaButton mediaId={entry.id} mode="redirect" />
         </div>
       </SectionCard>

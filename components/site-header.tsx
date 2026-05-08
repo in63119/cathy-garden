@@ -24,11 +24,8 @@ export async function SiteHeader() {
       }}
     >
       <div className="content-shell">
-        <div
-          className="card header-card"
-        >
+        <div className="card header-card">
           <Link href="/" className="header-brand">
-            <span className="eyebrow">Private Archive</span>
             <strong style={{ fontSize: "1.25rem" }}>Cathy Garden</strong>
           </Link>
 

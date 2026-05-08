@@ -24,6 +24,8 @@ export type MediaEntryResponse = {
   contentType: string;
   size: number;
   uploadedAt: string;
+  takenAt?: string;
+  thumbnailObjectKey?: string;
 };
 
 export type UploadBatchItem = {
@@ -31,6 +33,7 @@ export type UploadBatchItem = {
   fileName: string;
   contentType: string;
   size: number;
+  takenAt?: string;
 };
 
 export type UploadBatchStage = "presign" | "transfer" | "complete";
@@ -39,6 +42,9 @@ export type UploadProgressCallback = (progress: {
   total: number;
   percentage: number;
 }) => void;
+
+const DEFAULT_MAX_TRANSFER_ATTEMPTS = 3;
+const DEFAULT_RETRY_DELAY_MS = 750;
 
 export async function requestPresignedUpload(
   payload: PresignRequestPayload
@@ -55,6 +61,26 @@ export async function requestPresignedUpload(
 
   if (!response.ok) {
     throw new Error(data?.error ?? "presign-failed");
+  }
+
+  return data as PresignUploadResponse;
+}
+
+export async function requestPresignedThumbnailUpload(payload: {
+  objectKey: string;
+}): Promise<PresignUploadResponse> {
+  const response = await fetch("/api/upload/thumbnail", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error ?? "thumbnail-presign-failed");
   }
 
   return data as PresignUploadResponse;
@@ -132,6 +158,8 @@ export async function completeUploadedMedia(
 export async function uploadMediaBatch(
   items: UploadBatchItem[],
   options?: {
+    maxTransferAttempts?: number;
+    retryDelayMs?: number;
     onStageChange?: (params: {
       index: number;
       total: number;
@@ -152,9 +180,25 @@ export async function uploadMediaBatch(
       size: number;
       percentage: number;
     }) => void;
+    onTransferRetry?: (params: {
+      index: number;
+      total: number;
+      fileName: string;
+      attempt: number;
+      maxAttempts: number;
+      retryDelayMs: number;
+    }) => void;
   }
 ) {
   const uploadedEntries: MediaEntryResponse[] = [];
+  const maxTransferAttempts = Math.max(
+    1,
+    options?.maxTransferAttempts ?? DEFAULT_MAX_TRANSFER_ATTEMPTS
+  );
+  const retryDelayMs = Math.max(
+    0,
+    options?.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS
+  );
 
   for (const [index, item] of items.entries()) {
     const batchIndex = index + 1;
@@ -186,27 +230,54 @@ export async function uploadMediaBatch(
       stage: "transfer",
     });
 
-    await uploadFileToPresignedUrl({
-      uploadUrl: presigned.uploadUrl,
-      file: item.file,
-      contentType: item.contentType,
-      onProgress: (progress) => {
-        options?.onTransferProgress?.({
+    for (let attempt = 1; attempt <= maxTransferAttempts; attempt += 1) {
+      try {
+        await uploadFileToPresignedUrl({
+          uploadUrl: presigned.uploadUrl,
+          file: item.file,
+          contentType: item.contentType,
+          onProgress: (progress) => {
+            options?.onTransferProgress?.({
+              index: batchIndex,
+              total: items.length,
+              fileName: item.fileName,
+              loaded: progress.loaded,
+              size: progress.total,
+              percentage: progress.percentage,
+            });
+          },
+        });
+        break;
+      } catch (error) {
+        if (attempt >= maxTransferAttempts) {
+          throw error;
+        }
+
+        const nextRetryDelayMs = retryDelayMs * attempt;
+        options?.onTransferRetry?.({
           index: batchIndex,
           total: items.length,
           fileName: item.fileName,
-          loaded: progress.loaded,
-          size: progress.total,
-          percentage: progress.percentage,
+          attempt: attempt + 1,
+          maxAttempts: maxTransferAttempts,
+          retryDelayMs: nextRetryDelayMs,
         });
-      },
-    });
+
+        await wait(nextRetryDelayMs);
+      }
+    }
 
     options?.onStageChange?.({
       index: batchIndex,
       total: items.length,
       fileName: item.fileName,
       stage: "complete",
+    });
+
+    const thumbnailObjectKey = await createAndUploadThumbnail({
+      contentType: item.contentType,
+      file: item.file,
+      objectKey: presigned.objectKey,
     });
 
     const entry = await completeUploadedMedia({
@@ -216,12 +287,102 @@ export async function uploadMediaBatch(
       fileName: presigned.fileName,
       contentType: presigned.contentType,
       size: presigned.size,
+      takenAt: item.takenAt,
+      thumbnailObjectKey,
     });
 
     uploadedEntries.push(entry);
   }
 
   return uploadedEntries;
+}
+
+async function createAndUploadThumbnail(params: {
+  contentType: string;
+  file: File | Blob;
+  objectKey: string;
+}) {
+  if (!params.contentType.startsWith("image/")) {
+    return undefined;
+  }
+
+  const thumbnail = await createImageThumbnail(params.file);
+
+  if (!thumbnail) {
+    return undefined;
+  }
+
+  try {
+    const presigned = await requestPresignedThumbnailUpload({
+      objectKey: params.objectKey,
+    });
+
+    await uploadFileToPresignedUrl({
+      uploadUrl: presigned.uploadUrl,
+      file: thumbnail,
+      contentType: "image/jpeg",
+    });
+
+    return presigned.objectKey;
+  } catch {
+    return undefined;
+  }
+}
+
+async function createImageThumbnail(file: File | Blob) {
+  if (
+    typeof document === "undefined" ||
+    typeof URL === "undefined" ||
+    typeof URL.createObjectURL !== "function"
+  ) {
+    return null;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await loadImage(objectUrl);
+    const maxDimension = 640;
+    const scale = Math.min(
+      1,
+      maxDimension / Math.max(image.naturalWidth, image.naturalHeight)
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d")?.drawImage(image, 0, 0, width, height);
+
+    return await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.78);
+    });
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("thumbnail-load-failed"));
+    image.src = src;
+  });
+}
+
+function wait(delayMs: number) {
+  if (delayMs === 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    globalThis.setTimeout(resolve, delayMs);
+  });
 }
 
 export function formatBytes(bytes: number) {

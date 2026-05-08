@@ -1,14 +1,19 @@
 import { DeleteMediaButton } from "@/components/delete-media-button";
+import { FavoriteMediaButton } from "@/components/favorite-media-button";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/section-card";
 import { readMediaEntries } from "@/lib/media-store";
 import {
   filterAndSortMediaEntries,
+  getMediaArchiveDate,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
+  normalizeMediaAlbumFilter,
   normalizeMediaFilterValue,
+  normalizeMediaSearchQuery,
+  normalizeMediaTagFilter,
   normalizeMediaSortValue,
 } from "@/lib/media-preview";
 import { createPresignedDownload } from "@/lib/s3";
@@ -23,16 +28,40 @@ function formatUploadedAt(value: string) {
   });
 }
 
-function buildLibraryHref(params: { filter: string; sort: string }) {
-  return `/library?filter=${encodeURIComponent(params.filter)}&sort=${encodeURIComponent(
-    params.sort
-  )}`;
+function buildLibraryHref(params: {
+  filter: string;
+  sort: string;
+  album: string;
+  query: string;
+  tag: string;
+}) {
+  const searchParams = new URLSearchParams({
+    filter: params.filter,
+    sort: params.sort,
+  });
+
+  if (params.query) {
+    searchParams.set("q", params.query);
+  }
+
+  if (params.album) {
+    searchParams.set("album", params.album);
+  }
+
+  if (params.tag) {
+    searchParams.set("tag", params.tag);
+  }
+
+  return `/library?${searchParams.toString()}`;
 }
 
 type LibraryPageProps = {
   searchParams?: Promise<{
     filter?: string;
     sort?: string;
+    album?: string;
+    q?: string;
+    tag?: string;
     uploaded?: string;
     uploadedCount?: string;
   }>;
@@ -42,23 +71,34 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const params = searchParams ? await searchParams : undefined;
   const filter = normalizeMediaFilterValue(params?.filter);
   const sort = normalizeMediaSortValue(params?.sort);
+  const album = normalizeMediaAlbumFilter(params?.album);
+  const query = normalizeMediaSearchQuery(params?.q);
+  const tag = normalizeMediaTagFilter(params?.tag);
   const uploaded = params?.uploaded?.trim() ?? "";
   const uploadedCount = Number(params?.uploadedCount ?? "0");
   const entries = await readMediaEntries();
-  const visibleEntries = filterAndSortMediaEntries(entries, { filter, sort });
+  const visibleEntries = filterAndSortMediaEntries(entries, {
+    filter,
+    sort,
+    album,
+    query,
+    tag,
+  });
   const entriesWithPreview = await Promise.all(
     visibleEntries.map(async (entry) => {
       const mediaKind = getMediaKindLabel(entry.contentType);
+      const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
 
       return {
         ...entry,
         mediaKind,
+        archiveDateLabel,
         previewUrl:
           mediaKind === "image"
             ? await createPresignedDownload({
                 bucket: entry.bucket,
-                objectKey: entry.objectKey,
-                contentType: entry.contentType,
+                objectKey: entry.thumbnailObjectKey ?? entry.objectKey,
+                contentType: entry.thumbnailObjectKey ? "image/jpeg" : entry.contentType,
               })
             : null,
       };
@@ -88,19 +128,66 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         ) : null}
 
+        <form
+          action="/library"
+          style={{
+            display: "grid",
+            gap: "10px",
+          }}
+        >
+          <input type="hidden" name="filter" value={filter} />
+          <input type="hidden" name="sort" value={sort} />
+          <input type="hidden" name="album" value={album} />
+          <input type="hidden" name="tag" value={tag} />
+          <label htmlFor="library-search" style={{ fontWeight: 700 }}>
+            Search archive
+          </label>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              alignItems: "center",
+            }}
+          >
+            <input
+              id="library-search"
+              name="q"
+              type="search"
+              className="input-field"
+              defaultValue={query}
+              placeholder="Search by file name"
+              style={{ maxWidth: "420px" }}
+            />
+            <button type="submit" className="button-link primary">
+              Search
+            </button>
+            {query ? (
+              <Link
+                href={buildLibraryHref({ filter, sort, album, query: "", tag })}
+                className="button-link secondary"
+              >
+                Clear
+              </Link>
+            ) : null}
+          </div>
+        </form>
+
         <div className="filter-toolbar">
           <div className="filter-cluster">
-            {(["all", "image", "video"] as const).map((option) => (
+            {(["all", "favorite", "image", "video"] as const).map((option) => (
               <Link
                 key={option}
-                href={buildLibraryHref({ filter: option, sort })}
+                href={buildLibraryHref({ filter: option, sort, album, query, tag })}
                 className={`button-link secondary${filter === option ? " is-active" : ""}`}
               >
                 {option === "all"
                   ? "All"
-                  : option === "image"
-                    ? "Photos"
-                    : "Videos"}
+                  : option === "favorite"
+                    ? "Favorites"
+                    : option === "image"
+                      ? "Photos"
+                      : "Videos"}
               </Link>
             ))}
           </div>
@@ -109,7 +196,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             {(["newest", "oldest"] as const).map((option) => (
               <Link
                 key={option}
-                href={buildLibraryHref({ filter, sort: option })}
+                href={buildLibraryHref({ filter, sort: option, album, query, tag })}
                 className={`button-link secondary${sort === option ? " is-active" : ""}`}
               >
                 {option === "newest" ? "Newest first" : "Oldest first"}
@@ -118,6 +205,34 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         </div>
 
+        {album ? (
+          <div className="card-soft" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", padding: "14px" }}>
+            <span>
+              Album filter: <strong>{album}</strong>
+            </span>
+            <Link
+              href={buildLibraryHref({ filter, sort, album: "", query, tag })}
+              className="button-link secondary"
+            >
+              Clear album
+            </Link>
+          </div>
+        ) : null}
+
+        {tag ? (
+          <div className="card-soft" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", padding: "14px" }}>
+            <span>
+              Tag filter: <strong>{tag}</strong>
+            </span>
+            <Link
+              href={buildLibraryHref({ filter, sort, album, query, tag: "" })}
+              className="button-link secondary"
+            >
+              Clear tag
+            </Link>
+          </div>
+        ) : null}
+
         {entries.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
             No uploaded items yet. Use the upload route to add the first photo
@@ -125,7 +240,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         ) : entriesWithPreview.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
-            No items match the current filter.
+            No items match the current filter or search.
           </div>
         ) : (
           <div className="library-grid">
@@ -172,7 +287,43 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     <span className="media-chip">
                       {entry.mediaKind === "image" ? "Photo" : "Video"}
                     </span>
-                    <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+                    {entry.favorite ? (
+                      <span className="media-chip">Favorite</span>
+                    ) : null}
+                    {(entry.albums ?? []).map((entryAlbum) => (
+                      <Link
+                        key={entryAlbum}
+                        href={buildLibraryHref({
+                          filter,
+                          sort,
+                          album: entryAlbum,
+                          query,
+                          tag,
+                        })}
+                        className="media-chip"
+                      >
+                        {entryAlbum}
+                      </Link>
+                    ))}
+                    {(entry.tags ?? []).map((entryTag) => (
+                      <Link
+                        key={entryTag}
+                        href={buildLibraryHref({
+                          filter,
+                          sort,
+                          album,
+                          query,
+                          tag: entryTag,
+                        })}
+                        className="media-chip"
+                      >
+                        {entryTag}
+                      </Link>
+                    ))}
+                    <span className="media-chip">
+                      {entry.archiveDateLabel}{" "}
+                      {formatUploadedAt(getMediaArchiveDate(entry))}
+                    </span>
                   </div>
                   <h2 className="media-card-title">{entry.fileName}</h2>
                   <p className="media-card-caption">
@@ -187,6 +338,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     >
                       Open details
                     </Link>
+                    <FavoriteMediaButton
+                      mediaId={entry.id}
+                      favorite={entry.favorite}
+                    />
                     <DeleteMediaButton mediaId={entry.id} />
                   </div>
                 </div>

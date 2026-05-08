@@ -22,6 +22,8 @@ const errorMessages: Record<string, string> = {
   "file-too-large": "This file is larger than the current upload limit.",
   "invalid-json": "The upload request payload was malformed.",
   "presign-failed": "The server could not prepare an S3 upload URL.",
+  "duplicate-upload":
+    "This file already appears to be in the archive. Rename it or delete the existing copy before uploading again.",
 };
 
 type SelectedFileState = {
@@ -29,6 +31,7 @@ type SelectedFileState = {
   name: string;
   size: number;
   type: string;
+  takenAt?: string;
 };
 
 type UploadProgressState = {
@@ -100,6 +103,7 @@ export function UploadRequestPanel() {
         name: file.name,
         size: file.size,
         type: file.type,
+        takenAt: getFileTakenAt(file),
       }))
     );
     setErrorMessage(null);
@@ -129,6 +133,7 @@ export function UploadRequestPanel() {
           fileName: selectedFile.name,
           contentType: selectedFile.type,
           size: selectedFile.size,
+          takenAt: selectedFile.takenAt,
         })),
         {
           onStageChange: ({ index, total, fileName, stage }) => {
@@ -172,6 +177,26 @@ export function UploadRequestPanel() {
               loaded,
               totalBytes: size,
             });
+          },
+          onTransferRetry: ({
+            index,
+            total,
+            fileName,
+            attempt,
+            maxAttempts,
+          }) => {
+            setStatusMessage(
+              `Upload failed. Retrying ${index} of ${total}: ${fileName} (${attempt}/${maxAttempts})`
+            );
+            setUploadProgress((currentProgress) =>
+              currentProgress?.currentFileName === fileName
+                ? {
+                    ...currentProgress,
+                    percentage: 0,
+                    loaded: 0,
+                  }
+                : currentProgress
+            );
           },
           onPresigned: ({ result }) => {
             setPresignResult({
@@ -395,4 +420,12 @@ export function UploadRequestPanel() {
       ) : null}
     </div>
   );
+}
+
+function getFileTakenAt(file: File) {
+  if (!Number.isFinite(file.lastModified) || file.lastModified <= 0) {
+    return undefined;
+  }
+
+  return new Date(file.lastModified).toISOString();
 }

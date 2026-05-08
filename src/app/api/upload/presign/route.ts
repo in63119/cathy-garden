@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
       size: validation.normalized.size,
     });
   } catch (error) {
-    console.error("Failed to create S3 presigned upload URL", error);
+    console.error("Failed to create S3 presigned upload URL", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    });
 
     return NextResponse.json(
       { error: "presign-failed" },

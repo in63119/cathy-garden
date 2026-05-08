@@ -31,8 +31,8 @@ export const getAuthorize = async (code: string) => {
       const userInfo = await getUserInfo(acceseToken);
       return userInfo;
     }
-  } catch (error) {
-    console.error("getAuthorize : ", error);
+  } catch {
+    return undefined;
   }
 };
 
@@ -61,7 +61,7 @@ const getUserInfo = async (token: string) => {
         kakaoId: res?.data.id,
       };
     }
-  } catch (error) {
-    console.log(error);
+  } catch {
+    return undefined;
   }
 };

@@ -5,6 +5,7 @@ import { DeleteMediaButton } from "@/components/delete-media-button";
 import { SectionCard } from "@/components/section-card";
 import { getMediaEntryById } from "@/lib/media-store";
 import {
+  getMediaArchiveDate,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
@@ -43,6 +44,7 @@ export default async function MediaDetailPage({
     contentType: entry.contentType,
   });
   const mediaKind = getMediaKindLabel(entry.contentType);
+  const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
 
   return (
     <div className="content-shell page-section">
@@ -110,7 +112,9 @@ export default async function MediaDetailPage({
               <span className="media-chip">
                 {mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}
               </span>
-              <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+              <span className="media-chip">
+                {archiveDateLabel} {formatUploadedAt(getMediaArchiveDate(entry))}
+              </span>
               <span className="media-chip">{entry.size} bytes</span>
             </div>
             <p className="media-detail-note">
@@ -135,6 +139,13 @@ export default async function MediaDetailPage({
             </span>
             <span>
               Region: <code>{entry.region}</code>
+            </span>
+            <span>
+              {archiveDateLabel} at:{" "}
+              <strong>{formatUploadedAt(getMediaArchiveDate(entry))}</strong>
+            </span>
+            <span>
+              Uploaded at: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
             </span>
             <span>
               Preview URL expires in about <code>5 minutes</code>

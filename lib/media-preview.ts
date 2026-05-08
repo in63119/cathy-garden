@@ -41,8 +41,15 @@ export function normalizeMediaSortValue(value?: string | null): MediaSortValue {
 
 export type SortableMediaEntry = {
   uploadedAt: string;
+  takenAt?: string;
   contentType: string;
 };
+
+export function getMediaArchiveDate(
+  entry: Pick<SortableMediaEntry, "uploadedAt" | "takenAt">
+) {
+  return entry.takenAt ?? entry.uploadedAt;
+}
 
 export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
   entries: T[],
@@ -60,8 +67,9 @@ export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
   });
 
   return filtered.sort((left, right) => {
-    const compare =
-      left.uploadedAt.localeCompare(right.uploadedAt);
+    const compare = getMediaArchiveDate(left).localeCompare(
+      getMediaArchiveDate(right)
+    );
 
     return options.sort === "newest" ? -compare : compare;
   });

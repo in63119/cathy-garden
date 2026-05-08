@@ -1,5 +1,6 @@
 import {
   filterAndSortMediaEntries,
+  getMediaArchiveDate,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
@@ -67,5 +68,32 @@ describe("media preview helpers", () => {
       "2026-05-07T12:00:00.000Z",
       "2026-05-08T12:00:00.000Z",
     ]);
+  });
+
+  test("uses taken date before upload date for archive ordering", () => {
+    const entries = [
+      {
+        contentType: "image/jpeg",
+        uploadedAt: "2026-05-08T12:00:00.000Z",
+        takenAt: "2026-05-05T12:00:00.000Z",
+      },
+      {
+        contentType: "image/png",
+        uploadedAt: "2026-05-07T12:00:00.000Z",
+        takenAt: "2026-05-09T12:00:00.000Z",
+      },
+      {
+        contentType: "video/mp4",
+        uploadedAt: "2026-05-06T12:00:00.000Z",
+      },
+    ];
+
+    expect(getMediaArchiveDate(entries[0])).toBe("2026-05-05T12:00:00.000Z");
+    expect(
+      filterAndSortMediaEntries(entries, {
+        filter: "all",
+        sort: "newest",
+      }).map((entry) => entry.contentType)
+    ).toEqual(["image/png", "video/mp4", "image/jpeg"]);
   });
 });

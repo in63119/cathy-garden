@@ -5,6 +5,7 @@ import { SectionCard } from "@/components/section-card";
 import { readMediaEntries } from "@/lib/media-store";
 import {
   filterAndSortMediaEntries,
+  getMediaArchiveDate,
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
@@ -49,10 +50,12 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const entriesWithPreview = await Promise.all(
     visibleEntries.map(async (entry) => {
       const mediaKind = getMediaKindLabel(entry.contentType);
+      const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
 
       return {
         ...entry,
         mediaKind,
+        archiveDateLabel,
         previewUrl:
           mediaKind === "image"
             ? await createPresignedDownload({
@@ -172,7 +175,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     <span className="media-chip">
                       {entry.mediaKind === "image" ? "Photo" : "Video"}
                     </span>
-                    <span className="media-chip">{formatUploadedAt(entry.uploadedAt)}</span>
+                    <span className="media-chip">
+                      {entry.archiveDateLabel}{" "}
+                      {formatUploadedAt(getMediaArchiveDate(entry))}
+                    </span>
                   </div>
                   <h2 className="media-card-title">{entry.fileName}</h2>
                   <p className="media-card-caption">

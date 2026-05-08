@@ -24,6 +24,7 @@ export type MediaEntryResponse = {
   contentType: string;
   size: number;
   uploadedAt: string;
+  takenAt?: string;
 };
 
 export type UploadBatchItem = {
@@ -31,6 +32,7 @@ export type UploadBatchItem = {
   fileName: string;
   contentType: string;
   size: number;
+  takenAt?: string;
 };
 
 export type UploadBatchStage = "presign" | "transfer" | "complete";
@@ -258,6 +260,7 @@ export async function uploadMediaBatch(
       fileName: presigned.fileName,
       contentType: presigned.contentType,
       size: presigned.size,
+      takenAt: item.takenAt,
     });
 
     uploadedEntries.push(entry);

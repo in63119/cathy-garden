@@ -99,6 +99,7 @@ describe("media manifest store", () => {
       fileName: "new.jpg",
       contentType: "image/jpeg",
       size: 1024,
+      takenAt: "2026-05-06T09:30:00.000Z",
     });
 
     const putCalls = send.mock.calls
@@ -112,6 +113,7 @@ describe("media manifest store", () => {
     const secondBody = String(putCalls[1].input.Body);
     expect(secondBody).toContain('"id": "existing-entry"');
     expect(secondBody).toContain(`"id": "${createdEntry.id}"`);
+    expect(secondBody).toContain('"takenAt": "2026-05-06T09:30:00.000Z"');
   });
 
   test("removes metadata after deleting the source object", async () => {

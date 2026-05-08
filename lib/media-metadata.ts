@@ -5,6 +5,7 @@ export type CompleteUploadPayload = {
   fileName?: string;
   contentType?: string;
   size?: number;
+  takenAt?: string;
 };
 
 export function validateCompleteUploadPayload(payload: CompleteUploadPayload) {
@@ -14,6 +15,7 @@ export function validateCompleteUploadPayload(payload: CompleteUploadPayload) {
   const fileName = payload.fileName?.trim() ?? "";
   const contentType = payload.contentType?.trim() ?? "";
   const size = payload.size;
+  const takenAt = payload.takenAt?.trim() ?? undefined;
 
   if (!objectKey) {
     return { ok: false as const, reason: "missing-object-key" };
@@ -39,6 +41,10 @@ export function validateCompleteUploadPayload(payload: CompleteUploadPayload) {
     return { ok: false as const, reason: "invalid-size" };
   }
 
+  if (takenAt && Number.isNaN(Date.parse(takenAt))) {
+    return { ok: false as const, reason: "invalid-taken-at" };
+  }
+
   return {
     ok: true as const,
     normalized: {
@@ -48,6 +54,7 @@ export function validateCompleteUploadPayload(payload: CompleteUploadPayload) {
       fileName,
       contentType,
       size,
+      takenAt,
     },
   };
 }

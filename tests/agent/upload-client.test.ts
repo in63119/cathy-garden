@@ -145,6 +145,7 @@ describe("upload client helpers", () => {
       fileName: "example.jpg",
       contentType: "image/jpeg",
       size: 1024,
+      takenAt: "2026-05-06T09:30:00.000Z",
     });
 
     expect(fetchMock).toHaveBeenCalledWith("/api/media/complete", {
@@ -159,6 +160,7 @@ describe("upload client helpers", () => {
         fileName: "example.jpg",
         contentType: "image/jpeg",
         size: 1024,
+        takenAt: "2026-05-06T09:30:00.000Z",
       }),
     });
     expect(result.id).toBe("entry-1");
@@ -227,7 +229,7 @@ describe("upload client helpers", () => {
     }
     global.XMLHttpRequest = MockXMLHttpRequest as never;
 
-    jest
+    const fetchMock = jest
       .spyOn(global, "fetch" as never)
       .mockResolvedValueOnce({
         ok: true,
@@ -266,6 +268,7 @@ describe("upload client helpers", () => {
           fileName: "retry.jpg",
           contentType: "image/jpeg",
           size: 100,
+          takenAt: "2026-05-06T09:30:00.000Z",
         },
       ],
       {
@@ -277,6 +280,21 @@ describe("upload client helpers", () => {
 
     expect(results[0].id).toBe("entry-retry");
     expect(send).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenLastCalledWith("/api/media/complete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        objectKey: "uploads/2026/05/07/retry.jpg",
+        bucket: "garden-bucket",
+        region: "ap-northeast-2",
+        fileName: "retry.jpg",
+        contentType: "image/jpeg",
+        size: 100,
+        takenAt: "2026-05-06T09:30:00.000Z",
+      }),
+    });
     expect(onTransferRetry).toHaveBeenCalledWith({
       index: 1,
       total: 1,

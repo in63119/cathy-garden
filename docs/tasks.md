@@ -139,7 +139,7 @@
 - [x] mime type
 - [x] size
 - [x] created at
-- [ ] taken at
+- [x] taken at
 
 ## Phase 9. 보관함 기능 구현
 

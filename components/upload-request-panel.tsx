@@ -29,6 +29,7 @@ type SelectedFileState = {
   name: string;
   size: number;
   type: string;
+  takenAt?: string;
 };
 
 type UploadProgressState = {
@@ -100,6 +101,7 @@ export function UploadRequestPanel() {
         name: file.name,
         size: file.size,
         type: file.type,
+        takenAt: getFileTakenAt(file),
       }))
     );
     setErrorMessage(null);
@@ -129,6 +131,7 @@ export function UploadRequestPanel() {
           fileName: selectedFile.name,
           contentType: selectedFile.type,
           size: selectedFile.size,
+          takenAt: selectedFile.takenAt,
         })),
         {
           onStageChange: ({ index, total, fileName, stage }) => {
@@ -415,4 +418,12 @@ export function UploadRequestPanel() {
       ) : null}
     </div>
   );
+}
+
+function getFileTakenAt(file: File) {
+  if (!Number.isFinite(file.lastModified) || file.lastModified <= 0) {
+    return undefined;
+  }
+
+  return new Date(file.lastModified).toISOString();
 }

@@ -16,6 +16,7 @@ export type MediaEntry = {
   contentType: string;
   size: number;
   uploadedAt: string;
+  takenAt?: string;
 };
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
@@ -31,8 +32,12 @@ function getManifestKey() {
 
 function sortEntries(entries: MediaEntry[]) {
   return [...entries].sort((left, right) =>
-    right.uploadedAt.localeCompare(left.uploadedAt)
+    getArchiveDate(right).localeCompare(getArchiveDate(left))
   );
+}
+
+function getArchiveDate(entry: Pick<MediaEntry, "uploadedAt" | "takenAt">) {
+  return entry.takenAt ?? entry.uploadedAt;
 }
 
 function normalizeETag(eTag?: string) {

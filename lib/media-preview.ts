@@ -45,6 +45,7 @@ export type SortableMediaEntry = {
   contentType: string;
   fileName: string;
   favorite?: boolean;
+  tags?: string[];
 };
 
 export function getMediaArchiveDate(
@@ -57,27 +58,50 @@ export function normalizeMediaSearchQuery(value?: string | null) {
   return value?.trim().replace(/\s+/g, " ") ?? "";
 }
 
+export function normalizeMediaTag(value?: string | null) {
+  return value?.trim().replace(/\s+/g, " ").slice(0, 32) ?? "";
+}
+
+export function normalizeMediaTags(values: string[]) {
+  const normalizedTags = values
+    .map((value) => normalizeMediaTag(value))
+    .filter(Boolean);
+
+  return Array.from(new Set(normalizedTags)).slice(0, 12);
+}
+
+export function normalizeMediaTagFilter(value?: string | null) {
+  return normalizeMediaTag(value);
+}
+
 export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
   entries: T[],
   options: {
     filter: MediaFilterValue;
     sort: MediaSortValue;
     query?: string;
+    tag?: string;
   }
 ) {
   const searchQuery = normalizeMediaSearchQuery(options.query).toLocaleLowerCase();
+  const tagFilter = normalizeMediaTagFilter(options.tag).toLocaleLowerCase();
   const filtered = entries.filter((entry) => {
     if (options.filter === "all") {
-      return matchesSearchQuery(entry, searchQuery);
+      return matchesSearchQuery(entry, searchQuery) && matchesTag(entry, tagFilter);
     }
 
     if (options.filter === "favorite") {
-      return entry.favorite === true && matchesSearchQuery(entry, searchQuery);
+      return (
+        entry.favorite === true &&
+        matchesSearchQuery(entry, searchQuery) &&
+        matchesTag(entry, tagFilter)
+      );
     }
 
     return (
       getMediaKindLabel(entry.contentType) === options.filter &&
-      matchesSearchQuery(entry, searchQuery)
+      matchesSearchQuery(entry, searchQuery) &&
+      matchesTag(entry, tagFilter)
     );
   });
 
@@ -99,4 +123,17 @@ function matchesSearchQuery(
   }
 
   return entry.fileName.toLocaleLowerCase().includes(searchQuery);
+}
+
+function matchesTag(
+  entry: Pick<SortableMediaEntry, "tags">,
+  tagFilter: string
+) {
+  if (!tagFilter) {
+    return true;
+  }
+
+  return (entry.tags ?? []).some(
+    (tag) => tag.toLocaleLowerCase() === tagFilter
+  );
 }

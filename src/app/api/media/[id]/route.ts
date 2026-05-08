@@ -4,7 +4,9 @@ import { isAuthenticated } from "@/lib/auth-server";
 import {
   deleteMediaEntryById,
   updateMediaEntryFavorite,
+  updateMediaEntryTags,
 } from "@/lib/media-store";
+import { normalizeMediaTags } from "@/lib/media-preview";
 
 type RouteContext = {
   params: Promise<{
@@ -43,20 +45,43 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "invalid-json" }, { status: 400 });
   }
 
-  const favorite = (body as { favorite?: unknown } | null)?.favorite;
+  const payload = body as { favorite?: unknown; tags?: unknown } | null;
+  const favorite = payload?.favorite;
+  const tags = payload?.tags;
 
-  if (typeof favorite !== "boolean") {
+  if (typeof favorite === "boolean") {
+    const { id } = await context.params;
+    const entry = await updateMediaEntryFavorite(id, favorite);
+
+    if (!entry) {
+      return NextResponse.json({ error: "not-found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      entry,
+    });
+  }
+
+  if (Array.isArray(tags) && tags.every((tag) => typeof tag === "string")) {
+    const { id } = await context.params;
+    const entry = await updateMediaEntryTags(id, normalizeMediaTags(tags));
+
+    if (!entry) {
+      return NextResponse.json({ error: "not-found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      entry,
+    });
+  }
+
+  if (tags !== undefined) {
+    return NextResponse.json({ error: "invalid-tags" }, { status: 400 });
+  }
+
+  if (favorite !== undefined) {
     return NextResponse.json({ error: "invalid-favorite" }, { status: 400 });
   }
 
-  const { id } = await context.params;
-  const entry = await updateMediaEntryFavorite(id, favorite);
-
-  if (!entry) {
-    return NextResponse.json({ error: "not-found" }, { status: 404 });
-  }
-
-  return NextResponse.json({
-    entry,
-  });
+  return NextResponse.json({ error: "invalid-patch" }, { status: 400 });
 }

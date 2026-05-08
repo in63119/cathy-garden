@@ -6,6 +6,9 @@ import {
   isVideoContentType,
   normalizeMediaFilterValue,
   normalizeMediaSearchQuery,
+  normalizeMediaTag,
+  normalizeMediaTagFilter,
+  normalizeMediaTags,
   normalizeMediaSortValue,
 } from "../../lib/media-preview";
 
@@ -165,5 +168,36 @@ describe("media preview helpers", () => {
         query: "birthday",
       }).map((entry) => entry.fileName)
     ).toEqual(["birthday-video.mp4"]);
+  });
+
+  test("normalizes and filters media tags", () => {
+    const entries = [
+      {
+        fileName: "garden.jpg",
+        contentType: "image/jpeg",
+        uploadedAt: "2026-05-08T12:00:00.000Z",
+        tags: ["Garden", "Spring"],
+      },
+      {
+        fileName: "porch.jpg",
+        contentType: "image/jpeg",
+        uploadedAt: "2026-05-07T12:00:00.000Z",
+        tags: ["Porch"],
+      },
+    ];
+
+    expect(normalizeMediaTag("  spring   garden  ")).toBe("spring garden");
+    expect(normalizeMediaTagFilter(" Garden ")).toBe("Garden");
+    expect(normalizeMediaTags(["Garden", "Garden", "  Porch  ", ""])).toEqual([
+      "Garden",
+      "Porch",
+    ]);
+    expect(
+      filterAndSortMediaEntries(entries, {
+        filter: "all",
+        sort: "newest",
+        tag: "garden",
+      }).map((entry) => entry.fileName)
+    ).toEqual(["garden.jpg"]);
   });
 });

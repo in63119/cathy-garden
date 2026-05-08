@@ -15,6 +15,7 @@ import {
   deleteMediaEntryById,
   readMediaEntries,
   updateMediaEntryFavorite,
+  updateMediaEntryTags,
 } from "../../lib/media-store";
 import {
   createS3Client,
@@ -222,5 +223,50 @@ describe("media manifest store", () => {
     );
 
     expect(putCalls).toHaveLength(0);
+  });
+
+  test("updates tags without deleting the source object", async () => {
+    const existingEntry = {
+      id: "entry-1",
+      objectKey: "uploads/2026/05/07/garden.jpg",
+      bucket: "garden-bucket",
+      region: "ap-northeast-2",
+      fileName: "garden.jpg",
+      contentType: "image/jpeg",
+      size: 1024,
+      uploadedAt: "2026-05-07T10:00:00.000Z",
+    };
+
+    (streamToString as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify([existingEntry])
+    );
+
+    send
+      .mockResolvedValueOnce({
+        Body: {
+          transformToString: async () => JSON.stringify([existingEntry]),
+        },
+        ETag: '"etag-6"',
+      })
+      .mockResolvedValueOnce({});
+
+    await expect(
+      updateMediaEntryTags(existingEntry.id, ["Garden", "Spring"])
+    ).resolves.toEqual({
+      ...existingEntry,
+      tags: ["Garden", "Spring"],
+    });
+
+    const deleteCalls = send.mock.calls.filter(
+      ([command]) => command instanceof DeleteObjectCommand
+    );
+    const putCall = send.mock.calls.find(
+      ([command]) => command instanceof PutObjectCommand
+    )?.[0] as PutObjectCommand | undefined;
+
+    expect(deleteCalls).toHaveLength(0);
+    expect(putCall?.input.IfMatch).toBe("etag-6");
+    expect(String(putCall?.input.Body)).toContain('"tags": [');
+    expect(String(putCall?.input.Body)).toContain('"Garden"');
   });
 });

@@ -21,6 +21,13 @@
 - presigned upload 발급 실패 로그에서 원본 AWS 에러 객체를 제거했다.
 - 레거시 Kakao/axios 유틸의 원본 에러 로그를 제거했다.
 
+## 비인가 접근 차단 확인
+
+- 보호 페이지는 `src/app/(private)/layout.tsx`에서 `requireAuthenticatedSession()`을 호출한다.
+- 보호 대상 경로는 `lib/auth.ts`의 `PROTECTED_PATH_PREFIXES`에 `/library`, `/upload`, `/media`로 등록되어 있다.
+- 보호 API는 요청 처리 시작 시 `isAuthenticated()`를 확인하고 실패 시 `401`과 `unauthorized` error code를 반환한다.
+- `tests/agent/unauthorized-access-guard.test.ts`가 이 계약을 고정한다.
+
 ## 남은 운영 확인
 
 - Vercel production 환경에서 `CATHY_GARDEN_AUTH_SECRET`이 비밀번호와 별도 값으로 설정되어 있는지 확인한다.

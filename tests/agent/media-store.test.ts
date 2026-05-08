@@ -13,6 +13,7 @@ import {
 import {
   createMediaEntry,
   deleteMediaEntryById,
+  findDuplicateMediaEntry,
   readMediaEntries,
   updateMediaEntryAlbums,
   updateMediaEntryFavorite,
@@ -49,6 +50,38 @@ describe("media manifest store", () => {
 
     await expect(readMediaEntries()).resolves.toEqual([]);
     expect(send).toHaveBeenCalledWith(expect.any(GetObjectCommand));
+  });
+
+  test("finds duplicate media by file name, content type, and size", async () => {
+    const existingEntry = {
+      id: "entry-1",
+      objectKey: "uploads/2026/05/07/garden.jpg",
+      bucket: "garden-bucket",
+      region: "ap-northeast-2",
+      fileName: "Garden.JPG",
+      contentType: "image/jpeg",
+      size: 1024,
+      uploadedAt: "2026-05-07T10:00:00.000Z",
+    };
+
+    (streamToString as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify([existingEntry])
+    );
+
+    send.mockResolvedValueOnce({
+      Body: {
+        transformToString: async () => JSON.stringify([existingEntry]),
+      },
+      ETag: '"etag-duplicate"',
+    });
+
+    await expect(
+      findDuplicateMediaEntry({
+        fileName: "garden.jpg",
+        contentType: "image/jpeg",
+        size: 1024,
+      })
+    ).resolves.toEqual(existingEntry);
   });
 
   test("retries manifest writes on conditional conflicts", async () => {

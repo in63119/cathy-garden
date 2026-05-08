@@ -22,6 +22,8 @@ const errorMessages: Record<string, string> = {
   "file-too-large": "This file is larger than the current upload limit.",
   "invalid-json": "The upload request payload was malformed.",
   "presign-failed": "The server could not prepare an S3 upload URL.",
+  "duplicate-upload":
+    "This file already appears to be in the archive. Rename it or delete the existing copy before uploading again.",
 };
 
 type SelectedFileState = {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAuthenticated } from "@/lib/auth-server";
+import { findDuplicateMediaEntry } from "@/lib/media-store";
 import { createPresignedUpload } from "@/lib/s3";
 import { validateUploadRequest } from "@/lib/upload-policy";
 
@@ -33,6 +34,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const duplicateEntry = await findDuplicateMediaEntry(validation.normalized);
+
+    if (duplicateEntry) {
+      return NextResponse.json(
+        {
+          error: "duplicate-upload",
+          duplicate: {
+            id: duplicateEntry.id,
+            fileName: duplicateEntry.fileName,
+            uploadedAt: duplicateEntry.uploadedAt,
+          },
+        },
+        { status: 409 }
+      );
+    }
+
     const presigned = await createPresignedUpload(validation.normalized);
 
     return NextResponse.json({

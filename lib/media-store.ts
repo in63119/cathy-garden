@@ -170,6 +170,24 @@ export async function getMediaEntryById(id: string) {
   return entries.find((entry) => entry.id === id) ?? null;
 }
 
+export async function findDuplicateMediaEntry(params: {
+  contentType: string;
+  fileName: string;
+  size: number;
+}) {
+  const entries = await readMediaEntries();
+  const normalizedFileName = params.fileName.trim().toLocaleLowerCase();
+
+  return (
+    entries.find(
+      (entry) =>
+        entry.fileName.trim().toLocaleLowerCase() === normalizedFileName &&
+        entry.contentType === params.contentType &&
+        entry.size === params.size
+    ) ?? null
+  );
+}
+
 export async function deleteMediaEntryById(id: string) {
   const config = getS3Config();
   const client = createS3Client();

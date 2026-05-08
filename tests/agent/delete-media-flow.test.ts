@@ -63,5 +63,6 @@ describe("delete media flow scaffolding", () => {
     expect(uploadPanel).toContain("Open library now");
     expect(uploadPanel).toContain("completed successfully. Opening the library...");
     expect(uploadPanel).toContain("multiple files, sequential uploads");
+    expect(uploadPanel).toContain("duplicate-upload");
   });
 });

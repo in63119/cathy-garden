@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { SectionCard } from "@/components/section-card";
-import { isAuthConfigured, isAuthenticated } from "@/lib/auth-server";
+import {
+  isAuthConfigured,
+  isAuthenticated,
+  isKakaoAuthConfigured,
+} from "@/lib/auth-server";
 import { DEFAULT_REDIRECT_PATH, getSafeRedirectPath } from "@/lib/auth";
 
 type LoginPageProps = {
@@ -13,6 +17,10 @@ type LoginPageProps = {
 
 const errorMessages: Record<string, string> = {
   "invalid-password": "The private access code did not match.",
+  "kakao-invalid-state": "The Kakao login session expired. Please try again.",
+  "kakao-login-failed": "Kakao login could not be completed.",
+  "kakao-not-configured": "Kakao login is not configured yet.",
+  "kakao-user-not-allowed": "This Kakao account is not allowed for this archive.",
   "not-configured":
     "This site does not have a private password configured yet.",
 };
@@ -26,6 +34,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const nextPath = getSafeRedirectPath(params?.next);
   const errorMessage = params?.error ? errorMessages[params.error] : undefined;
   const configured = isAuthConfigured();
+  const kakaoConfigured = isKakaoAuthConfigured();
 
   return (
     <div className="content-shell" style={{ padding: "16px 0 48px" }}>
@@ -81,6 +90,30 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Enter the archive
           </button>
         </form>
+
+        <div className="panel panel-dashed" style={{ display: "grid", gap: "12px" }}>
+          <strong>Kakao login</strong>
+          <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
+            Use the one allowed Kakao account to enter without the private code.
+          </span>
+          <a
+            href={`/api/auth/kakao/start?next=${encodeURIComponent(nextPath)}`}
+            className={`button-link secondary${kakaoConfigured ? "" : " is-disabled"}`}
+            aria-disabled={!kakaoConfigured}
+            style={{
+              width: "fit-content",
+              pointerEvents: kakaoConfigured ? "auto" : "none",
+              opacity: kakaoConfigured ? 1 : 0.58,
+            }}
+          >
+            Continue with Kakao
+          </a>
+          {!kakaoConfigured ? (
+            <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.7 }}>
+              Set Kakao OAuth environment variables before using this option.
+            </p>
+          ) : null}
+        </div>
       </SectionCard>
     </div>
   );

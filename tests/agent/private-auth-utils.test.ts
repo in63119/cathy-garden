@@ -46,4 +46,18 @@ describe("private auth helpers", () => {
     expect(verifyPasswordAttempt("rose-bush", "rose-bush-2")).toBe(false);
     expect(verifyPasswordAttempt("short", "longer")).toBe(false);
   });
+
+  test("keeps Kakao login wired into the login page", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const rootDir = path.resolve(__dirname, "../..");
+    const loginPage = fs.readFileSync(
+      path.join(rootDir, "src/app/login/page.tsx"),
+      "utf8"
+    );
+
+    expect(loginPage).toContain("Continue with Kakao");
+    expect(loginPage).toContain("/api/auth/kakao/start");
+    expect(loginPage).toContain("isKakaoAuthConfigured");
+  });
 });

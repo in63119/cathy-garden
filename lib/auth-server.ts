@@ -8,6 +8,7 @@ import {
   verifyPasswordAttempt,
   verifySessionCookieValue,
 } from "@/lib/auth";
+import { getKakaoOAuthConfig } from "@/lib/kakao-auth";
 
 const PASSWORD_ENV_NAME = "CATHY_GARDEN_PASSWORD";
 const SECRET_ENV_NAME = "CATHY_GARDEN_AUTH_SECRET";
@@ -22,6 +23,10 @@ function getConfiguredSecret() {
 
 export function isAuthConfigured() {
   return getConfiguredPassword().length > 0;
+}
+
+export function isKakaoAuthConfigured() {
+  return getKakaoOAuthConfig() !== null;
 }
 
 export async function isAuthenticated() {

@@ -106,7 +106,7 @@
 ### 후보
 
 - [x] 단일 비밀번호 기반 private gate
-- [ ] Kakao OAuth + 허용 사용자 1명
+- [x] Kakao OAuth + 허용 사용자 1명
 
 ## Phase 7. 스토리지 및 업로드 구현
 

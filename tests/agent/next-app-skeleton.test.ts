@@ -15,6 +15,8 @@ describe("next app skeleton", () => {
       "src/app/share/[token]/page.tsx",
       "src/app/api/auth/login/route.ts",
       "src/app/api/auth/logout/route.ts",
+      "src/app/api/auth/kakao/callback/route.ts",
+      "src/app/api/auth/kakao/start/route.ts",
       "src/app/api/media/complete/route.ts",
       "src/app/api/media/[id]/route.ts",
       "src/app/api/upload/presign/route.ts",

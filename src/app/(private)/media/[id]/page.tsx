@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DeleteMediaButton } from "@/components/delete-media-button";
+import { FavoriteMediaButton } from "@/components/favorite-media-button";
 import { SectionCard } from "@/components/section-card";
 import { getMediaEntryById } from "@/lib/media-store";
 import {
@@ -112,6 +113,9 @@ export default async function MediaDetailPage({
               <span className="media-chip">
                 {mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}
               </span>
+              {entry.favorite ? (
+                <span className="media-chip">Favorite</span>
+              ) : null}
               <span className="media-chip">
                 {archiveDateLabel} {formatUploadedAt(getMediaArchiveDate(entry))}
               </span>
@@ -165,6 +169,7 @@ export default async function MediaDetailPage({
           >
             Open original
           </a>
+          <FavoriteMediaButton mediaId={entry.id} favorite={entry.favorite} />
           <DeleteMediaButton mediaId={entry.id} mode="redirect" />
         </div>
       </SectionCard>

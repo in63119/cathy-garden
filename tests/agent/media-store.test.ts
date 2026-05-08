@@ -14,6 +14,7 @@ import {
   createMediaEntry,
   deleteMediaEntryById,
   readMediaEntries,
+  updateMediaEntryFavorite,
 } from "../../lib/media-store";
 import {
   createS3Client,
@@ -160,5 +161,66 @@ describe("media manifest store", () => {
     expect(deleteCall?.input.Key).toBe(existingEntry.objectKey);
     expect(putCall?.input.IfMatch).toBe("etag-3");
     expect(String(putCall?.input.Body)).toContain("[]");
+  });
+
+  test("updates the favorite flag without deleting the source object", async () => {
+    const existingEntry = {
+      id: "entry-1",
+      objectKey: "uploads/2026/05/07/garden.jpg",
+      bucket: "garden-bucket",
+      region: "ap-northeast-2",
+      fileName: "garden.jpg",
+      contentType: "image/jpeg",
+      size: 1024,
+      uploadedAt: "2026-05-07T10:00:00.000Z",
+    };
+
+    (streamToString as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify([existingEntry])
+    );
+
+    send
+      .mockResolvedValueOnce({
+        Body: {
+          transformToString: async () => JSON.stringify([existingEntry]),
+        },
+        ETag: '"etag-4"',
+      })
+      .mockResolvedValueOnce({});
+
+    await expect(updateMediaEntryFavorite(existingEntry.id, true)).resolves.toEqual({
+      ...existingEntry,
+      favorite: true,
+    });
+
+    const deleteCalls = send.mock.calls.filter(
+      ([command]) => command instanceof DeleteObjectCommand
+    );
+    const putCall = send.mock.calls.find(
+      ([command]) => command instanceof PutObjectCommand
+    )?.[0] as PutObjectCommand | undefined;
+
+    expect(deleteCalls).toHaveLength(0);
+    expect(putCall?.input.IfMatch).toBe("etag-4");
+    expect(String(putCall?.input.Body)).toContain('"favorite": true');
+  });
+
+  test("does not rewrite the manifest when favorite target is missing", async () => {
+    (streamToString as jest.Mock).mockResolvedValueOnce("[]");
+
+    send.mockResolvedValueOnce({
+      Body: {
+        transformToString: async () => "[]",
+      },
+      ETag: '"etag-5"',
+    });
+
+    await expect(updateMediaEntryFavorite("missing-entry", true)).resolves.toBeNull();
+
+    const putCalls = send.mock.calls.filter(
+      ([command]) => command instanceof PutObjectCommand
+    );
+
+    expect(putCalls).toHaveLength(0);
   });
 });

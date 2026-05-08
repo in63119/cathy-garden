@@ -30,6 +30,7 @@ describe("media preview helpers", () => {
   test("normalizes filter and sort query values", () => {
     expect(normalizeMediaFilterValue("image")).toBe("image");
     expect(normalizeMediaFilterValue("video")).toBe("video");
+    expect(normalizeMediaFilterValue("favorite")).toBe("favorite");
     expect(normalizeMediaFilterValue("weird")).toBe("all");
     expect(normalizeMediaSortValue("oldest")).toBe("oldest");
     expect(normalizeMediaSortValue("whatever")).toBe("newest");
@@ -95,5 +96,26 @@ describe("media preview helpers", () => {
         sort: "newest",
       }).map((entry) => entry.contentType)
     ).toEqual(["image/png", "video/mp4", "image/jpeg"]);
+  });
+
+  test("filters favorite media entries", () => {
+    const entries = [
+      {
+        contentType: "image/jpeg",
+        uploadedAt: "2026-05-08T12:00:00.000Z",
+        favorite: true,
+      },
+      {
+        contentType: "video/mp4",
+        uploadedAt: "2026-05-07T12:00:00.000Z",
+      },
+    ];
+
+    expect(
+      filterAndSortMediaEntries(entries, {
+        filter: "favorite",
+        sort: "newest",
+      }).map((entry) => entry.contentType)
+    ).toEqual(["image/jpeg"]);
   });
 });

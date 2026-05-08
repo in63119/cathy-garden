@@ -1,4 +1,5 @@
 import { DeleteMediaButton } from "@/components/delete-media-button";
+import { FavoriteMediaButton } from "@/components/favorite-media-button";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/section-card";
@@ -93,7 +94,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
 
         <div className="filter-toolbar">
           <div className="filter-cluster">
-            {(["all", "image", "video"] as const).map((option) => (
+            {(["all", "favorite", "image", "video"] as const).map((option) => (
               <Link
                 key={option}
                 href={buildLibraryHref({ filter: option, sort })}
@@ -101,9 +102,11 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
               >
                 {option === "all"
                   ? "All"
-                  : option === "image"
-                    ? "Photos"
-                    : "Videos"}
+                  : option === "favorite"
+                    ? "Favorites"
+                    : option === "image"
+                      ? "Photos"
+                      : "Videos"}
               </Link>
             ))}
           </div>
@@ -175,6 +178,9 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     <span className="media-chip">
                       {entry.mediaKind === "image" ? "Photo" : "Video"}
                     </span>
+                    {entry.favorite ? (
+                      <span className="media-chip">Favorite</span>
+                    ) : null}
                     <span className="media-chip">
                       {entry.archiveDateLabel}{" "}
                       {formatUploadedAt(getMediaArchiveDate(entry))}
@@ -193,6 +199,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     >
                       Open details
                     </Link>
+                    <FavoriteMediaButton
+                      mediaId={entry.id}
+                      favorite={entry.favorite}
+                    />
                     <DeleteMediaButton mediaId={entry.id} />
                   </div>
                 </div>

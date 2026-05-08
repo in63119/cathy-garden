@@ -17,6 +17,7 @@ export type MediaEntry = {
   size: number;
   uploadedAt: string;
   takenAt?: string;
+  favorite?: boolean;
 };
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
@@ -124,6 +125,10 @@ async function updateManifestWithRetry(
     const state = await readManifestState();
     const nextEntries = updater(state.entries);
 
+    if (nextEntries === state.entries) {
+      return sortEntries(nextEntries);
+    }
+
     try {
       // Use the last observed ETag so concurrent writes fail fast and retry
       // against the latest manifest instead of silently overwriting it.
@@ -184,4 +189,29 @@ export async function deleteMediaEntryById(id: string) {
   );
 
   return entry;
+}
+
+export async function updateMediaEntryFavorite(id: string, favorite: boolean) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = {
+        ...entry,
+        favorite,
+      };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
 }

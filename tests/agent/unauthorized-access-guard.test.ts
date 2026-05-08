@@ -37,4 +37,15 @@ describe("unauthorized access guards", () => {
       expect(source).toContain("status: 401");
     }
   });
+
+  test("protects favorite updates through the media API route", () => {
+    const source = fs.readFileSync(
+      path.join(rootDir, "src/app/api/media/[id]/route.ts"),
+      "utf8"
+    );
+
+    expect(source).toContain("export async function PATCH");
+    expect(source).toContain("updateMediaEntryFavorite");
+    expect(source).toContain('error: "invalid-favorite"');
+  });
 });

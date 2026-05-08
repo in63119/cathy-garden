@@ -18,13 +18,13 @@ export function getMediaKindLabel(contentType: string) {
   return "file";
 }
 
-export type MediaFilterValue = "all" | "image" | "video";
+export type MediaFilterValue = "all" | "image" | "video" | "favorite";
 export type MediaSortValue = "newest" | "oldest";
 
 export function normalizeMediaFilterValue(
   value?: string | null
 ): MediaFilterValue {
-  if (value === "image" || value === "video") {
+  if (value === "image" || value === "video" || value === "favorite") {
     return value;
   }
 
@@ -43,6 +43,7 @@ export type SortableMediaEntry = {
   uploadedAt: string;
   takenAt?: string;
   contentType: string;
+  favorite?: boolean;
 };
 
 export function getMediaArchiveDate(
@@ -61,6 +62,10 @@ export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
   const filtered = entries.filter((entry) => {
     if (options.filter === "all") {
       return true;
+    }
+
+    if (options.filter === "favorite") {
+      return entry.favorite === true;
     }
 
     return getMediaKindLabel(entry.contentType) === options.filter;

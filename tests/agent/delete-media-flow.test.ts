@@ -10,7 +10,9 @@ describe("delete media flow scaffolding", () => {
       "components/favorite-media-button.tsx",
       "components/media-albums-panel.tsx",
       "components/media-tags-panel.tsx",
+      "components/share-media-panel.tsx",
       "src/app/(private)/media/[id]/page.tsx",
+      "src/app/share/[token]/page.tsx",
     ];
 
     for (const relativePath of requiredFiles) {
@@ -57,6 +59,7 @@ describe("delete media flow scaffolding", () => {
     expect(mediaDetailPage).toContain("FavoriteMediaButton");
     expect(mediaDetailPage).toContain("MediaAlbumsPanel");
     expect(mediaDetailPage).toContain("MediaTagsPanel");
+    expect(mediaDetailPage).toContain("ShareMediaPanel");
     expect(mediaDetailPage).toContain("createPresignedDownload");
     expect(mediaDetailPage).toContain("<video");
     expect(mediaDetailPage).toContain("<img");

@@ -48,9 +48,11 @@ describe("unauthorized access guards", () => {
     expect(source).toContain("export async function PATCH");
     expect(source).toContain("updateMediaEntryAlbums");
     expect(source).toContain("updateMediaEntryFavorite");
+    expect(source).toContain("updateMediaEntrySharing");
     expect(source).toContain("updateMediaEntryTags");
     expect(source).toContain('error: "invalid-albums"');
     expect(source).toContain('error: "invalid-favorite"');
+    expect(source).toContain('error: "invalid-share"');
     expect(source).toContain('error: "invalid-tags"');
   });
 });

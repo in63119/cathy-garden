@@ -6,6 +6,7 @@ import { FavoriteMediaButton } from "@/components/favorite-media-button";
 import { MediaAlbumsPanel } from "@/components/media-albums-panel";
 import { MediaTagsPanel } from "@/components/media-tags-panel";
 import { SectionCard } from "@/components/section-card";
+import { ShareMediaPanel } from "@/components/share-media-panel";
 import { getMediaEntryById } from "@/lib/media-store";
 import {
   getMediaArchiveDate,
@@ -171,9 +172,15 @@ export default async function MediaDetailPage({
             <span>
               Preview URL expires in about <code>5 minutes</code>
             </span>
+            {entry.shareToken ? (
+              <span>
+                Share link: <code>/share/{entry.shareToken}</code>
+              </span>
+            ) : null}
           </div>
         </div>
 
+        <ShareMediaPanel mediaId={entry.id} shareToken={entry.shareToken} />
         <MediaAlbumsPanel mediaId={entry.id} albums={entry.albums} />
         <MediaTagsPanel mediaId={entry.id} tags={entry.tags} />
 

@@ -5,6 +5,7 @@ import {
   deleteMediaEntryById,
   updateMediaEntryAlbums,
   updateMediaEntryFavorite,
+  updateMediaEntrySharing,
   updateMediaEntryTags,
 } from "@/lib/media-store";
 import {
@@ -52,15 +53,30 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const payload = body as {
     albums?: unknown;
     favorite?: unknown;
+    shareEnabled?: unknown;
     tags?: unknown;
   } | null;
   const albums = payload?.albums;
   const favorite = payload?.favorite;
+  const shareEnabled = payload?.shareEnabled;
   const tags = payload?.tags;
 
   if (typeof favorite === "boolean") {
     const { id } = await context.params;
     const entry = await updateMediaEntryFavorite(id, favorite);
+
+    if (!entry) {
+      return NextResponse.json({ error: "not-found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      entry,
+    });
+  }
+
+  if (typeof shareEnabled === "boolean") {
+    const { id } = await context.params;
+    const entry = await updateMediaEntrySharing(id, shareEnabled);
 
     if (!entry) {
       return NextResponse.json({ error: "not-found" }, { status: 404 });
@@ -102,6 +118,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   if (albums !== undefined) {
     return NextResponse.json({ error: "invalid-albums" }, { status: 400 });
+  }
+
+  if (shareEnabled !== undefined) {
+    return NextResponse.json({ error: "invalid-share" }, { status: 400 });
   }
 
   if (tags !== undefined) {

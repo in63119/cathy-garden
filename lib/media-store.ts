@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -21,6 +23,8 @@ export type MediaEntry = {
   tags?: string[];
   albums?: string[];
   thumbnailObjectKey?: string;
+  shareToken?: string;
+  sharedAt?: string;
 };
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
@@ -171,6 +175,18 @@ export async function getMediaEntryById(id: string) {
   return entries.find((entry) => entry.id === id) ?? null;
 }
 
+export async function getMediaEntryByShareToken(token: string) {
+  const normalizedToken = token.trim();
+
+  if (!normalizedToken) {
+    return null;
+  }
+
+  const entries = await readMediaEntries();
+
+  return entries.find((entry) => entry.shareToken === normalizedToken) ?? null;
+}
+
 export async function findDuplicateMediaEntry(params: {
   contentType: string;
   fileName: string;
@@ -295,4 +311,40 @@ export async function updateMediaEntryAlbums(id: string, albums: string[]) {
   });
 
   return updatedEntry;
+}
+
+export async function updateMediaEntrySharing(id: string, shareEnabled: boolean) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = shareEnabled
+        ? {
+            ...entry,
+            shareToken: entry.shareToken ?? createShareToken(),
+            sharedAt: entry.sharedAt ?? new Date().toISOString(),
+          }
+        : {
+            ...entry,
+            shareToken: undefined,
+            sharedAt: undefined,
+          };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
+}
+
+function createShareToken() {
+  return randomBytes(24).toString("hex");
 }

@@ -14,9 +14,11 @@ import {
   createMediaEntry,
   deleteMediaEntryById,
   findDuplicateMediaEntry,
+  getMediaEntryByShareToken,
   readMediaEntries,
   updateMediaEntryAlbums,
   updateMediaEntryFavorite,
+  updateMediaEntrySharing,
   updateMediaEntryTags,
 } from "../../lib/media-store";
 import {
@@ -83,6 +85,35 @@ describe("media manifest store", () => {
         size: 1024,
       })
     ).resolves.toEqual(existingEntry);
+  });
+
+  test("finds media by share token", async () => {
+    const existingEntry = {
+      id: "entry-1",
+      objectKey: "uploads/2026/05/07/garden.jpg",
+      bucket: "garden-bucket",
+      region: "ap-northeast-2",
+      fileName: "garden.jpg",
+      contentType: "image/jpeg",
+      size: 1024,
+      uploadedAt: "2026-05-07T10:00:00.000Z",
+      shareToken: "share-token",
+    };
+
+    (streamToString as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify([existingEntry])
+    );
+
+    send.mockResolvedValueOnce({
+      Body: {
+        transformToString: async () => JSON.stringify([existingEntry]),
+      },
+      ETag: '"etag-share"',
+    });
+
+    await expect(getMediaEntryByShareToken("share-token")).resolves.toEqual(
+      existingEntry
+    );
   });
 
   test("retries manifest writes on conditional conflicts", async () => {
@@ -357,5 +388,66 @@ describe("media manifest store", () => {
     expect(putCall?.input.IfMatch).toBe("etag-7");
     expect(String(putCall?.input.Body)).toContain('"albums": [');
     expect(String(putCall?.input.Body)).toContain('"Spring Garden"');
+  });
+
+  test("creates and disables share tokens", async () => {
+    const existingEntry = {
+      id: "entry-1",
+      objectKey: "uploads/2026/05/07/garden.jpg",
+      bucket: "garden-bucket",
+      region: "ap-northeast-2",
+      fileName: "garden.jpg",
+      contentType: "image/jpeg",
+      size: 1024,
+      uploadedAt: "2026-05-07T10:00:00.000Z",
+    };
+
+    (streamToString as jest.Mock)
+      .mockResolvedValueOnce(JSON.stringify([existingEntry]))
+      .mockResolvedValueOnce(
+        JSON.stringify([
+          {
+            ...existingEntry,
+            shareToken: "existing-share-token",
+            sharedAt: "2026-05-07T10:10:00.000Z",
+          },
+        ])
+      );
+
+    send
+      .mockResolvedValueOnce({
+        Body: {
+          transformToString: async () => JSON.stringify([existingEntry]),
+        },
+        ETag: '"etag-share-1"',
+      })
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({
+        Body: {
+          transformToString: async () =>
+            JSON.stringify([
+              {
+                ...existingEntry,
+                shareToken: "existing-share-token",
+                sharedAt: "2026-05-07T10:10:00.000Z",
+              },
+            ]),
+        },
+        ETag: '"etag-share-2"',
+      })
+      .mockResolvedValueOnce({});
+
+    const sharedEntry = await updateMediaEntrySharing(existingEntry.id, true);
+
+    expect(sharedEntry?.shareToken).toHaveLength(48);
+    expect(sharedEntry?.sharedAt).toBeDefined();
+
+    await expect(
+      updateMediaEntrySharing(existingEntry.id, false)
+    ).resolves.toMatchObject({
+      ...existingEntry,
+      shareToken: undefined,
+      sharedAt: undefined,
+    });
   });
 });

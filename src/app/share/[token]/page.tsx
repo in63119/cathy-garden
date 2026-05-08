@@ -29,6 +29,12 @@ export default async function SharedMediaPage({
     objectKey: entry.objectKey,
     contentType: entry.contentType,
   });
+  const downloadUrl = await createPresignedDownload({
+    bucket: entry.bucket,
+    objectKey: entry.objectKey,
+    contentType: entry.contentType,
+    downloadFileName: entry.fileName,
+  });
 
   return (
     <div className="content-shell page-section">
@@ -70,6 +76,15 @@ export default async function SharedMediaPage({
         </div>
 
         <div className="action-row">
+          <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="button-link secondary"
+            download={entry.fileName}
+          >
+            다운로드
+          </a>
           <a
             href={previewUrl}
             target="_blank"

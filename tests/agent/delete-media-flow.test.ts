@@ -65,6 +65,8 @@ describe("delete media flow scaffolding", () => {
     expect(mediaDetailPage).toContain("<img");
     expect(mediaDetailPage).toContain("media-detail-summary");
     expect(mediaDetailPage).toContain("사진이나 영상을 크게 보고");
+    expect(mediaDetailPage).toContain("download={entry.fileName}");
+    expect(mediaDetailPage).toContain("다운로드");
     expect(mediaDetailPage).not.toContain("S3 key:");
     expect(mediaDetailPage).not.toContain("Bucket:");
     expect(mediaDetailPage).not.toContain("Preview URL expires");

@@ -34,4 +34,14 @@ describe("security checks", () => {
       'console.error("Failed to create S3 presigned upload URL", error)'
     );
   });
+
+  test("does not log browser upload failures with presigned URLs", () => {
+    const source = fs.readFileSync(
+      path.join(rootDir, "lib/upload-client.ts"),
+      "utf8"
+    );
+
+    expect(source).toContain("s3-upload-failed");
+    expect(source).not.toMatch(/console\.(log|error|warn|info)\(/);
+  });
 });

@@ -28,10 +28,18 @@
 - 보호 API는 요청 처리 시작 시 `isAuthenticated()`를 확인하고 실패 시 `401`과 `unauthorized` error code를 반환한다.
 - `tests/agent/unauthorized-access-guard.test.ts`가 이 계약을 고정한다.
 
+## 업로드 실패 로그 확인
+
+- presigned URL 발급 실패는 서버에서 안전한 `errorName`만 기록한다.
+- 원본 AWS 에러 객체, presigned URL, object key, file name은 실패 로그에 남기지 않는다.
+- 브라우저의 직접 S3 PUT 실패는 클라이언트에서 `s3-upload-failed` error code로 처리하고 콘솔에 기록하지 않는다.
+- 사용자 화면에는 재시도 상태와 최종 실패 메시지만 표시한다.
+- `tests/agent/security-check.test.ts`가 실패 로그에 민감값이 남지 않는 계약을 고정한다.
+
 ## 남은 운영 확인
 
 - Vercel production 환경에서 `CATHY_GARDEN_AUTH_SECRET`이 비밀번호와 별도 값으로 설정되어 있는지 확인한다.
-- Vercel 로그에서 password, cookie, AWS key, presigned URL, 개인 이메일이 출력되지 않는지 확인한다.
+- Vercel 로그에서 password, cookie, AWS key, presigned URL, object key, file name, 개인 이메일이 출력되지 않는지 확인한다.
 - S3 bucket은 public access block을 유지한다.
 - IAM key는 이 앱 전용 최소 권한 key를 사용한다.
 - 운영 도메인만 S3 CORS origin에 등록한다.

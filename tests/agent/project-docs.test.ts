@@ -11,6 +11,7 @@ describe("project planning docs", () => {
       "docs/phase-2-technical-transition.md",
       "docs/phase-3-test-strategy.md",
       "docs/phase-4-app-foundation.md",
+      "docs/phase-10-storage-integration-check.md",
     ];
 
     for (const relativePath of requiredDocs) {

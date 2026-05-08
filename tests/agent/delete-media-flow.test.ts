@@ -64,6 +64,10 @@ describe("delete media flow scaffolding", () => {
     expect(mediaDetailPage).toContain("<video");
     expect(mediaDetailPage).toContain("<img");
     expect(mediaDetailPage).toContain("media-detail-summary");
+    expect(mediaDetailPage).toContain("View the full photo or video");
+    expect(mediaDetailPage).not.toContain("S3 key:");
+    expect(mediaDetailPage).not.toContain("Bucket:");
+    expect(mediaDetailPage).not.toContain("Preview URL expires");
     expect(uploadPanel).toContain("Open library now");
     expect(uploadPanel).toContain("completed successfully. Opening the library...");
     expect(uploadPanel).toContain("Multiple files can be selected at once.");

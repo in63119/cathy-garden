@@ -15,6 +15,7 @@ import {
   isVideoContentType,
 } from "@/lib/media-preview";
 import { createPresignedDownload } from "@/lib/s3";
+import { formatBytes } from "@/lib/upload-client";
 
 type MediaDetailPageProps = {
   params: Promise<{
@@ -55,7 +56,7 @@ export default async function MediaDetailPage({
       <SectionCard
         eyebrow="Media Detail"
         title={entry.fileName}
-        description="This detail page now reads real metadata from the archive manifest and renders the original file through a signed S3 read URL."
+        description="View the full photo or video, then update its favorite, album, tag, and sharing settings."
       >
         <div className="media-detail-stage">
           <div className="media-detail-preview">
@@ -132,12 +133,12 @@ export default async function MediaDetailPage({
               <span className="media-chip">
                 {archiveDateLabel} {formatUploadedAt(getMediaArchiveDate(entry))}
               </span>
-              <span className="media-chip">{entry.size} bytes</span>
+              <span className="media-chip">{formatBytes(entry.size)}</span>
             </div>
             <p className="media-detail-note">
               {mediaKind === "image"
-                ? "The full image sits at the center first, while archive details stay nearby instead of taking over the page."
-                : "The full video remains the focus, with archive details kept as supporting information below."}
+                ? "The full photo stays at the center, with its details and controls close by."
+                : "The full video stays at the center, with its details and controls close by."}
             </p>
           </div>
 
@@ -146,21 +147,10 @@ export default async function MediaDetailPage({
               File name: <strong>{entry.fileName}</strong>
             </span>
             <span>
-              Content type: <code>{entry.contentType}</code>
+              Type: <strong>{mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}</strong>
             </span>
             <span>
-              S3 key: <code>{entry.objectKey}</code>
-            </span>
-            {entry.thumbnailObjectKey ? (
-              <span>
-                Thumbnail key: <code>{entry.thumbnailObjectKey}</code>
-              </span>
-            ) : null}
-            <span>
-              Bucket: <code>{entry.bucket}</code>
-            </span>
-            <span>
-              Region: <code>{entry.region}</code>
+              Size: <strong>{formatBytes(entry.size)}</strong>
             </span>
             <span>
               {archiveDateLabel} at:{" "}
@@ -169,12 +159,9 @@ export default async function MediaDetailPage({
             <span>
               Uploaded at: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
             </span>
-            <span>
-              Preview URL expires in about <code>5 minutes</code>
-            </span>
             {entry.shareToken ? (
               <span>
-                Share link: <code>/share/{entry.shareToken}</code>
+                Sharing: <strong>Link created</strong>
               </span>
             ) : null}
           </div>

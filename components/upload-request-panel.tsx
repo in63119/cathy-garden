@@ -173,6 +173,26 @@ export function UploadRequestPanel() {
               totalBytes: size,
             });
           },
+          onTransferRetry: ({
+            index,
+            total,
+            fileName,
+            attempt,
+            maxAttempts,
+          }) => {
+            setStatusMessage(
+              `Upload failed. Retrying ${index} of ${total}: ${fileName} (${attempt}/${maxAttempts})`
+            );
+            setUploadProgress((currentProgress) =>
+              currentProgress?.currentFileName === fileName
+                ? {
+                    ...currentProgress,
+                    percentage: 0,
+                    loaded: 0,
+                  }
+                : currentProgress
+            );
+          },
           onPresigned: ({ result }) => {
             setPresignResult({
               objectKey: result.objectKey,

@@ -196,6 +196,151 @@ describe("upload client helpers", () => {
     ).rejects.toThrow("s3-upload-failed");
   });
 
+  test("retries a failed S3 transfer and then stores metadata", async () => {
+    const send = jest.fn(function (this: {
+      status: number;
+      onload: null | (() => void);
+      upload: { onprogress: null | ((event: ProgressEvent) => void) };
+    }, file: File) {
+      if (send.mock.calls.length === 1) {
+        this.status = 500;
+        this.onload?.();
+        return;
+      }
+
+      this.upload.onprogress?.({
+        lengthComputable: true,
+        loaded: file.size,
+        total: file.size,
+      } as ProgressEvent);
+      this.status = 200;
+      this.onload?.();
+    });
+    class MockXMLHttpRequest {
+      status = 0;
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+      upload = { onprogress: null as null | ((event: ProgressEvent) => void) };
+      open = jest.fn();
+      setRequestHeader = jest.fn();
+      send = send;
+    }
+    global.XMLHttpRequest = MockXMLHttpRequest as never;
+
+    jest
+      .spyOn(global, "fetch" as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          uploadUrl: "https://example.com/upload-url",
+          objectKey: "uploads/2026/05/07/retry.jpg",
+          bucket: "garden-bucket",
+          region: "ap-northeast-2",
+          expiresIn: 300,
+          contentType: "image/jpeg",
+          fileName: "retry.jpg",
+          size: 100,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          entry: {
+            id: "entry-retry",
+            objectKey: "uploads/2026/05/07/retry.jpg",
+            bucket: "garden-bucket",
+            region: "ap-northeast-2",
+            fileName: "retry.jpg",
+            contentType: "image/jpeg",
+            size: 100,
+            uploadedAt: "2026-05-07T12:00:00.000Z",
+          },
+        }),
+      } as Response);
+
+    const onTransferRetry = jest.fn();
+    const results = await uploadMediaBatch(
+      [
+        {
+          file: new File(["retry"], "retry.jpg", { type: "image/jpeg" }),
+          fileName: "retry.jpg",
+          contentType: "image/jpeg",
+          size: 100,
+        },
+      ],
+      {
+        maxTransferAttempts: 2,
+        retryDelayMs: 0,
+        onTransferRetry,
+      }
+    );
+
+    expect(results[0].id).toBe("entry-retry");
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(onTransferRetry).toHaveBeenCalledWith({
+      index: 1,
+      total: 1,
+      fileName: "retry.jpg",
+      attempt: 2,
+      maxAttempts: 2,
+      retryDelayMs: 0,
+    });
+  });
+
+  test("stops retrying S3 transfers after the configured attempt limit", async () => {
+    const send = jest.fn(function (this: {
+      status: number;
+      onload: null | (() => void);
+    }) {
+      this.status = 500;
+      this.onload?.();
+    });
+    class MockXMLHttpRequest {
+      status = 0;
+      onload: null | (() => void) = null;
+      onerror: null | (() => void) = null;
+      upload = { onprogress: null as null | ((event: ProgressEvent) => void) };
+      open = jest.fn();
+      setRequestHeader = jest.fn();
+      send = send;
+    }
+    global.XMLHttpRequest = MockXMLHttpRequest as never;
+
+    const fetchMock = jest.spyOn(global, "fetch" as never).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        uploadUrl: "https://example.com/upload-url",
+        objectKey: "uploads/2026/05/07/fail.jpg",
+        bucket: "garden-bucket",
+        region: "ap-northeast-2",
+        expiresIn: 300,
+        contentType: "image/jpeg",
+        fileName: "fail.jpg",
+        size: 100,
+      }),
+    } as Response);
+
+    await expect(
+      uploadMediaBatch(
+        [
+          {
+            file: new File(["fail"], "fail.jpg", { type: "image/jpeg" }),
+            fileName: "fail.jpg",
+            contentType: "image/jpeg",
+            size: 100,
+          },
+        ],
+        {
+          maxTransferAttempts: 2,
+          retryDelayMs: 0,
+        }
+      )
+    ).rejects.toThrow("s3-upload-failed");
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   test("formats file sizes for display", () => {
     expect(formatBytes(512)).toBe("512 B");
     expect(formatBytes(1536)).toBe("1.5 KB");

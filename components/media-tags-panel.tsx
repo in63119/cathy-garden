@@ -14,9 +14,9 @@ type MediaTagsPanelProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  unauthorized: "Your session is not authorized anymore. Please log in again.",
-  "not-found": "This media entry was not found in the archive.",
-  "invalid-tags": "The tag request was invalid.",
+  unauthorized: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+  "not-found": "보관함에서 이 항목을 찾을 수 없습니다.",
+  "invalid-tags": "태그 요청이 올바르지 않습니다.",
 };
 
 export function MediaTagsPanel({ mediaId, tags = [] }: MediaTagsPanelProps) {
@@ -65,7 +65,7 @@ export function MediaTagsPanel({ mediaId, tags = [] }: MediaTagsPanelProps) {
 
   return (
     <div className="card-soft" style={{ display: "grid", gap: "12px", padding: "16px" }}>
-      <strong>Tags</strong>
+      <strong>태그</strong>
       {normalizedTags.length > 0 ? (
         <div className="media-detail-chips">
           {normalizedTags.map((tag) => (
@@ -77,15 +77,15 @@ export function MediaTagsPanel({ mediaId, tags = [] }: MediaTagsPanelProps) {
                 saveTags(normalizedTags.filter((currentTag) => currentTag !== tag))
               }
               disabled={isPending}
-              title={`Remove ${tag}`}
+              title={`${tag} 태그 제거`}
               style={{ cursor: isPending ? "progress" : "pointer" }}
             >
-              {tag} x
+              {tag} 삭제
             </button>
           ))}
         </div>
       ) : (
-        <span style={{ color: "var(--muted)" }}>No tags yet.</span>
+        <span style={{ color: "var(--muted)" }}>아직 태그가 없습니다.</span>
       )}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
@@ -94,7 +94,7 @@ export function MediaTagsPanel({ mediaId, tags = [] }: MediaTagsPanelProps) {
           className="input-field"
           value={draftTag}
           onChange={(event) => setDraftTag(event.target.value)}
-          placeholder="Add a tag"
+          placeholder="태그 추가"
           maxLength={32}
           style={{ maxWidth: "260px" }}
         />
@@ -105,7 +105,7 @@ export function MediaTagsPanel({ mediaId, tags = [] }: MediaTagsPanelProps) {
           disabled={isPending}
           style={{ cursor: isPending ? "progress" : "pointer" }}
         >
-          {isPending ? "Saving..." : "Add tag"}
+          {isPending ? "저장 중..." : "태그 추가"}
         </button>
       </div>
 

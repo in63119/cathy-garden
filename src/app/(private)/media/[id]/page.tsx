@@ -15,6 +15,7 @@ import {
   isVideoContentType,
 } from "@/lib/media-preview";
 import { createPresignedDownload } from "@/lib/s3";
+import { formatBytes } from "@/lib/upload-client";
 
 type MediaDetailPageProps = {
   params: Promise<{
@@ -23,9 +24,9 @@ type MediaDetailPageProps = {
 };
 
 function formatUploadedAt(value: string) {
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString("ko-KR", {
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -47,15 +48,21 @@ export default async function MediaDetailPage({
     objectKey: entry.objectKey,
     contentType: entry.contentType,
   });
+  const downloadUrl = await createPresignedDownload({
+    bucket: entry.bucket,
+    objectKey: entry.objectKey,
+    contentType: entry.contentType,
+    downloadFileName: entry.fileName,
+  });
   const mediaKind = getMediaKindLabel(entry.contentType);
-  const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
+  const archiveDateLabel = entry.takenAt ? "촬영" : "업로드";
 
   return (
     <div className="content-shell page-section">
       <SectionCard
-        eyebrow="Media Detail"
+        eyebrow="자세히 보기"
         title={entry.fileName}
-        description="This detail page now reads real metadata from the archive manifest and renders the original file through a signed S3 read URL."
+        description="사진이나 영상을 크게 보고, 즐겨찾기와 앨범, 태그, 공유 설정을 관리할 수 있습니다."
       >
         <div className="media-detail-stage">
           <div className="media-detail-preview">
@@ -83,7 +90,7 @@ export default async function MediaDetailPage({
                 }}
               >
                 <source src={previewUrl} type={entry.contentType} />
-                Your browser does not support inline video preview.
+                이 브라우저에서는 영상 미리보기를 지원하지 않습니다.
               </video>
             ) : null}
             {!isImageContentType(entry.contentType) &&
@@ -98,14 +105,14 @@ export default async function MediaDetailPage({
                   textAlign: "center",
                 }}
               >
-                <strong>No inline preview for this file type.</strong>
+                <strong>이 파일 형식은 미리보기를 지원하지 않습니다.</strong>
                 <a
                   href={previewUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="button-link secondary"
                 >
-                  Open file
+                  파일 열기
                 </a>
               </div>
             ) : null}
@@ -114,10 +121,10 @@ export default async function MediaDetailPage({
           <div className="media-detail-summary">
             <div className="media-detail-chips">
               <span className="media-chip">
-                {mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}
+                {mediaKind === "image" ? "사진" : mediaKind === "video" ? "영상" : "파일"}
               </span>
               {entry.favorite ? (
-                <span className="media-chip">Favorite</span>
+                <span className="media-chip">즐겨찾기</span>
               ) : null}
               {(entry.albums ?? []).map((album) => (
                 <span key={album} className="media-chip">
@@ -132,49 +139,35 @@ export default async function MediaDetailPage({
               <span className="media-chip">
                 {archiveDateLabel} {formatUploadedAt(getMediaArchiveDate(entry))}
               </span>
-              <span className="media-chip">{entry.size} bytes</span>
+              <span className="media-chip">{formatBytes(entry.size)}</span>
             </div>
             <p className="media-detail-note">
               {mediaKind === "image"
-                ? "The full image sits at the center first, while archive details stay nearby instead of taking over the page."
-                : "The full video remains the focus, with archive details kept as supporting information below."}
+                ? "사진을 크게 보면서 필요한 설정을 바로 관리할 수 있습니다."
+                : "영상을 크게 보면서 필요한 설정을 바로 관리할 수 있습니다."}
             </p>
           </div>
 
           <div className="media-detail-meta">
             <span>
-              File name: <strong>{entry.fileName}</strong>
+              파일 이름: <strong>{entry.fileName}</strong>
             </span>
             <span>
-              Content type: <code>{entry.contentType}</code>
+              종류: <strong>{mediaKind === "image" ? "사진" : mediaKind === "video" ? "영상" : "파일"}</strong>
             </span>
             <span>
-              S3 key: <code>{entry.objectKey}</code>
-            </span>
-            {entry.thumbnailObjectKey ? (
-              <span>
-                Thumbnail key: <code>{entry.thumbnailObjectKey}</code>
-              </span>
-            ) : null}
-            <span>
-              Bucket: <code>{entry.bucket}</code>
+              크기: <strong>{formatBytes(entry.size)}</strong>
             </span>
             <span>
-              Region: <code>{entry.region}</code>
-            </span>
-            <span>
-              {archiveDateLabel} at:{" "}
+              {archiveDateLabel}일:{" "}
               <strong>{formatUploadedAt(getMediaArchiveDate(entry))}</strong>
             </span>
             <span>
-              Uploaded at: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
-            </span>
-            <span>
-              Preview URL expires in about <code>5 minutes</code>
+              업로드일: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
             </span>
             {entry.shareToken ? (
               <span>
-                Share link: <code>/share/{entry.shareToken}</code>
+                공유: <strong>링크 생성됨</strong>
               </span>
             ) : null}
           </div>
@@ -186,15 +179,24 @@ export default async function MediaDetailPage({
 
         <div className="action-row">
           <Link href="/library" className="button-link secondary">
-            Back to library
+            보관함으로 돌아가기
           </Link>
+          <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="button-link secondary"
+            download={entry.fileName}
+          >
+            다운로드
+          </a>
           <a
             href={previewUrl}
             target="_blank"
             rel="noreferrer"
             className="button-link secondary"
           >
-            Open original
+            원본 열기
           </a>
           <FavoriteMediaButton mediaId={entry.id} favorite={entry.favorite} />
           <DeleteMediaButton mediaId={entry.id} mode="redirect" />

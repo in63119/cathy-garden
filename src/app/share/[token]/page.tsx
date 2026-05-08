@@ -29,13 +29,19 @@ export default async function SharedMediaPage({
     objectKey: entry.objectKey,
     contentType: entry.contentType,
   });
+  const downloadUrl = await createPresignedDownload({
+    bucket: entry.bucket,
+    objectKey: entry.objectKey,
+    contentType: entry.contentType,
+    downloadFileName: entry.fileName,
+  });
 
   return (
     <div className="content-shell page-section">
       <SectionCard
-        eyebrow="Shared Media"
+        eyebrow="공유 항목"
         title={entry.fileName}
-        description="This private archive item is available through a share link."
+        description="공유 링크로 볼 수 있는 보관함 항목입니다."
       >
         <div className="media-detail-stage">
           <div className="media-detail-preview">
@@ -63,7 +69,7 @@ export default async function SharedMediaPage({
                 }}
               >
                 <source src={previewUrl} type={entry.contentType} />
-                Your browser does not support inline video preview.
+                이 브라우저에서는 영상 미리보기를 지원하지 않습니다.
               </video>
             ) : null}
           </div>
@@ -71,12 +77,21 @@ export default async function SharedMediaPage({
 
         <div className="action-row">
           <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="button-link secondary"
+            download={entry.fileName}
+          >
+            다운로드
+          </a>
+          <a
             href={previewUrl}
             target="_blank"
             rel="noreferrer"
             className="button-link secondary"
           >
-            Open original
+            원본 열기
           </a>
         </div>
       </SectionCard>

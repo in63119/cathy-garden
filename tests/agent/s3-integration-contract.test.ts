@@ -83,6 +83,7 @@ describe("S3 storage integration contract", () => {
       bucket: "garden-bucket",
       objectKey: "uploads/2026/05/07/garden.jpg",
       contentType: "image/jpeg",
+      downloadFileName: "정원 사진.jpg",
     });
 
     const command = (getSignedUrl as jest.Mock).mock.calls[0][1] as GetObjectCommand;
@@ -93,6 +94,9 @@ describe("S3 storage integration contract", () => {
     expect(command.input.Bucket).toBe("garden-bucket");
     expect(command.input.Key).toBe("uploads/2026/05/07/garden.jpg");
     expect(command.input.ResponseContentType).toBe("image/jpeg");
+    expect(command.input.ResponseContentDisposition).toContain("attachment");
+    expect(command.input.ResponseContentDisposition).toContain("filename=");
+    expect(command.input.ResponseContentDisposition).toContain("filename*=UTF-8''");
     expect(options).toEqual({
       expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
     });

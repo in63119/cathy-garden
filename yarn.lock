@@ -2090,6 +2090,16 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
+"@fontsource/gowun-batang@^5.2.8":
+  version "5.2.8"
+  resolved "https://registry.yarnpkg.com/@fontsource/gowun-batang/-/gowun-batang-5.2.8.tgz#d9b63541a820f1ccdff770cabd211d44a133ce9f"
+  integrity sha512-l9Cr0649g/YUMenoGXNeEwfk/xgI6O0VjkvkyBoLfuWBVAJV8lss3cHMYkR6YsvUIVc0u7T1w6nPgxDXqS/z3w==
+
+"@fontsource/pretendard@^5.2.5":
+  version "5.2.5"
+  resolved "https://registry.yarnpkg.com/@fontsource/pretendard/-/pretendard-5.2.5.tgz#e073400952c2cc733c6dbeb6dc4d212d6ca50f4c"
+  integrity sha512-UAj3l+Exfx6Sq5hySbhTQhNzkZnhzBxQdHySmjo2lifXyXpMAHv7GD7hAQTLgZfBd1WixJJkmynfJbOp+TAckg==
+
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.13.0.tgz#fb907624df3256d04b9aa2df50d7aa97ec648748"

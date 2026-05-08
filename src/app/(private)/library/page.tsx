@@ -19,9 +19,9 @@ import {
 import { createPresignedDownload } from "@/lib/s3";
 
 function formatUploadedAt(value: string) {
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString("ko-KR", {
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -87,7 +87,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const entriesWithPreview = await Promise.all(
     visibleEntries.map(async (entry) => {
       const mediaKind = getMediaKindLabel(entry.contentType);
-      const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
+      const archiveDateLabel = entry.takenAt ? "촬영" : "업로드";
 
       return {
         ...entry,
@@ -108,21 +108,21 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   return (
     <div className="content-shell page-section">
       <SectionCard
-        eyebrow="Library"
-        title="The media library now reflects uploaded archive entries."
-        description="This page reads saved upload metadata, supports basic filtering, and keeps the preview load light for video items."
+        eyebrow="보관함"
+        title="보관함 둘러보기"
+        description="사진과 영상을 종류, 날짜, 즐겨찾기, 앨범, 태그, 파일 이름으로 찾아볼 수 있습니다."
       >
         {uploaded ? (
           <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
-            <strong>Upload complete</strong>
+            <strong>업로드 완료</strong>
             {uploadedCount > 1 ? (
               <span>
-                <code>{uploadedCount}</code> files were added to the archive. The
-                latest item is <code>{uploaded}</code>.
+                <code>{uploadedCount}</code>개 파일이 보관함에 추가되었습니다.
+                마지막으로 추가된 파일은 <code>{uploaded}</code>입니다.
               </span>
             ) : (
               <span>
-                <code>{uploaded}</code> is now part of the archive.
+                <code>{uploaded}</code> 파일이 보관함에 추가되었습니다.
               </span>
             )}
           </div>
@@ -140,7 +140,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           <input type="hidden" name="album" value={album} />
           <input type="hidden" name="tag" value={tag} />
           <label htmlFor="library-search" style={{ fontWeight: 700 }}>
-            Search archive
+            보관함 검색
           </label>
           <div
             style={{
@@ -156,18 +156,18 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
               type="search"
               className="input-field"
               defaultValue={query}
-              placeholder="Search by file name"
+              placeholder="파일 이름으로 검색"
               style={{ maxWidth: "420px" }}
             />
             <button type="submit" className="button-link primary">
-              Search
+              검색
             </button>
             {query ? (
               <Link
                 href={buildLibraryHref({ filter, sort, album, query: "", tag })}
                 className="button-link secondary"
               >
-                Clear
+                지우기
               </Link>
             ) : null}
           </div>
@@ -182,12 +182,12 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                 className={`button-link secondary${filter === option ? " is-active" : ""}`}
               >
                 {option === "all"
-                  ? "All"
+                  ? "전체"
                   : option === "favorite"
-                    ? "Favorites"
+                    ? "즐겨찾기"
                     : option === "image"
-                      ? "Photos"
-                      : "Videos"}
+                      ? "사진"
+                      : "영상"}
               </Link>
             ))}
           </div>
@@ -199,7 +199,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                 href={buildLibraryHref({ filter, sort: option, album, query, tag })}
                 className={`button-link secondary${sort === option ? " is-active" : ""}`}
               >
-                {option === "newest" ? "Newest first" : "Oldest first"}
+                {option === "newest" ? "최신순" : "오래된순"}
               </Link>
             ))}
           </div>
@@ -208,13 +208,13 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         {album ? (
           <div className="card-soft" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", padding: "14px" }}>
             <span>
-              Album filter: <strong>{album}</strong>
+              앨범 필터: <strong>{album}</strong>
             </span>
             <Link
               href={buildLibraryHref({ filter, sort, album: "", query, tag })}
               className="button-link secondary"
             >
-              Clear album
+              앨범 필터 지우기
             </Link>
           </div>
         ) : null}
@@ -222,25 +222,24 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         {tag ? (
           <div className="card-soft" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", padding: "14px" }}>
             <span>
-              Tag filter: <strong>{tag}</strong>
+              태그 필터: <strong>{tag}</strong>
             </span>
             <Link
               href={buildLibraryHref({ filter, sort, album, query, tag: "" })}
               className="button-link secondary"
             >
-              Clear tag
+              태그 필터 지우기
             </Link>
           </div>
         ) : null}
 
         {entries.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
-            No uploaded items yet. Use the upload route to add the first photo
-            or video to the archive.
+            아직 보관된 항목이 없습니다. 첫 사진이나 영상을 올려 보관함을 시작하세요.
           </div>
         ) : entriesWithPreview.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
-            No items match the current filter or search.
+            현재 필터나 검색어와 일치하는 항목이 없습니다.
           </div>
         ) : (
           <div className="library-grid">
@@ -267,10 +266,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                       </div>
                       <div className="media-card-video-copy">
                         <strong style={{ fontSize: "0.98rem", lineHeight: 1.4 }}>
-                          Video keeps its full quiet moment.
+                          보관함에 저장된 영상입니다.
                         </strong>
                         <span style={{ fontSize: "0.84rem", opacity: 0.86, lineHeight: 1.5 }}>
-                          Open the detail page to watch the signed original.
+                          자세히 보기에서 재생할 수 있습니다.
                         </span>
                       </div>
                     </Link>
@@ -278,17 +277,17 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                   {!isImageContentType(entry.contentType) &&
                   !isVideoContentType(entry.contentType) ? (
                     <span style={{ color: "var(--muted)", fontWeight: 700 }}>
-                      No preview available
+                      미리보기를 사용할 수 없습니다
                     </span>
                   ) : null}
                 </div>
                 <div className="media-card-body">
                   <div className="media-card-meta">
                     <span className="media-chip">
-                      {entry.mediaKind === "image" ? "Photo" : "Video"}
+                      {entry.mediaKind === "image" ? "사진" : "영상"}
                     </span>
                     {entry.favorite ? (
-                      <span className="media-chip">Favorite</span>
+                      <span className="media-chip">즐겨찾기</span>
                     ) : null}
                     {(entry.albums ?? []).map((entryAlbum) => (
                       <Link
@@ -328,15 +327,15 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                   <h2 className="media-card-title">{entry.fileName}</h2>
                   <p className="media-card-caption">
                     {entry.mediaKind === "image"
-                      ? "A preserved photo in the private garden archive."
-                      : "A quiet video entry kept with the rest of the archive."}
+                      ? "개인 보관함에 간직한 사진입니다."
+                      : "개인 보관함에 간직한 영상입니다."}
                   </p>
                   <div className="media-card-actions">
                     <Link
                       href={`/media/${entry.id}`}
                       className="button-link secondary"
                     >
-                      Open details
+                      자세히 보기
                     </Link>
                     <FavoriteMediaButton
                       mediaId={entry.id}
@@ -352,7 +351,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
 
         <div className="action-row">
           <Link href="/upload" className="button-link primary">
-            Go to upload
+            사진 올리기
           </Link>
         </div>
       </SectionCard>

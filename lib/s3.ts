@@ -127,6 +127,7 @@ export async function createPresignedDownload(params: {
   bucket?: string;
   objectKey: string;
   contentType?: string;
+  downloadFileName?: string;
 }) {
   const config = getS3Config();
   const client = createS3Client();
@@ -134,9 +135,21 @@ export async function createPresignedDownload(params: {
     Bucket: params.bucket ?? config.bucket,
     Key: params.objectKey,
     ResponseContentType: params.contentType,
+    ResponseContentDisposition: params.downloadFileName
+      ? buildAttachmentDisposition(params.downloadFileName)
+      : undefined,
   });
 
   return getSignedUrl(client, command, {
     expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
   });
+}
+
+function buildAttachmentDisposition(fileName: string) {
+  const fallbackName = fileName
+    .replace(/["\\]/g, "")
+    .replace(/[^\x20-\x7E]/g, "_")
+    .trim() || "download";
+
+  return `attachment; filename="${fallbackName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
 }

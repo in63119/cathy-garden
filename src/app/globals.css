@@ -15,6 +15,8 @@
   --success-soft: rgba(240, 248, 236, 0.92);
   --shadow: 0 18px 40px rgba(55, 74, 48, 0.12);
   --shadow-soft: 0 10px 26px rgba(55, 74, 48, 0.08);
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Gowun Batang", Georgia, "Times New Roman", serif;
 }
 
 * {
@@ -28,8 +30,17 @@ html {
 body {
   margin: 0;
   color: var(--foreground);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+.header-brand strong {
+  font-family: var(--font-display);
 }
 
 a {
@@ -102,7 +113,7 @@ input {
   color: var(--accent-strong);
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -184,6 +195,68 @@ input {
 .input-field[aria-invalid="true"] {
   border-color: rgba(127, 58, 46, 0.34);
   background: rgba(255, 248, 245, 0.9);
+}
+
+.upload-selection-summary {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.upload-selection-header,
+.upload-file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.upload-selection-header span,
+.upload-file-row span {
+  white-space: nowrap;
+}
+
+.upload-file-list {
+  display: grid;
+  gap: 8px;
+}
+
+.upload-file-row {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.upload-file-row strong,
+.upload-progress-title,
+.upload-result-row code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-file-row-muted {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.upload-action-row {
+  display: flex;
+  align-items: center;
+}
+
+.upload-progress-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.upload-result-row {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .status-text {
@@ -464,8 +537,20 @@ input {
   .action-row .button-link,
   .action-row form,
   .action-row form .button-link,
-  .filter-cluster .button-link {
+  .filter-cluster .button-link,
+  .upload-action-row .button-link {
     width: 100%;
+  }
+
+  .upload-selection-header,
+  .upload-file-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .upload-selection-header span,
+  .upload-file-row span {
+    white-space: normal;
   }
 
   .filter-toolbar {

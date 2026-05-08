@@ -9,8 +9,8 @@ type DeleteMediaButtonProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  unauthorized: "Your session is not authorized anymore. Please log in again.",
-  "not-found": "This media entry was not found in the archive.",
+  unauthorized: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+  "not-found": "보관함에서 이 항목을 찾을 수 없습니다.",
 };
 
 export function DeleteMediaButton({
@@ -23,7 +23,7 @@ export function DeleteMediaButton({
 
   const handleDelete = () => {
     const confirmed = window.confirm(
-      "Delete this item from S3 and remove it from the library?"
+      "이 항목을 보관함에서 삭제할까요?"
     );
 
     if (!confirmed) {
@@ -65,7 +65,7 @@ export function DeleteMediaButton({
           cursor: isPending ? "progress" : "pointer",
         }}
       >
-        {isPending ? "Deleting..." : "Delete"}
+        {isPending ? "삭제 중..." : "삭제"}
       </button>
 
       {errorMessage ? (

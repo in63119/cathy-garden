@@ -12,7 +12,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
       className="content-shell hero-grid"
     >
       <div className="card hero-copy-card">
-        <span className="eyebrow">For Cathy Only</span>
+        <span className="eyebrow">Private Archive</span>
         <h1
           style={{
             fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
@@ -63,8 +63,8 @@ export function HeroSection({ title, description }: HeroSectionProps) {
             lineHeight: 1.6,
           }}
         >
-          A warm, private home for photos and videos, shaped around the garden
-          mood you wanted from the start.
+          A private home for the photos and videos saved from the garden,
+          family, and everyday life.
         </p>
       </div>
     </section>

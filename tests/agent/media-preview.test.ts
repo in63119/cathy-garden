@@ -5,6 +5,9 @@ import {
   isImageContentType,
   isVideoContentType,
   normalizeMediaFilterValue,
+  normalizeMediaAlbum,
+  normalizeMediaAlbumFilter,
+  normalizeMediaAlbums,
   normalizeMediaSearchQuery,
   normalizeMediaTag,
   normalizeMediaTagFilter,
@@ -197,6 +200,36 @@ describe("media preview helpers", () => {
         filter: "all",
         sort: "newest",
         tag: "garden",
+      }).map((entry) => entry.fileName)
+    ).toEqual(["garden.jpg"]);
+  });
+
+  test("normalizes and filters media albums", () => {
+    const entries = [
+      {
+        fileName: "garden.jpg",
+        contentType: "image/jpeg",
+        uploadedAt: "2026-05-08T12:00:00.000Z",
+        albums: ["Spring Garden"],
+      },
+      {
+        fileName: "birthday.mp4",
+        contentType: "video/mp4",
+        uploadedAt: "2026-05-07T12:00:00.000Z",
+        albums: ["Birthday"],
+      },
+    ];
+
+    expect(normalizeMediaAlbum("  Spring   Garden  ")).toBe("Spring Garden");
+    expect(normalizeMediaAlbumFilter(" Birthday ")).toBe("Birthday");
+    expect(
+      normalizeMediaAlbums(["Spring Garden", "Spring Garden", "Birthday", ""])
+    ).toEqual(["Spring Garden", "Birthday"]);
+    expect(
+      filterAndSortMediaEntries(entries, {
+        filter: "all",
+        sort: "newest",
+        album: "spring garden",
       }).map((entry) => entry.fileName)
     ).toEqual(["garden.jpg"]);
   });

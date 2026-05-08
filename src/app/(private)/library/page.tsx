@@ -10,6 +10,7 @@ import {
   getMediaKindLabel,
   isImageContentType,
   isVideoContentType,
+  normalizeMediaAlbumFilter,
   normalizeMediaFilterValue,
   normalizeMediaSearchQuery,
   normalizeMediaTagFilter,
@@ -30,6 +31,7 @@ function formatUploadedAt(value: string) {
 function buildLibraryHref(params: {
   filter: string;
   sort: string;
+  album: string;
   query: string;
   tag: string;
 }) {
@@ -40,6 +42,10 @@ function buildLibraryHref(params: {
 
   if (params.query) {
     searchParams.set("q", params.query);
+  }
+
+  if (params.album) {
+    searchParams.set("album", params.album);
   }
 
   if (params.tag) {
@@ -53,6 +59,7 @@ type LibraryPageProps = {
   searchParams?: Promise<{
     filter?: string;
     sort?: string;
+    album?: string;
     q?: string;
     tag?: string;
     uploaded?: string;
@@ -64,6 +71,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const params = searchParams ? await searchParams : undefined;
   const filter = normalizeMediaFilterValue(params?.filter);
   const sort = normalizeMediaSortValue(params?.sort);
+  const album = normalizeMediaAlbumFilter(params?.album);
   const query = normalizeMediaSearchQuery(params?.q);
   const tag = normalizeMediaTagFilter(params?.tag);
   const uploaded = params?.uploaded?.trim() ?? "";
@@ -72,6 +80,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const visibleEntries = filterAndSortMediaEntries(entries, {
     filter,
     sort,
+    album,
     query,
     tag,
   });
@@ -128,6 +137,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         >
           <input type="hidden" name="filter" value={filter} />
           <input type="hidden" name="sort" value={sort} />
+          <input type="hidden" name="album" value={album} />
           <input type="hidden" name="tag" value={tag} />
           <label htmlFor="library-search" style={{ fontWeight: 700 }}>
             Search archive
@@ -154,7 +164,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             </button>
             {query ? (
               <Link
-                href={buildLibraryHref({ filter, sort, query: "", tag })}
+                href={buildLibraryHref({ filter, sort, album, query: "", tag })}
                 className="button-link secondary"
               >
                 Clear
@@ -168,7 +178,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             {(["all", "favorite", "image", "video"] as const).map((option) => (
               <Link
                 key={option}
-                href={buildLibraryHref({ filter: option, sort, query, tag })}
+                href={buildLibraryHref({ filter: option, sort, album, query, tag })}
                 className={`button-link secondary${filter === option ? " is-active" : ""}`}
               >
                 {option === "all"
@@ -186,7 +196,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             {(["newest", "oldest"] as const).map((option) => (
               <Link
                 key={option}
-                href={buildLibraryHref({ filter, sort: option, query, tag })}
+                href={buildLibraryHref({ filter, sort: option, album, query, tag })}
                 className={`button-link secondary${sort === option ? " is-active" : ""}`}
               >
                 {option === "newest" ? "Newest first" : "Oldest first"}
@@ -195,13 +205,27 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         </div>
 
+        {album ? (
+          <div className="card-soft" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", padding: "14px" }}>
+            <span>
+              Album filter: <strong>{album}</strong>
+            </span>
+            <Link
+              href={buildLibraryHref({ filter, sort, album: "", query, tag })}
+              className="button-link secondary"
+            >
+              Clear album
+            </Link>
+          </div>
+        ) : null}
+
         {tag ? (
           <div className="card-soft" style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", padding: "14px" }}>
             <span>
               Tag filter: <strong>{tag}</strong>
             </span>
             <Link
-              href={buildLibraryHref({ filter, sort, query, tag: "" })}
+              href={buildLibraryHref({ filter, sort, album, query, tag: "" })}
               className="button-link secondary"
             >
               Clear tag
@@ -266,12 +290,28 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                     {entry.favorite ? (
                       <span className="media-chip">Favorite</span>
                     ) : null}
+                    {(entry.albums ?? []).map((entryAlbum) => (
+                      <Link
+                        key={entryAlbum}
+                        href={buildLibraryHref({
+                          filter,
+                          sort,
+                          album: entryAlbum,
+                          query,
+                          tag,
+                        })}
+                        className="media-chip"
+                      >
+                        {entryAlbum}
+                      </Link>
+                    ))}
                     {(entry.tags ?? []).map((entryTag) => (
                       <Link
                         key={entryTag}
                         href={buildLibraryHref({
                           filter,
                           sort,
+                          album,
                           query,
                           tag: entryTag,
                         })}

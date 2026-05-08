@@ -3,10 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth-server";
 import {
   deleteMediaEntryById,
+  updateMediaEntryAlbums,
   updateMediaEntryFavorite,
   updateMediaEntryTags,
 } from "@/lib/media-store";
-import { normalizeMediaTags } from "@/lib/media-preview";
+import {
+  normalizeMediaAlbums,
+  normalizeMediaTags,
+} from "@/lib/media-preview";
 
 type RouteContext = {
   params: Promise<{
@@ -45,7 +49,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "invalid-json" }, { status: 400 });
   }
 
-  const payload = body as { favorite?: unknown; tags?: unknown } | null;
+  const payload = body as {
+    albums?: unknown;
+    favorite?: unknown;
+    tags?: unknown;
+  } | null;
+  const albums = payload?.albums;
   const favorite = payload?.favorite;
   const tags = payload?.tags;
 
@@ -73,6 +82,26 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({
       entry,
     });
+  }
+
+  if (
+    Array.isArray(albums) &&
+    albums.every((album) => typeof album === "string")
+  ) {
+    const { id } = await context.params;
+    const entry = await updateMediaEntryAlbums(id, normalizeMediaAlbums(albums));
+
+    if (!entry) {
+      return NextResponse.json({ error: "not-found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      entry,
+    });
+  }
+
+  if (albums !== undefined) {
+    return NextResponse.json({ error: "invalid-albums" }, { status: 400 });
   }
 
   if (tags !== undefined) {

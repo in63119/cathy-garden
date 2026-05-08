@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DeleteMediaButton } from "@/components/delete-media-button";
 import { FavoriteMediaButton } from "@/components/favorite-media-button";
+import { MediaAlbumsPanel } from "@/components/media-albums-panel";
 import { MediaTagsPanel } from "@/components/media-tags-panel";
 import { SectionCard } from "@/components/section-card";
 import { getMediaEntryById } from "@/lib/media-store";
@@ -117,6 +118,11 @@ export default async function MediaDetailPage({
               {entry.favorite ? (
                 <span className="media-chip">Favorite</span>
               ) : null}
+              {(entry.albums ?? []).map((album) => (
+                <span key={album} className="media-chip">
+                  {album}
+                </span>
+              ))}
               {(entry.tags ?? []).map((tag) => (
                 <span key={tag} className="media-chip">
                   {tag}
@@ -163,6 +169,7 @@ export default async function MediaDetailPage({
           </div>
         </div>
 
+        <MediaAlbumsPanel mediaId={entry.id} albums={entry.albums} />
         <MediaTagsPanel mediaId={entry.id} tags={entry.tags} />
 
         <div className="action-row">

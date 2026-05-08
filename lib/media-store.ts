@@ -19,6 +19,7 @@ export type MediaEntry = {
   takenAt?: string;
   favorite?: boolean;
   tags?: string[];
+  albums?: string[];
 };
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
@@ -233,6 +234,31 @@ export async function updateMediaEntryTags(id: string, tags: string[]) {
       updatedEntry = {
         ...entry,
         tags,
+      };
+
+      return updatedEntry;
+    });
+  });
+
+  return updatedEntry;
+}
+
+export async function updateMediaEntryAlbums(id: string, albums: string[]) {
+  let updatedEntry: MediaEntry | null = null;
+
+  await updateManifestWithRetry((entries) => {
+    if (!entries.some((entry) => entry.id === id)) {
+      return entries;
+    }
+
+    return entries.map((entry) => {
+      if (entry.id !== id) {
+        return entry;
+      }
+
+      updatedEntry = {
+        ...entry,
+        albums,
       };
 
       return updatedEntry;

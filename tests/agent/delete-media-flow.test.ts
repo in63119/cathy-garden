@@ -8,6 +8,7 @@ describe("delete media flow scaffolding", () => {
       "src/app/api/media/[id]/route.ts",
       "components/delete-media-button.tsx",
       "components/favorite-media-button.tsx",
+      "components/media-albums-panel.tsx",
       "components/media-tags-panel.tsx",
       "src/app/(private)/media/[id]/page.tsx",
     ];
@@ -35,6 +36,8 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("DeleteMediaButton");
     expect(libraryPage).toContain("FavoriteMediaButton");
     expect(libraryPage).toContain("Favorites");
+    expect(libraryPage).toContain("normalizeMediaAlbumFilter");
+    expect(libraryPage).toContain("Album filter");
     expect(libraryPage).toContain("createPresignedDownload");
     expect(libraryPage).toContain("<img");
     expect(libraryPage).toContain("media-card");
@@ -51,6 +54,7 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("Upload complete");
     expect(mediaDetailPage).toContain('mode="redirect"');
     expect(mediaDetailPage).toContain("FavoriteMediaButton");
+    expect(mediaDetailPage).toContain("MediaAlbumsPanel");
     expect(mediaDetailPage).toContain("MediaTagsPanel");
     expect(mediaDetailPage).toContain("createPresignedDownload");
     expect(mediaDetailPage).toContain("<video");

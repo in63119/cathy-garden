@@ -46,6 +46,7 @@ export type SortableMediaEntry = {
   fileName: string;
   favorite?: boolean;
   tags?: string[];
+  albums?: string[];
 };
 
 export function getMediaArchiveDate(
@@ -74,6 +75,22 @@ export function normalizeMediaTagFilter(value?: string | null) {
   return normalizeMediaTag(value);
 }
 
+export function normalizeMediaAlbum(value?: string | null) {
+  return value?.trim().replace(/\s+/g, " ").slice(0, 48) ?? "";
+}
+
+export function normalizeMediaAlbums(values: string[]) {
+  const normalizedAlbums = values
+    .map((value) => normalizeMediaAlbum(value))
+    .filter(Boolean);
+
+  return Array.from(new Set(normalizedAlbums)).slice(0, 8);
+}
+
+export function normalizeMediaAlbumFilter(value?: string | null) {
+  return normalizeMediaAlbum(value);
+}
+
 export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
   entries: T[],
   options: {
@@ -81,27 +98,35 @@ export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
     sort: MediaSortValue;
     query?: string;
     tag?: string;
+    album?: string;
   }
 ) {
   const searchQuery = normalizeMediaSearchQuery(options.query).toLocaleLowerCase();
   const tagFilter = normalizeMediaTagFilter(options.tag).toLocaleLowerCase();
+  const albumFilter = normalizeMediaAlbumFilter(options.album).toLocaleLowerCase();
   const filtered = entries.filter((entry) => {
     if (options.filter === "all") {
-      return matchesSearchQuery(entry, searchQuery) && matchesTag(entry, tagFilter);
+      return (
+        matchesSearchQuery(entry, searchQuery) &&
+        matchesTag(entry, tagFilter) &&
+        matchesAlbum(entry, albumFilter)
+      );
     }
 
     if (options.filter === "favorite") {
       return (
         entry.favorite === true &&
         matchesSearchQuery(entry, searchQuery) &&
-        matchesTag(entry, tagFilter)
+        matchesTag(entry, tagFilter) &&
+        matchesAlbum(entry, albumFilter)
       );
     }
 
     return (
       getMediaKindLabel(entry.contentType) === options.filter &&
       matchesSearchQuery(entry, searchQuery) &&
-      matchesTag(entry, tagFilter)
+      matchesTag(entry, tagFilter) &&
+      matchesAlbum(entry, albumFilter)
     );
   });
 
@@ -135,5 +160,18 @@ function matchesTag(
 
   return (entry.tags ?? []).some(
     (tag) => tag.toLocaleLowerCase() === tagFilter
+  );
+}
+
+function matchesAlbum(
+  entry: Pick<SortableMediaEntry, "albums">,
+  albumFilter: string
+) {
+  if (!albumFilter) {
+    return true;
+  }
+
+  return (entry.albums ?? []).some(
+    (album) => album.toLocaleLowerCase() === albumFilter
   );
 }

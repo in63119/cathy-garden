@@ -25,6 +25,7 @@ describe("unauthorized access guards", () => {
   test("blocks unauthenticated protected API routes with 401 responses", () => {
     const routePaths = [
       "src/app/api/upload/presign/route.ts",
+      "src/app/api/upload/thumbnail/route.ts",
       "src/app/api/media/complete/route.ts",
       "src/app/api/media/[id]/route.ts",
     ];

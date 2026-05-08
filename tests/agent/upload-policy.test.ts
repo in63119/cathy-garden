@@ -1,6 +1,7 @@
 import {
   ALLOWED_UPLOAD_MIME_TYPES,
   MAX_UPLOAD_SIZE_BYTES,
+  buildThumbnailObjectKey,
   buildUploadObjectKey,
   sanitizeFileName,
   validateUploadRequest,
@@ -23,6 +24,15 @@ describe("upload policy", () => {
 
     expect(key.startsWith("uploads/2026/05/07/")).toBe(true);
     expect(key.endsWith("-garden.jpg")).toBe(true);
+  });
+
+  test("builds thumbnail object keys under the thumbnails prefix", () => {
+    expect(buildThumbnailObjectKey("uploads/2026/05/07/garden.jpg")).toBe(
+      "thumbnails/2026/05/07/garden.jpg.jpg"
+    );
+    expect(() => buildThumbnailObjectKey("media/garden.jpg")).toThrow(
+      "invalid-thumbnail-source-key"
+    );
   });
 
   test("accepts valid image and video uploads", () => {

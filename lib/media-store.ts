@@ -20,6 +20,7 @@ export type MediaEntry = {
   favorite?: boolean;
   tags?: string[];
   albums?: string[];
+  thumbnailObjectKey?: string;
 };
 
 export type CreateMediaEntryInput = Omit<MediaEntry, "id" | "uploadedAt">;
@@ -204,6 +205,16 @@ export async function deleteMediaEntryById(id: string) {
       Key: entry.objectKey,
     })
   );
+
+  if (entry.thumbnailObjectKey) {
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: entry.bucket || config.bucket,
+        Key: entry.thumbnailObjectKey,
+      })
+    );
+  }
+
   await updateManifestWithRetry((currentEntries) =>
     currentEntries.filter((item) => item.id !== id)
   );

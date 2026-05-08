@@ -17,6 +17,7 @@ describe("next app skeleton", () => {
       "src/app/api/media/complete/route.ts",
       "src/app/api/media/[id]/route.ts",
       "src/app/api/upload/presign/route.ts",
+      "src/app/api/upload/thumbnail/route.ts",
       "src/app/globals.css",
       "components/app-shell.tsx",
       "components/delete-media-button.tsx",

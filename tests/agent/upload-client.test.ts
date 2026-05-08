@@ -2,6 +2,7 @@ import {
   completeUploadedMedia,
   formatBytes,
   requestPresignedUpload,
+  requestPresignedThumbnailUpload,
   uploadMediaBatch,
   uploadFileToPresignedUrl,
 } from "../../lib/upload-client";
@@ -66,6 +67,35 @@ describe("upload client helpers", () => {
         size: 512,
       })
     ).rejects.toThrow("unsupported-content-type");
+  });
+
+  test("requests a presigned thumbnail upload URL", async () => {
+    const fetchMock = jest.spyOn(global, "fetch" as never).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        uploadUrl: "https://example.com/thumbnail",
+        objectKey: "thumbnails/2026/05/07/example.jpg.jpg",
+        bucket: "garden-bucket",
+        region: "ap-northeast-2",
+        expiresIn: 300,
+        contentType: "image/jpeg",
+      }),
+    } as Response);
+
+    const result = await requestPresignedThumbnailUpload({
+      objectKey: "uploads/2026/05/07/example.jpg",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/upload/thumbnail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        objectKey: "uploads/2026/05/07/example.jpg",
+      }),
+    });
+    expect(result.objectKey).toBe("thumbnails/2026/05/07/example.jpg.jpg");
   });
 
   test("uploads a selected file directly to the presigned URL", async () => {

@@ -11,6 +11,7 @@ describe("media metadata validation", () => {
         contentType: "image/jpeg",
         size: 1024,
         takenAt: "2026-05-06T09:30:00.000Z",
+        thumbnailObjectKey: "thumbnails/2026/05/07/garden.jpg.jpg",
       })
     ).toEqual({
       ok: true,
@@ -22,6 +23,7 @@ describe("media metadata validation", () => {
         contentType: "image/jpeg",
         size: 1024,
         takenAt: "2026-05-06T09:30:00.000Z",
+        thumbnailObjectKey: "thumbnails/2026/05/07/garden.jpg.jpg",
       },
     });
   });
@@ -59,6 +61,21 @@ describe("media metadata validation", () => {
     ).toEqual({
       ok: false,
       reason: "invalid-taken-at",
+    });
+
+    expect(
+      validateCompleteUploadPayload({
+        objectKey: "uploads/example.jpg",
+        bucket: "garden-bucket",
+        region: "ap-northeast-2",
+        fileName: "garden.jpg",
+        contentType: "image/jpeg",
+        size: 1024,
+        thumbnailObjectKey: "uploads/not-a-thumbnail.jpg",
+      })
+    ).toEqual({
+      ok: false,
+      reason: "invalid-thumbnail-key",
     });
   });
 });

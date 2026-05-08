@@ -25,6 +25,7 @@ export type MediaEntryResponse = {
   size: number;
   uploadedAt: string;
   takenAt?: string;
+  thumbnailObjectKey?: string;
 };
 
 export type UploadBatchItem = {
@@ -60,6 +61,26 @@ export async function requestPresignedUpload(
 
   if (!response.ok) {
     throw new Error(data?.error ?? "presign-failed");
+  }
+
+  return data as PresignUploadResponse;
+}
+
+export async function requestPresignedThumbnailUpload(payload: {
+  objectKey: string;
+}): Promise<PresignUploadResponse> {
+  const response = await fetch("/api/upload/thumbnail", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error ?? "thumbnail-presign-failed");
   }
 
   return data as PresignUploadResponse;
@@ -253,6 +274,12 @@ export async function uploadMediaBatch(
       stage: "complete",
     });
 
+    const thumbnailObjectKey = await createAndUploadThumbnail({
+      contentType: item.contentType,
+      file: item.file,
+      objectKey: presigned.objectKey,
+    });
+
     const entry = await completeUploadedMedia({
       objectKey: presigned.objectKey,
       bucket: presigned.bucket,
@@ -261,12 +288,91 @@ export async function uploadMediaBatch(
       contentType: presigned.contentType,
       size: presigned.size,
       takenAt: item.takenAt,
+      thumbnailObjectKey,
     });
 
     uploadedEntries.push(entry);
   }
 
   return uploadedEntries;
+}
+
+async function createAndUploadThumbnail(params: {
+  contentType: string;
+  file: File | Blob;
+  objectKey: string;
+}) {
+  if (!params.contentType.startsWith("image/")) {
+    return undefined;
+  }
+
+  const thumbnail = await createImageThumbnail(params.file);
+
+  if (!thumbnail) {
+    return undefined;
+  }
+
+  try {
+    const presigned = await requestPresignedThumbnailUpload({
+      objectKey: params.objectKey,
+    });
+
+    await uploadFileToPresignedUrl({
+      uploadUrl: presigned.uploadUrl,
+      file: thumbnail,
+      contentType: "image/jpeg",
+    });
+
+    return presigned.objectKey;
+  } catch {
+    return undefined;
+  }
+}
+
+async function createImageThumbnail(file: File | Blob) {
+  if (
+    typeof document === "undefined" ||
+    typeof URL === "undefined" ||
+    typeof URL.createObjectURL !== "function"
+  ) {
+    return null;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await loadImage(objectUrl);
+    const maxDimension = 640;
+    const scale = Math.min(
+      1,
+      maxDimension / Math.max(image.naturalWidth, image.naturalHeight)
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d")?.drawImage(image, 0, 0, width, height);
+
+    return await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.78);
+    });
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("thumbnail-load-failed"));
+    image.src = src;
+  });
 }
 
 function wait(delayMs: number) {

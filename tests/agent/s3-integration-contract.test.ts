@@ -10,6 +10,7 @@ import {
 } from "../../lib/upload-policy";
 import {
   createPresignedDownload,
+  createPresignedThumbnailUpload,
   createPresignedUpload,
   getS3Config,
 } from "../../lib/s3";
@@ -95,5 +96,23 @@ describe("S3 storage integration contract", () => {
     expect(options).toEqual({
       expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
     });
+  });
+
+  test("creates presigned thumbnail uploads under the thumbnails prefix", async () => {
+    const result = await createPresignedThumbnailUpload({
+      objectKey: "uploads/2026/05/07/garden.jpg",
+    });
+
+    const command = (getSignedUrl as jest.Mock).mock.calls[0][1] as PutObjectCommand;
+    const options = (getSignedUrl as jest.Mock).mock.calls[0][2];
+
+    expect(command).toBeInstanceOf(PutObjectCommand);
+    expect(command.input.Bucket).toBe("garden-bucket");
+    expect(command.input.Key).toBe("thumbnails/2026/05/07/garden.jpg.jpg");
+    expect(command.input.ContentType).toBe("image/jpeg");
+    expect(options).toEqual({
+      expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+    });
+    expect(result.objectKey).toBe("thumbnails/2026/05/07/garden.jpg.jpg");
   });
 });

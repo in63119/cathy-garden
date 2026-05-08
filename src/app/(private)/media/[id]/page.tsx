@@ -150,6 +150,11 @@ export default async function MediaDetailPage({
             <span>
               S3 key: <code>{entry.objectKey}</code>
             </span>
+            {entry.thumbnailObjectKey ? (
+              <span>
+                Thumbnail key: <code>{entry.thumbnailObjectKey}</code>
+              </span>
+            ) : null}
             <span>
               Bucket: <code>{entry.bucket}</code>
             </span>

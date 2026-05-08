@@ -97,8 +97,8 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           mediaKind === "image"
             ? await createPresignedDownload({
                 bucket: entry.bucket,
-                objectKey: entry.objectKey,
-                contentType: entry.contentType,
+                objectKey: entry.thumbnailObjectKey ?? entry.objectKey,
+                contentType: entry.thumbnailObjectKey ? "image/jpeg" : entry.contentType,
               })
             : null,
       };

@@ -62,6 +62,7 @@ describe("media manifest store", () => {
       contentType: "image/jpeg",
       size: 1024,
       uploadedAt: "2026-05-07T10:00:00.000Z",
+      thumbnailObjectKey: "thumbnails/2026/05/07/garden.jpg.jpg",
     };
 
     (streamToString as jest.Mock).mockResolvedValueOnce(
@@ -162,6 +163,7 @@ describe("media manifest store", () => {
       contentType: "image/jpeg",
       size: 1024,
       uploadedAt: "2026-05-07T10:00:00.000Z",
+      thumbnailObjectKey: "thumbnails/2026/05/07/garden.jpg.jpg",
     };
 
     (streamToString as jest.Mock)
@@ -175,6 +177,7 @@ describe("media manifest store", () => {
         },
         ETag: '"etag-3"',
       })
+      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({
         Body: {
@@ -194,6 +197,13 @@ describe("media manifest store", () => {
     )?.[0] as PutObjectCommand | undefined;
 
     expect(deleteCall?.input.Key).toBe(existingEntry.objectKey);
+    expect(
+      send.mock.calls.some(
+        ([command]) =>
+          command instanceof DeleteObjectCommand &&
+          command.input.Key === existingEntry.thumbnailObjectKey
+      )
+    ).toBe(true);
     expect(putCall?.input.IfMatch).toBe("etag-3");
     expect(String(putCall?.input.Body)).toContain("[]");
   });

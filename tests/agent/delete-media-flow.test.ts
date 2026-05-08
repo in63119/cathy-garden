@@ -39,6 +39,7 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("normalizeMediaAlbumFilter");
     expect(libraryPage).toContain("Album filter");
     expect(libraryPage).toContain("createPresignedDownload");
+    expect(libraryPage).toContain("thumbnailObjectKey");
     expect(libraryPage).toContain("<img");
     expect(libraryPage).toContain("media-card");
     expect(libraryPage).toContain("Video keeps its full quiet moment.");

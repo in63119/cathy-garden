@@ -23,7 +23,7 @@ export function DeleteMediaButton({
 
   const handleDelete = () => {
     const confirmed = window.confirm(
-      "Delete this item from S3 and remove it from the library?"
+      "Delete this item from the archive?"
     );
 
     if (!confirmed) {

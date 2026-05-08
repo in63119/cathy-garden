@@ -44,7 +44,7 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("thumbnailObjectKey");
     expect(libraryPage).toContain("<img");
     expect(libraryPage).toContain("media-card");
-    expect(libraryPage).toContain("Video keeps its full quiet moment.");
+    expect(libraryPage).toContain("Video saved in the archive.");
     expect(libraryPage).toContain("normalizeMediaFilterValue");
     expect(libraryPage).toContain("normalizeMediaSearchQuery");
     expect(libraryPage).toContain("normalizeMediaTagFilter");

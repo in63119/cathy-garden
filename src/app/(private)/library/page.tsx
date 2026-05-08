@@ -109,8 +109,8 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
     <div className="content-shell page-section">
       <SectionCard
         eyebrow="Library"
-        title="The media library now reflects uploaded archive entries."
-        description="This page reads saved upload metadata, supports basic filtering, and keeps the preview load light for video items."
+        title="Browse the archive."
+        description="Find photos and videos by type, date, favorites, albums, tags, or file name."
       >
         {uploaded ? (
           <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
@@ -235,8 +235,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
 
         {entries.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
-            No uploaded items yet. Use the upload route to add the first photo
-            or video to the archive.
+            No items yet. Add the first photo or video to begin the archive.
           </div>
         ) : entriesWithPreview.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
@@ -267,10 +266,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                       </div>
                       <div className="media-card-video-copy">
                         <strong style={{ fontSize: "0.98rem", lineHeight: 1.4 }}>
-                          Video keeps its full quiet moment.
+                          Video saved in the archive.
                         </strong>
                         <span style={{ fontSize: "0.84rem", opacity: 0.86, lineHeight: 1.5 }}>
-                          Open the detail page to watch the signed original.
+                          Open the detail page to watch it.
                         </span>
                       </div>
                     </Link>
@@ -328,8 +327,8 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                   <h2 className="media-card-title">{entry.fileName}</h2>
                   <p className="media-card-caption">
                     {entry.mediaKind === "image"
-                      ? "A preserved photo in the private garden archive."
-                      : "A quiet video entry kept with the rest of the archive."}
+                      ? "A photo kept in the private archive."
+                      : "A video kept in the private archive."}
                   </p>
                   <div className="media-card-actions">
                     <Link

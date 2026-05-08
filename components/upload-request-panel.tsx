@@ -17,11 +17,11 @@ const errorMessages: Record<string, string> = {
   "missing-file-name": "Please choose a file with a valid name.",
   "missing-content-type": "The selected file is missing a content type.",
   "unsupported-content-type":
-    "This file type is not allowed in the current upload policy.",
+    "This file type is not allowed for this archive.",
   "invalid-size": "The selected file size is invalid.",
   "file-too-large": "This file is larger than the current upload limit.",
   "invalid-json": "The upload request payload was malformed.",
-  "presign-failed": "The server could not prepare an S3 upload URL.",
+  "presign-failed": "The upload could not start. Please try again.",
   "duplicate-upload":
     "This file already appears to be in the archive. Rename it or delete the existing copy before uploading again.",
 };
@@ -48,12 +48,6 @@ export function UploadRequestPanel() {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFileState[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [presignResult, setPresignResult] = useState<{
-    objectKey: string;
-    bucket: string;
-    region: string;
-    expiresIn: number;
-  } | null>(null);
   const [uploadResults, setUploadResults] = useState<
     {
       id: string;
@@ -92,7 +86,6 @@ export function UploadRequestPanel() {
     if (files.length === 0) {
       setSelectedFiles([]);
       setErrorMessage(null);
-      setPresignResult(null);
       setUploadProgress(null);
       return;
     }
@@ -107,7 +100,6 @@ export function UploadRequestPanel() {
       }))
     );
     setErrorMessage(null);
-    setPresignResult(null);
     setUploadResults([]);
     setStatusMessage(null);
     setUploadProgress(null);
@@ -121,9 +113,8 @@ export function UploadRequestPanel() {
 
     setIsPending(true);
     setErrorMessage(null);
-    setPresignResult(null);
     setUploadResults([]);
-    setStatusMessage("Preparing upload URLs...");
+    setStatusMessage("Preparing upload...");
     setUploadProgress(null);
 
     startTransition(() => {
@@ -138,7 +129,7 @@ export function UploadRequestPanel() {
         {
           onStageChange: ({ index, total, fileName, stage }) => {
             if (stage === "presign") {
-              setStatusMessage(`Preparing upload ${index} of ${total}: ${fileName}`);
+              setStatusMessage(`Preparing ${index} of ${total}: ${fileName}`);
               return;
             }
 
@@ -157,9 +148,7 @@ export function UploadRequestPanel() {
               return;
             }
 
-            setStatusMessage(
-              `Saving archive metadata ${index} of ${total}: ${fileName}`
-            );
+            setStatusMessage(`Saving ${index} of ${total}: ${fileName}`);
           },
           onTransferProgress: ({
             index,
@@ -198,14 +187,6 @@ export function UploadRequestPanel() {
                 : currentProgress
             );
           },
-          onPresigned: ({ result }) => {
-            setPresignResult({
-              objectKey: result.objectKey,
-              bucket: result.bucket,
-              region: result.region,
-              expiresIn: result.expiresIn,
-            });
-          },
         }
       )
         .then((entries) => {
@@ -217,12 +198,6 @@ export function UploadRequestPanel() {
               fileName: entry.fileName,
             }))
           );
-          setPresignResult({
-            objectKey: entries[entries.length - 1]?.objectKey ?? "",
-            bucket: entries[entries.length - 1]?.bucket ?? "",
-            region: entries[entries.length - 1]?.region ?? "",
-            expiresIn: 300,
-          });
           setStatusMessage(
             `${entries.length} upload${entries.length > 1 ? "s" : ""} completed successfully. Opening the library...`
           );
@@ -242,10 +217,10 @@ export function UploadRequestPanel() {
 
   return (
     <div className="panel panel-dashed">
-      <strong>Request a presigned S3 upload URL</strong>
+      <strong>Choose photos and videos</strong>
       <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
-        This flow now requests a presigned URL and immediately uploads the
-        selected file directly from the browser to S3.
+        Select one or more files from your phone or computer. The archive will
+        open when the upload is done.
       </span>
 
       <div style={{ display: "grid", gap: "10px" }}>
@@ -279,8 +254,6 @@ export function UploadRequestPanel() {
               <span key={`${selectedFile.name}-${selectedFile.size}`}>
                 <strong>{selectedFile.name}</strong>
                 {" · "}
-                {selectedFile.type || "unknown"}
-                {" · "}
                 {formatBytes(selectedFile.size)}
               </span>
             ))}
@@ -298,17 +271,15 @@ export function UploadRequestPanel() {
         }}
       >
         <span>
-          API route: <code>/api/upload/presign</code>
+          Photos and videos only.
         </span>
         <span>
-          Allowed types: <code>{ALLOWED_UPLOAD_MIME_TYPES.join(", ")}</code>
-        </span>
-        <span>
-          Max file size:{" "}
+          Up to{" "}
           <code>{Math.floor(MAX_UPLOAD_SIZE_BYTES / (1024 * 1024))} MB</code>
+          {" "}per file.
         </span>
         <span>
-          Batch strategy: <code>multiple files, sequential uploads</code>
+          Multiple files can be selected at once.
         </span>
       </div>
 
@@ -323,7 +294,7 @@ export function UploadRequestPanel() {
           cursor: isPending ? "progress" : "pointer",
         }}
       >
-        {isPending ? "Uploading to S3..." : "Upload selected files"}
+        {isPending ? "Uploading..." : "Upload selected files"}
       </button>
 
       {statusMessage ? (
@@ -369,28 +340,10 @@ export function UploadRequestPanel() {
         </p>
       ) : null}
 
-      {presignResult ? (
-        <div className="card-soft" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
-          <strong>Presigned URL prepared</strong>
-          <span>
-            Object key: <code>{presignResult.objectKey}</code>
-          </span>
-          <span>
-            Bucket: <code>{presignResult.bucket}</code>
-          </span>
-          <span>
-            Region: <code>{presignResult.region}</code>
-          </span>
-          <span>
-            Expires in: <code>{presignResult.expiresIn}</code> seconds
-          </span>
-        </div>
-      ) : null}
-
       {uploadResults.length > 0 ? (
         <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
           <strong>
-            {uploadResults.length} file{uploadResults.length > 1 ? "s" : ""} uploaded to S3
+            {uploadResults.length} file{uploadResults.length > 1 ? "s" : ""} added to the archive
           </strong>
           <span>
             The library will open automatically in a moment.

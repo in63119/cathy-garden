@@ -39,8 +39,11 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("media-card");
     expect(libraryPage).toContain("Video keeps its full quiet moment.");
     expect(libraryPage).toContain("normalizeMediaFilterValue");
+    expect(libraryPage).toContain("normalizeMediaSearchQuery");
     expect(libraryPage).toContain("normalizeMediaSortValue");
     expect(libraryPage).toContain("buildLibraryHref");
+    expect(libraryPage).toContain("Search archive");
+    expect(libraryPage).toContain("Search by file name");
     expect(libraryPage).toContain("Newest first");
     expect(libraryPage).toContain("Photos");
     expect(libraryPage).toContain("Upload complete");

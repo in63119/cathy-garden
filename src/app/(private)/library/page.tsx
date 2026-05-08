@@ -11,6 +11,7 @@ import {
   isImageContentType,
   isVideoContentType,
   normalizeMediaFilterValue,
+  normalizeMediaSearchQuery,
   normalizeMediaSortValue,
 } from "@/lib/media-preview";
 import { createPresignedDownload } from "@/lib/s3";
@@ -25,16 +26,24 @@ function formatUploadedAt(value: string) {
   });
 }
 
-function buildLibraryHref(params: { filter: string; sort: string }) {
-  return `/library?filter=${encodeURIComponent(params.filter)}&sort=${encodeURIComponent(
-    params.sort
-  )}`;
+function buildLibraryHref(params: { filter: string; sort: string; query: string }) {
+  const searchParams = new URLSearchParams({
+    filter: params.filter,
+    sort: params.sort,
+  });
+
+  if (params.query) {
+    searchParams.set("q", params.query);
+  }
+
+  return `/library?${searchParams.toString()}`;
 }
 
 type LibraryPageProps = {
   searchParams?: Promise<{
     filter?: string;
     sort?: string;
+    q?: string;
     uploaded?: string;
     uploadedCount?: string;
   }>;
@@ -44,10 +53,15 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const params = searchParams ? await searchParams : undefined;
   const filter = normalizeMediaFilterValue(params?.filter);
   const sort = normalizeMediaSortValue(params?.sort);
+  const query = normalizeMediaSearchQuery(params?.q);
   const uploaded = params?.uploaded?.trim() ?? "";
   const uploadedCount = Number(params?.uploadedCount ?? "0");
   const entries = await readMediaEntries();
-  const visibleEntries = filterAndSortMediaEntries(entries, { filter, sort });
+  const visibleEntries = filterAndSortMediaEntries(entries, {
+    filter,
+    sort,
+    query,
+  });
   const entriesWithPreview = await Promise.all(
     visibleEntries.map(async (entry) => {
       const mediaKind = getMediaKindLabel(entry.contentType);
@@ -92,12 +106,55 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         ) : null}
 
+        <form
+          action="/library"
+          style={{
+            display: "grid",
+            gap: "10px",
+          }}
+        >
+          <input type="hidden" name="filter" value={filter} />
+          <input type="hidden" name="sort" value={sort} />
+          <label htmlFor="library-search" style={{ fontWeight: 700 }}>
+            Search archive
+          </label>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              alignItems: "center",
+            }}
+          >
+            <input
+              id="library-search"
+              name="q"
+              type="search"
+              className="input-field"
+              defaultValue={query}
+              placeholder="Search by file name"
+              style={{ maxWidth: "420px" }}
+            />
+            <button type="submit" className="button-link primary">
+              Search
+            </button>
+            {query ? (
+              <Link
+                href={buildLibraryHref({ filter, sort, query: "" })}
+                className="button-link secondary"
+              >
+                Clear
+              </Link>
+            ) : null}
+          </div>
+        </form>
+
         <div className="filter-toolbar">
           <div className="filter-cluster">
             {(["all", "favorite", "image", "video"] as const).map((option) => (
               <Link
                 key={option}
-                href={buildLibraryHref({ filter: option, sort })}
+                href={buildLibraryHref({ filter: option, sort, query })}
                 className={`button-link secondary${filter === option ? " is-active" : ""}`}
               >
                 {option === "all"
@@ -115,7 +172,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             {(["newest", "oldest"] as const).map((option) => (
               <Link
                 key={option}
-                href={buildLibraryHref({ filter, sort: option })}
+                href={buildLibraryHref({ filter, sort: option, query })}
                 className={`button-link secondary${sort === option ? " is-active" : ""}`}
               >
                 {option === "newest" ? "Newest first" : "Oldest first"}
@@ -131,7 +188,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </div>
         ) : entriesWithPreview.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
-            No items match the current filter.
+            No items match the current filter or search.
           </div>
         ) : (
           <div className="library-grid">

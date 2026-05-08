@@ -43,6 +43,7 @@ export type SortableMediaEntry = {
   uploadedAt: string;
   takenAt?: string;
   contentType: string;
+  fileName: string;
   favorite?: boolean;
 };
 
@@ -52,23 +53,32 @@ export function getMediaArchiveDate(
   return entry.takenAt ?? entry.uploadedAt;
 }
 
+export function normalizeMediaSearchQuery(value?: string | null) {
+  return value?.trim().replace(/\s+/g, " ") ?? "";
+}
+
 export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
   entries: T[],
   options: {
     filter: MediaFilterValue;
     sort: MediaSortValue;
+    query?: string;
   }
 ) {
+  const searchQuery = normalizeMediaSearchQuery(options.query).toLocaleLowerCase();
   const filtered = entries.filter((entry) => {
     if (options.filter === "all") {
-      return true;
+      return matchesSearchQuery(entry, searchQuery);
     }
 
     if (options.filter === "favorite") {
-      return entry.favorite === true;
+      return entry.favorite === true && matchesSearchQuery(entry, searchQuery);
     }
 
-    return getMediaKindLabel(entry.contentType) === options.filter;
+    return (
+      getMediaKindLabel(entry.contentType) === options.filter &&
+      matchesSearchQuery(entry, searchQuery)
+    );
   });
 
   return filtered.sort((left, right) => {
@@ -78,4 +88,15 @@ export function filterAndSortMediaEntries<T extends SortableMediaEntry>(
 
     return options.sort === "newest" ? -compare : compare;
   });
+}
+
+function matchesSearchQuery(
+  entry: Pick<SortableMediaEntry, "fileName">,
+  searchQuery: string
+) {
+  if (!searchQuery) {
+    return true;
+  }
+
+  return entry.fileName.toLocaleLowerCase().includes(searchQuery);
 }

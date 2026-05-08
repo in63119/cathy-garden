@@ -9,9 +9,9 @@ type FavoriteMediaButtonProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  unauthorized: "Your session is not authorized anymore. Please log in again.",
-  "not-found": "This media entry was not found in the archive.",
-  "invalid-favorite": "The favorite request was invalid.",
+  unauthorized: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+  "not-found": "보관함에서 이 항목을 찾을 수 없습니다.",
+  "invalid-favorite": "즐겨찾기 요청이 올바르지 않습니다.",
 };
 
 export function FavoriteMediaButton({
@@ -63,10 +63,10 @@ export function FavoriteMediaButton({
         }}
       >
         {isPending
-          ? "Saving..."
+          ? "저장 중..."
           : favorite
-            ? "Remove favorite"
-            : "Add favorite"}
+            ? "즐겨찾기 해제"
+            : "즐겨찾기 추가"}
       </button>
 
       {errorMessage ? (

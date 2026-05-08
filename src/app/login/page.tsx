@@ -16,13 +16,13 @@ type LoginPageProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  "invalid-password": "The private access code did not match.",
-  "kakao-invalid-state": "The Kakao login session expired. Please try again.",
-  "kakao-login-failed": "Kakao login could not be completed.",
-  "kakao-not-configured": "Kakao login is not configured yet.",
-  "kakao-user-not-allowed": "This Kakao account is not allowed for this archive.",
+  "invalid-password": "비밀번호가 맞지 않습니다.",
+  "kakao-invalid-state": "카카오 로그인 시간이 만료되었습니다. 다시 시도해 주세요.",
+  "kakao-login-failed": "카카오 로그인을 완료하지 못했습니다.",
+  "kakao-not-configured": "카카오 로그인이 아직 설정되지 않았습니다.",
+  "kakao-user-not-allowed": "허용된 카카오 계정만 들어올 수 있습니다.",
   "not-configured":
-    "This site does not have a private password configured yet.",
+    "아직 개인 비밀번호가 설정되지 않았습니다.",
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -39,9 +39,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <div className="content-shell" style={{ padding: "16px 0 48px" }}>
       <SectionCard
-        eyebrow="Login"
-        title="A private entrance for one quiet archive."
-        description="Use the private access code to enter the library. The protected pages stay behind a server-side cookie gate."
+        eyebrow="로그인"
+        title="개인 보관함에 들어가기"
+        description="비밀번호나 허용된 카카오 계정으로 보관함에 들어갈 수 있습니다."
       >
         <form
           action="/api/auth/login"
@@ -52,7 +52,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <div style={{ display: "grid", gap: "10px" }}>
             <label htmlFor="password" style={{ fontWeight: 700 }}>
-              Private access code
+              개인 비밀번호
             </label>
             <input
               id="password"
@@ -61,7 +61,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               className="input-field"
               autoComplete="current-password"
               placeholder={
-                configured ? "Enter the shared private password" : "Not configured yet"
+                configured ? "개인 비밀번호를 입력하세요" : "아직 설정되지 않았습니다"
               }
               disabled={!configured}
               aria-invalid={errorMessage ? true : undefined}
@@ -76,8 +76,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           {!configured ? (
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.7 }}>
-              Set the <code>CATHY_GARDEN_PASSWORD</code> environment variable
-              before using this login form.
+              로그인 폼을 사용하기 전에 <code>CATHY_GARDEN_PASSWORD</code>{" "}
+              환경변수를 설정해 주세요.
             </p>
           ) : null}
 
@@ -87,14 +87,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             disabled={!configured}
             style={{ width: "fit-content", border: "none", cursor: "pointer" }}
           >
-            Enter the archive
+            보관함 들어가기
           </button>
         </form>
 
         <div className="panel panel-dashed" style={{ display: "grid", gap: "12px" }}>
-          <strong>Kakao login</strong>
+          <strong>카카오 로그인</strong>
           <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
-            Use the one allowed Kakao account to enter without the private code.
+            허용된 카카오 계정으로 비밀번호 없이 들어갈 수 있습니다.
           </span>
           <a
             href={`/api/auth/kakao/start?next=${encodeURIComponent(nextPath)}`}
@@ -106,11 +106,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               opacity: kakaoConfigured ? 1 : 0.58,
             }}
           >
-            Continue with Kakao
+            카카오로 계속하기
           </a>
           {!kakaoConfigured ? (
             <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.7 }}>
-              Set Kakao OAuth environment variables before using this option.
+              카카오 로그인 환경변수를 먼저 설정해 주세요.
             </p>
           ) : null}
         </div>

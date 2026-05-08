@@ -13,7 +13,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Cathy Garden",
-  description: "A private archive for Cathy's photos and videos.",
+  description: "사진과 영상을 간직하는 개인 보관함입니다.",
 };
 
 type RootLayoutProps = {

@@ -13,17 +13,17 @@ import {
 } from "@/lib/upload-policy";
 
 const errorMessages: Record<string, string> = {
-  unauthorized: "Your session is not authorized. Please log in again.",
-  "missing-file-name": "Please choose a file with a valid name.",
-  "missing-content-type": "The selected file is missing a content type.",
+  unauthorized: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+  "missing-file-name": "이름이 있는 파일을 선택해 주세요.",
+  "missing-content-type": "선택한 파일의 형식을 확인할 수 없습니다.",
   "unsupported-content-type":
-    "This file type is not allowed for this archive.",
-  "invalid-size": "The selected file size is invalid.",
-  "file-too-large": "This file is larger than the current upload limit.",
-  "invalid-json": "The upload request payload was malformed.",
-  "presign-failed": "The upload could not start. Please try again.",
+    "이 보관함에 올릴 수 없는 파일 형식입니다.",
+  "invalid-size": "선택한 파일 크기가 올바르지 않습니다.",
+  "file-too-large": "현재 업로드 제한보다 큰 파일입니다.",
+  "invalid-json": "업로드 요청을 처리하지 못했습니다.",
+  "presign-failed": "업로드를 시작하지 못했습니다. 다시 시도해 주세요.",
   "duplicate-upload":
-    "This file already appears to be in the archive. Rename it or delete the existing copy before uploading again.",
+    "이미 보관함에 있는 파일로 보입니다. 기존 파일을 삭제하거나 파일 이름을 바꾼 뒤 다시 올려 주세요.",
 };
 
 type SelectedFileState = {
@@ -107,14 +107,14 @@ export function UploadRequestPanel() {
 
   const handleUpload = () => {
     if (selectedFiles.length === 0) {
-      setErrorMessage("Please choose at least one file first.");
+      setErrorMessage("먼저 파일을 하나 이상 선택해 주세요.");
       return;
     }
 
     setIsPending(true);
     setErrorMessage(null);
     setUploadResults([]);
-    setStatusMessage("Preparing upload...");
+    setStatusMessage("업로드를 준비하는 중입니다...");
     setUploadProgress(null);
 
     startTransition(() => {
@@ -129,12 +129,12 @@ export function UploadRequestPanel() {
         {
           onStageChange: ({ index, total, fileName, stage }) => {
             if (stage === "presign") {
-              setStatusMessage(`Preparing ${index} of ${total}: ${fileName}`);
+              setStatusMessage(`${total}개 중 ${index}번째 준비 중: ${fileName}`);
               return;
             }
 
             if (stage === "transfer") {
-              setStatusMessage(`Uploading ${index} of ${total}: ${fileName}`);
+              setStatusMessage(`${total}개 중 ${index}번째 업로드 중: ${fileName}`);
               setUploadProgress({
                 currentFileName: fileName,
                 currentIndex: index,
@@ -148,7 +148,7 @@ export function UploadRequestPanel() {
               return;
             }
 
-            setStatusMessage(`Saving ${index} of ${total}: ${fileName}`);
+            setStatusMessage(`${total}개 중 ${index}번째 저장 중: ${fileName}`);
           },
           onTransferProgress: ({
             index,
@@ -175,7 +175,7 @@ export function UploadRequestPanel() {
             maxAttempts,
           }) => {
             setStatusMessage(
-              `Upload failed. Retrying ${index} of ${total}: ${fileName} (${attempt}/${maxAttempts})`
+              `업로드에 실패해 다시 시도합니다. ${total}개 중 ${index}번째: ${fileName} (${attempt}/${maxAttempts})`
             );
             setUploadProgress((currentProgress) =>
               currentProgress?.currentFileName === fileName
@@ -199,7 +199,7 @@ export function UploadRequestPanel() {
             }))
           );
           setStatusMessage(
-            `${entries.length} upload${entries.length > 1 ? "s" : ""} completed successfully. Opening the library...`
+            `${entries.length}개 파일 업로드가 완료되었습니다. 보관함을 여는 중입니다...`
           );
           setUploadProgress(null);
           router.refresh();
@@ -217,15 +217,15 @@ export function UploadRequestPanel() {
 
   return (
     <div className="panel panel-dashed">
-      <strong>Choose photos and videos</strong>
+      <strong>사진과 영상 선택</strong>
       <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
-        Select one or more files from your phone or computer. The archive will
-        open when the upload is done.
+        휴대폰이나 컴퓨터에서 파일을 하나 이상 선택하세요. 업로드가 끝나면
+        보관함이 자동으로 열립니다.
       </span>
 
       <div style={{ display: "grid", gap: "10px" }}>
         <label htmlFor="upload-file" style={{ fontWeight: 700 }}>
-          Choose one or more photos and videos
+          올릴 사진과 영상
         </label>
         <input
           id="upload-file"
@@ -247,7 +247,7 @@ export function UploadRequestPanel() {
           }}
         >
           <strong>
-            {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""} selected
+            {selectedFiles.length}개 파일 선택됨
           </strong>
           <div style={{ display: "grid", gap: "4px" }}>
             {selectedFiles.map((selectedFile) => (
@@ -271,15 +271,15 @@ export function UploadRequestPanel() {
         }}
       >
         <span>
-          Photos and videos only.
+          사진과 영상만 올릴 수 있습니다.
         </span>
         <span>
-          Up to{" "}
+          파일 하나당 최대{" "}
           <code>{Math.floor(MAX_UPLOAD_SIZE_BYTES / (1024 * 1024))} MB</code>
-          {" "}per file.
+          까지 가능합니다.
         </span>
         <span>
-          Multiple files can be selected at once.
+          여러 파일을 한 번에 선택할 수 있습니다.
         </span>
       </div>
 
@@ -294,7 +294,7 @@ export function UploadRequestPanel() {
           cursor: isPending ? "progress" : "pointer",
         }}
       >
-        {isPending ? "Uploading..." : "Upload selected files"}
+        {isPending ? "올리는 중..." : "선택한 파일 올리기"}
       </button>
 
       {statusMessage ? (
@@ -304,11 +304,11 @@ export function UploadRequestPanel() {
       {uploadProgress ? (
         <div className="card-soft" style={{ display: "grid", gap: "10px", padding: "16px" }}>
           <strong>
-            Uploading {uploadProgress.currentIndex} of {uploadProgress.totalFiles}:{" "}
+            {uploadProgress.totalFiles}개 중 {uploadProgress.currentIndex}번째 업로드 중:{" "}
             {uploadProgress.currentFileName}
           </strong>
           <div
-            aria-label="Upload progress"
+            aria-label="업로드 진행률"
             style={{
               width: "100%",
               height: "12px",
@@ -328,7 +328,7 @@ export function UploadRequestPanel() {
             />
           </div>
           <span style={{ color: "var(--muted)", lineHeight: 1.6 }}>
-            {uploadProgress.percentage}% · {formatBytes(uploadProgress.loaded)} of{" "}
+            {uploadProgress.percentage}% · {formatBytes(uploadProgress.loaded)} /{" "}
             {formatBytes(uploadProgress.totalBytes)}
           </span>
         </div>
@@ -343,15 +343,15 @@ export function UploadRequestPanel() {
       {uploadResults.length > 0 ? (
         <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
           <strong>
-            {uploadResults.length} file{uploadResults.length > 1 ? "s" : ""} added to the archive
+            {uploadResults.length}개 파일이 보관함에 추가되었습니다
           </strong>
           <span>
-            The library will open automatically in a moment.
+            잠시 후 보관함이 자동으로 열립니다.
           </span>
           <div style={{ display: "grid", gap: "4px" }}>
             {uploadResults.map((uploadResult) => (
               <span key={uploadResult.id}>
-                Saved as: <code>{uploadResult.fileName}</code>
+                저장됨: <code>{uploadResult.fileName}</code>
               </span>
             ))}
           </div>
@@ -367,7 +367,7 @@ export function UploadRequestPanel() {
             }
             style={{ width: "fit-content", cursor: "pointer" }}
           >
-            Open library now
+            지금 보관함 열기
           </button>
         </div>
       ) : null}

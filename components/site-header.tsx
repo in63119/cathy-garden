@@ -2,17 +2,17 @@ import Link from "next/link";
 
 import { isAuthenticated } from "@/lib/auth-server";
 
-const publicLinks = [{ href: "/", label: "Home" }];
+const publicLinks = [{ href: "/", label: "홈" }];
 const privateLinks = [
-  { href: "/library", label: "Library" },
-  { href: "/upload", label: "Upload" },
+  { href: "/library", label: "보관함" },
+  { href: "/upload", label: "올리기" },
 ];
 
 export async function SiteHeader() {
   const authenticated = await isAuthenticated();
   const links = authenticated
     ? [...publicLinks, ...privateLinks]
-    : [...publicLinks, { href: "/login", label: "Login" }];
+    : [...publicLinks, { href: "/login", label: "로그인" }];
 
   return (
     <header
@@ -29,7 +29,7 @@ export async function SiteHeader() {
             <strong style={{ fontSize: "1.25rem" }}>Cathy Garden</strong>
           </Link>
 
-          <nav aria-label="Primary" className="header-nav">
+          <nav aria-label="주요 메뉴" className="header-nav">
             {links.map((link) => (
               <Link
                 key={link.href}
@@ -47,7 +47,7 @@ export async function SiteHeader() {
                   className="button-link secondary"
                   style={{ cursor: "pointer" }}
                 >
-                  Logout
+                  로그아웃
                 </button>
               </form>
             ) : null}

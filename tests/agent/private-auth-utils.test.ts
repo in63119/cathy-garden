@@ -56,7 +56,7 @@ describe("private auth helpers", () => {
       "utf8"
     );
 
-    expect(loginPage).toContain("Continue with Kakao");
+    expect(loginPage).toContain("카카오로 계속하기");
     expect(loginPage).toContain("/api/auth/kakao/start");
     expect(loginPage).toContain("isKakaoAuthConfigured");
   });

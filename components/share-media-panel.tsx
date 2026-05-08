@@ -9,9 +9,9 @@ type ShareMediaPanelProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  unauthorized: "Your session is not authorized anymore. Please log in again.",
-  "not-found": "This media entry was not found in the archive.",
-  "invalid-share": "The share request was invalid.",
+  unauthorized: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+  "not-found": "보관함에서 이 항목을 찾을 수 없습니다.",
+  "invalid-share": "공유 요청이 올바르지 않습니다.",
 };
 
 export function ShareMediaPanel({ mediaId, shareToken }: ShareMediaPanelProps) {
@@ -54,7 +54,7 @@ export function ShareMediaPanel({ mediaId, shareToken }: ShareMediaPanelProps) {
 
   return (
     <div className="card-soft" style={{ display: "grid", gap: "12px", padding: "16px" }}>
-      <strong>Share link</strong>
+      <strong>공유 링크</strong>
       {shareToken ? (
         <>
           <input
@@ -69,7 +69,7 @@ export function ShareMediaPanel({ mediaId, shareToken }: ShareMediaPanelProps) {
             disabled={isPending}
             style={{ width: "fit-content", cursor: isPending ? "progress" : "pointer" }}
           >
-            {isPending ? "Saving..." : "Disable share link"}
+            {isPending ? "저장 중..." : "공유 링크 끄기"}
           </button>
         </>
       ) : (
@@ -80,7 +80,7 @@ export function ShareMediaPanel({ mediaId, shareToken }: ShareMediaPanelProps) {
           disabled={isPending}
           style={{ width: "fit-content", cursor: isPending ? "progress" : "pointer" }}
         >
-          {isPending ? "Saving..." : "Create share link"}
+          {isPending ? "저장 중..." : "공유 링크 만들기"}
         </button>
       )}
 

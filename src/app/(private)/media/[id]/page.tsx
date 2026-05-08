@@ -24,9 +24,9 @@ type MediaDetailPageProps = {
 };
 
 function formatUploadedAt(value: string) {
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString("ko-KR", {
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -49,14 +49,14 @@ export default async function MediaDetailPage({
     contentType: entry.contentType,
   });
   const mediaKind = getMediaKindLabel(entry.contentType);
-  const archiveDateLabel = entry.takenAt ? "Taken" : "Uploaded";
+  const archiveDateLabel = entry.takenAt ? "촬영" : "업로드";
 
   return (
     <div className="content-shell page-section">
       <SectionCard
-        eyebrow="Media Detail"
+        eyebrow="자세히 보기"
         title={entry.fileName}
-        description="View the full photo or video, then update its favorite, album, tag, and sharing settings."
+        description="사진이나 영상을 크게 보고, 즐겨찾기와 앨범, 태그, 공유 설정을 관리할 수 있습니다."
       >
         <div className="media-detail-stage">
           <div className="media-detail-preview">
@@ -84,7 +84,7 @@ export default async function MediaDetailPage({
                 }}
               >
                 <source src={previewUrl} type={entry.contentType} />
-                Your browser does not support inline video preview.
+                이 브라우저에서는 영상 미리보기를 지원하지 않습니다.
               </video>
             ) : null}
             {!isImageContentType(entry.contentType) &&
@@ -99,14 +99,14 @@ export default async function MediaDetailPage({
                   textAlign: "center",
                 }}
               >
-                <strong>No inline preview for this file type.</strong>
+                <strong>이 파일 형식은 미리보기를 지원하지 않습니다.</strong>
                 <a
                   href={previewUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="button-link secondary"
                 >
-                  Open file
+                  파일 열기
                 </a>
               </div>
             ) : null}
@@ -115,10 +115,10 @@ export default async function MediaDetailPage({
           <div className="media-detail-summary">
             <div className="media-detail-chips">
               <span className="media-chip">
-                {mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}
+                {mediaKind === "image" ? "사진" : mediaKind === "video" ? "영상" : "파일"}
               </span>
               {entry.favorite ? (
-                <span className="media-chip">Favorite</span>
+                <span className="media-chip">즐겨찾기</span>
               ) : null}
               {(entry.albums ?? []).map((album) => (
                 <span key={album} className="media-chip">
@@ -137,31 +137,31 @@ export default async function MediaDetailPage({
             </div>
             <p className="media-detail-note">
               {mediaKind === "image"
-                ? "The full photo stays at the center, with its details and controls close by."
-                : "The full video stays at the center, with its details and controls close by."}
+                ? "사진을 크게 보면서 필요한 설정을 바로 관리할 수 있습니다."
+                : "영상을 크게 보면서 필요한 설정을 바로 관리할 수 있습니다."}
             </p>
           </div>
 
           <div className="media-detail-meta">
             <span>
-              File name: <strong>{entry.fileName}</strong>
+              파일 이름: <strong>{entry.fileName}</strong>
             </span>
             <span>
-              Type: <strong>{mediaKind === "image" ? "Photo" : mediaKind === "video" ? "Video" : "File"}</strong>
+              종류: <strong>{mediaKind === "image" ? "사진" : mediaKind === "video" ? "영상" : "파일"}</strong>
             </span>
             <span>
-              Size: <strong>{formatBytes(entry.size)}</strong>
+              크기: <strong>{formatBytes(entry.size)}</strong>
             </span>
             <span>
-              {archiveDateLabel} at:{" "}
+              {archiveDateLabel}일:{" "}
               <strong>{formatUploadedAt(getMediaArchiveDate(entry))}</strong>
             </span>
             <span>
-              Uploaded at: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
+              업로드일: <strong>{formatUploadedAt(entry.uploadedAt)}</strong>
             </span>
             {entry.shareToken ? (
               <span>
-                Sharing: <strong>Link created</strong>
+                공유: <strong>링크 생성됨</strong>
               </span>
             ) : null}
           </div>
@@ -173,7 +173,7 @@ export default async function MediaDetailPage({
 
         <div className="action-row">
           <Link href="/library" className="button-link secondary">
-            Back to library
+            보관함으로 돌아가기
           </Link>
           <a
             href={previewUrl}
@@ -181,7 +181,7 @@ export default async function MediaDetailPage({
             rel="noreferrer"
             className="button-link secondary"
           >
-            Open original
+            원본 열기
           </a>
           <FavoriteMediaButton mediaId={entry.id} favorite={entry.favorite} />
           <DeleteMediaButton mediaId={entry.id} mode="redirect" />

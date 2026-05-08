@@ -36,10 +36,10 @@ export function HeroSection({ title, description }: HeroSectionProps) {
 
         <div className="hero-actions">
           <Link href="/library" className="button-link primary">
-            Open the library
+            보관함 열기
           </Link>
           <Link href="/upload" className="button-link secondary">
-            Start an upload
+            사진 올리기
           </Link>
         </div>
       </div>
@@ -48,7 +48,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
         <div style={{ position: "relative", flex: 1, minHeight: "320px", overflow: "hidden", borderRadius: "22px" }}>
           <Image
             src="/logo512.png"
-            alt="A country house surrounded by a vegetable garden"
+            alt="정원으로 둘러싸인 집"
             fill
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
@@ -63,8 +63,7 @@ export function HeroSection({ title, description }: HeroSectionProps) {
             lineHeight: 1.6,
           }}
         >
-          A private home for the photos and videos saved from the garden,
-          family, and everyday life.
+          정원과 가족, 일상의 순간을 조용히 모아두는 개인 보관함입니다.
         </p>
       </div>
     </section>

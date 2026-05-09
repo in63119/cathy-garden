@@ -35,6 +35,13 @@ type CalendarDay = {
   dateKey: string | null;
 };
 
+type ContestSubmission = {
+  id: string;
+  name: string;
+  objectKey: string;
+  submittedAt: string;
+};
+
 function buildCalendarDays(monthDate: Date): CalendarDay[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -97,6 +104,10 @@ export function ContestCalendar() {
   );
   const [ideaMemo, setIdeaMemo] = useState("");
   const [ideaMemoStatus, setIdeaMemoStatus] = useState("불러오기 전");
+  const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
+  const [submissionName, setSubmissionName] = useState("");
+  const [submissionObjectKey, setSubmissionObjectKey] = useState("");
+  const [submissionStatus, setSubmissionStatus] = useState("불러오기 전");
   const calendarDays = useMemo(
     () => buildCalendarDays(visibleMonth),
     [visibleMonth],
@@ -166,6 +177,47 @@ export function ContestCalendar() {
     };
   }, [selectedContestId]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    if (!selectedContestId) {
+      setSubmissions([]);
+      setSubmissionName("");
+      setSubmissionObjectKey("");
+      setSubmissionStatus("불러오기 전");
+      return;
+    }
+
+    async function loadSubmissions() {
+      setSubmissionStatus("불러오는 중");
+
+      try {
+        const response = await fetch(
+          `/api/contests/${selectedContestId}/submissions`,
+        );
+        const data = (await response.json()) as {
+          archive?: { submissions?: ContestSubmission[] };
+        };
+
+        if (!ignore) {
+          setSubmissions(data.archive?.submissions ?? []);
+          setSubmissionStatus("불러옴");
+        }
+      } catch {
+        if (!ignore) {
+          setSubmissions([]);
+          setSubmissionStatus("불러오기 실패");
+        }
+      }
+    }
+
+    loadSubmissions();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedContestId]);
+
   function moveMonth(monthOffset: number) {
     setSelectedContestId(null);
     setVisibleMonth(
@@ -203,6 +255,38 @@ export function ContestCalendar() {
       setIdeaMemoStatus("저장됨");
     } catch {
       setIdeaMemoStatus("저장 실패");
+    }
+  }
+
+  async function addSubmission() {
+    if (!selectedContestId || !submissionName.trim() || !submissionObjectKey.trim()) {
+      setSubmissionStatus("입력 필요");
+      return;
+    }
+
+    setSubmissionStatus("저장 중");
+
+    try {
+      const response = await fetch(`/api/contests/${selectedContestId}/submissions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: submissionName,
+          objectKey: submissionObjectKey,
+        }),
+      });
+      const data = (await response.json()) as {
+        archive?: { submissions?: ContestSubmission[] };
+      };
+
+      setSubmissions(data.archive?.submissions ?? []);
+      setSubmissionName("");
+      setSubmissionObjectKey("");
+      setSubmissionStatus("저장됨");
+    } catch {
+      setSubmissionStatus("저장 실패");
     }
   }
 
@@ -380,6 +464,53 @@ export function ContestCalendar() {
                     메모 저장
                   </button>
                   <span aria-live="polite">{ideaMemoStatus}</span>
+                </div>
+              </div>
+              <div className="contest-calendar-submissions">
+                <div className="contest-calendar-submissions-header">
+                  <h4>제출물 아카이브</h4>
+                  <span aria-live="polite">{submissionStatus}</span>
+                </div>
+                {submissions.length > 0 ? (
+                  <ul>
+                    {submissions.map((submission) => (
+                      <li key={submission.id}>
+                        <strong>{submission.name}</strong>
+                        <code>{submission.objectKey}</code>
+                        <span>
+                          등록일{" "}
+                          {new Intl.DateTimeFormat("ko-KR", {
+                            dateStyle: "medium",
+                          }).format(new Date(submission.submittedAt))}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>아직 등록된 제출물이 없습니다.</p>
+                )}
+                <div className="contest-calendar-submission-form">
+                  <label htmlFor="contest-submission-name">제출물 이름</label>
+                  <input
+                    id="contest-submission-name"
+                    value={submissionName}
+                    onChange={(event) => setSubmissionName(event.target.value)}
+                    placeholder="예: 최종 제출 이미지"
+                  />
+                  <label htmlFor="contest-submission-object-key">
+                    S3 object key
+                  </label>
+                  <input
+                    id="contest-submission-object-key"
+                    value={submissionObjectKey}
+                    onChange={(event) =>
+                      setSubmissionObjectKey(event.target.value)
+                    }
+                    placeholder={`contests/${selectedContest.id}/submissions/final.png`}
+                  />
+                  <button type="button" onClick={addSubmission}>
+                    제출물 추가
+                  </button>
                 </div>
               </div>
             </article>

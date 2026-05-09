@@ -638,6 +638,95 @@ input {
   font-weight: 800;
 }
 
+.contest-calendar-submissions {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.contest-calendar-submissions-header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.contest-calendar-submissions h4,
+.contest-calendar-submissions p,
+.contest-calendar-submissions ul {
+  margin: 0;
+}
+
+.contest-calendar-submissions h4 {
+  font-size: 1rem;
+}
+
+.contest-calendar-submissions p,
+.contest-calendar-submissions-header span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.contest-calendar-submissions ul {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.contest-calendar-submissions li {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.contest-calendar-submissions code,
+.contest-calendar-submissions li span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.contest-calendar-submission-form {
+  display: grid;
+  gap: 8px;
+}
+
+.contest-calendar-submission-form label {
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.contest-calendar-submission-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.contest-calendar-submission-form button {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
 .hero-copy-card {
   padding: 28px;
   display: flex;

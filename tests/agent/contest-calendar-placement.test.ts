@@ -123,4 +123,24 @@ describe("contest calendar placement", () => {
     expect(globalStyles).toContain(".contest-calendar-memo");
     expect(globalStyles).toContain(".contest-calendar-memo-actions");
   });
+
+  test("shows a per-contest submission archive backed by the contest API", () => {
+    const calendarSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-calendar.tsx"),
+      "utf8",
+    );
+    const globalStyles = fs.readFileSync(
+      path.join(rootDir, "src/app/globals.css"),
+      "utf8",
+    );
+
+    expect(calendarSource).toContain("/api/contests/${selectedContestId}/submissions");
+    expect(calendarSource).toContain('method: "POST"');
+    expect(calendarSource).toContain("제출물 아카이브");
+    expect(calendarSource).toContain("제출물 이름");
+    expect(calendarSource).toContain("S3 object key");
+    expect(calendarSource).toContain("제출물 추가");
+    expect(globalStyles).toContain(".contest-calendar-submissions");
+    expect(globalStyles).toContain(".contest-calendar-submission-form");
+  });
 });

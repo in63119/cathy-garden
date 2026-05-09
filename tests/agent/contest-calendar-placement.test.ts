@@ -32,4 +32,22 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("공모전 달력");
     expect(calendarSource).toContain("아직 등록된 공모전 일정이 없습니다.");
   });
+
+  test("distinguishes dates that have contest schedules", () => {
+    const calendarSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-calendar.tsx"),
+      "utf8",
+    );
+    const globalStyles = fs.readFileSync(
+      path.join(rootDir, "src/app/globals.css"),
+      "utf8",
+    );
+
+    expect(calendarSource).toContain("contestScheduleItems");
+    expect(calendarSource).toContain("is-contest-day");
+    expect(calendarSource).toContain("contest-calendar-badge");
+    expect(calendarSource).toContain("공모전 일정");
+    expect(globalStyles).toContain(".contest-calendar-day.is-contest-day");
+    expect(globalStyles).toContain(".contest-calendar-badge");
+  });
 });

@@ -4,9 +4,23 @@ import { useMemo, useState } from "react";
 
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
+const contestScheduleItems = [
+  {
+    id: "spring-garden-photo",
+    title: "봄 정원 사진 공모전",
+    deadline: "2026-05-18",
+  },
+  {
+    id: "daily-idea-note",
+    title: "생활 아이디어 메모 공모전",
+    deadline: "2026-05-27",
+  },
+];
+
 type CalendarDay = {
   key: string;
   day: number | null;
+  dateKey: string | null;
 };
 
 function buildCalendarDays(monthDate: Date): CalendarDay[] {
@@ -18,14 +32,25 @@ function buildCalendarDays(monthDate: Date): CalendarDay[] {
   const calendarDays: CalendarDay[] = [];
 
   for (let index = 0; index < leadingEmptyDays; index += 1) {
-    calendarDays.push({ key: `empty-${index}`, day: null });
+    calendarDays.push({ key: `empty-${index}`, day: null, dateKey: null });
   }
 
   for (let day = 1; day <= daysInMonth; day += 1) {
-    calendarDays.push({ key: `day-${day}`, day });
+    calendarDays.push({
+      key: `day-${day}`,
+      day,
+      dateKey: formatDateKey(year, month, day),
+    });
   }
 
   return calendarDays;
+}
+
+function formatDateKey(year: number, monthIndex: number, day: number) {
+  const month = String(monthIndex + 1).padStart(2, "0");
+  const dayOfMonth = String(day).padStart(2, "0");
+
+  return `${year}-${month}-${dayOfMonth}`;
 }
 
 function formatMonthLabel(monthDate: Date) {
@@ -45,6 +70,23 @@ export function ContestCalendar() {
     () => buildCalendarDays(visibleMonth),
     [visibleMonth],
   );
+  const contestEventsByDate = useMemo(() => {
+    const eventsByDate = new Map<string, typeof contestScheduleItems>();
+
+    for (const contestItem of contestScheduleItems) {
+      const events = eventsByDate.get(contestItem.deadline) ?? [];
+      eventsByDate.set(contestItem.deadline, [...events, contestItem]);
+    }
+
+    return eventsByDate;
+  }, []);
+  const visibleMonthContestCount = calendarDays.reduce((count, calendarDay) => {
+    if (!calendarDay.dateKey) {
+      return count;
+    }
+
+    return count + (contestEventsByDate.get(calendarDay.dateKey)?.length ?? 0);
+  }, 0);
 
   function moveMonth(monthOffset: number) {
     setVisibleMonth(
@@ -103,23 +145,46 @@ export function ContestCalendar() {
           </div>
 
           <div className="contest-calendar-grid">
-            {calendarDays.map((calendarDay) => (
-              <div
-                key={calendarDay.key}
-                className={
-                  calendarDay.day === null
-                    ? "contest-calendar-day is-empty"
-                    : "contest-calendar-day"
-                }
-                aria-hidden={calendarDay.day === null}
-              >
-                {calendarDay.day}
-              </div>
-            ))}
+            {calendarDays.map((calendarDay) => {
+              const contestEvents = calendarDay.dateKey
+                ? contestEventsByDate.get(calendarDay.dateKey) ?? []
+                : [];
+              const hasContestEvents = contestEvents.length > 0;
+
+              return (
+                <div
+                  key={calendarDay.key}
+                  className={[
+                    "contest-calendar-day",
+                    calendarDay.day === null ? "is-empty" : "",
+                    hasContestEvents ? "is-contest-day" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-hidden={calendarDay.day === null}
+                  aria-label={
+                    calendarDay.day === null
+                      ? undefined
+                      : hasContestEvents
+                        ? `${calendarDay.day}일, 공모전 일정 ${contestEvents.length}건`
+                        : `${calendarDay.day}일`
+                  }
+                >
+                  <span>{calendarDay.day}</span>
+                  {hasContestEvents ? (
+                    <span className="contest-calendar-badge">
+                      일정 {contestEvents.length}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
 
           <p className="contest-calendar-empty">
-            아직 등록된 공모전 일정이 없습니다.
+            {visibleMonthContestCount > 0
+              ? `이번 달 공모전 일정 ${visibleMonthContestCount}건`
+              : "아직 등록된 공모전 일정이 없습니다."}
           </p>
         </div>
       </div>

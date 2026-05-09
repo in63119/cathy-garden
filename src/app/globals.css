@@ -329,6 +329,138 @@ input {
   line-height: 1.7;
 }
 
+.contest-manager {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.contest-manager-header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.contest-manager h3,
+.contest-manager p,
+.contest-manager ul {
+  margin: 0;
+}
+
+.contest-manager h3 {
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+
+.contest-manager-header span,
+.contest-manager-empty {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.contest-manager-form {
+  display: grid;
+  gap: 8px;
+}
+
+.contest-manager-form label {
+  color: var(--foreground);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.contest-manager-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.contest-manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-manager-actions button,
+.contest-manager-list button {
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.contest-manager-actions button {
+  padding: 0 0.9rem;
+}
+
+.contest-manager-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.contest-manager-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.contest-manager-list li > button {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  color: var(--foreground);
+}
+
+.contest-manager-list li > button strong,
+.contest-manager-list li > button span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contest-manager-list li > button span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.contest-manager-list li > div {
+  display: flex;
+  gap: 6px;
+}
+
+.contest-manager-list li > div button {
+  min-height: 34px;
+  padding: 0 0.68rem;
+  font-size: 0.82rem;
+}
+
 .contest-calendar-board {
   display: grid;
   gap: 10px;

@@ -10,24 +10,9 @@ type ContestScheduleItem = {
   deadline: string;
   prize: string;
   captureImageObjectKey: string;
+  createdAt: string;
+  updatedAt: string;
 };
-
-const contestScheduleItems: ContestScheduleItem[] = [
-  {
-    id: "spring-garden-photo",
-    title: "봄 정원 사진 공모전",
-    deadline: "2026-05-18",
-    prize: "총 상금 300만원",
-    captureImageObjectKey: "contests/spring-garden-photo/capture.png",
-  },
-  {
-    id: "daily-idea-note",
-    title: "생활 아이디어 메모 공모전",
-    deadline: "2026-05-27",
-    prize: "대상 100만원",
-    captureImageObjectKey: "contests/daily-idea-note/capture.png",
-  },
-];
 
 type CalendarDay = {
   key: string;
@@ -102,6 +87,15 @@ export function ContestCalendar() {
   const [selectedContestId, setSelectedContestId] = useState<string | null>(
     null,
   );
+  const [contests, setContests] = useState<ContestScheduleItem[]>([]);
+  const [contestListStatus, setContestListStatus] = useState("불러오기 전");
+  const [editingContestId, setEditingContestId] = useState<string | null>(null);
+  const [contestForm, setContestForm] = useState({
+    title: "",
+    deadline: "",
+    prize: "",
+    captureImageObjectKey: "",
+  });
   const [ideaMemo, setIdeaMemo] = useState("");
   const [ideaMemoStatus, setIdeaMemoStatus] = useState("불러오기 전");
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
@@ -115,13 +109,13 @@ export function ContestCalendar() {
   const contestEventsByDate = useMemo(() => {
     const eventsByDate = new Map<string, ContestScheduleItem[]>();
 
-    for (const contestItem of contestScheduleItems) {
+    for (const contestItem of contests) {
       const events = eventsByDate.get(contestItem.deadline) ?? [];
       eventsByDate.set(contestItem.deadline, [...events, contestItem]);
     }
 
     return eventsByDate;
-  }, []);
+  }, [contests]);
   const visibleMonthContestCount = calendarDays.reduce((count, calendarDay) => {
     if (!calendarDay.dateKey) {
       return count;
@@ -130,13 +124,44 @@ export function ContestCalendar() {
     return count + (contestEventsByDate.get(calendarDay.dateKey)?.length ?? 0);
   }, 0);
   const selectedContest = selectedContestId
-    ? contestScheduleItems.find(
+    ? contests.find(
         (contestItem) => contestItem.id === selectedContestId,
       )
     : null;
   const selectedContestCaptureUrl = selectedContest
     ? getContestCaptureImageUrl(selectedContest.captureImageObjectKey)
     : null;
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadContests() {
+      setContestListStatus("불러오는 중");
+
+      try {
+        const response = await fetch("/api/contests");
+        const data = (await response.json()) as {
+          contests?: ContestScheduleItem[];
+        };
+
+        if (!ignore) {
+          setContests(data.contests ?? []);
+          setContestListStatus("불러옴");
+        }
+      } catch {
+        if (!ignore) {
+          setContests([]);
+          setContestListStatus("불러오기 실패");
+        }
+      }
+    }
+
+    loadContests();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -290,6 +315,84 @@ export function ContestCalendar() {
     }
   }
 
+  function updateContestForm(field: keyof typeof contestForm, value: string) {
+    setContestForm((currentForm) => ({
+      ...currentForm,
+      [field]: value,
+    }));
+  }
+
+  function resetContestForm() {
+    setEditingContestId(null);
+    setContestForm({
+      title: "",
+      deadline: "",
+      prize: "",
+      captureImageObjectKey: "",
+    });
+  }
+
+  function startEditingContest(contest: ContestScheduleItem) {
+    setEditingContestId(contest.id);
+    setContestForm({
+      title: contest.title,
+      deadline: contest.deadline,
+      prize: contest.prize,
+      captureImageObjectKey: contest.captureImageObjectKey,
+    });
+  }
+
+  async function saveContest() {
+    const method = editingContestId ? "PUT" : "POST";
+    const endpoint = editingContestId
+      ? `/api/contests/${editingContestId}`
+      : "/api/contests";
+
+    setContestListStatus(editingContestId ? "수정 중" : "등록 중");
+
+    try {
+      await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(contestForm),
+      });
+      const response = await fetch("/api/contests");
+      const data = (await response.json()) as {
+        contests?: ContestScheduleItem[];
+      };
+
+      setContests(data.contests ?? []);
+      setContestListStatus(editingContestId ? "수정됨" : "등록됨");
+      resetContestForm();
+    } catch {
+      setContestListStatus(editingContestId ? "수정 실패" : "등록 실패");
+    }
+  }
+
+  async function deleteContest(contestId: string) {
+    setContestListStatus("삭제 중");
+
+    try {
+      await fetch(`/api/contests/${contestId}`, {
+        method: "DELETE",
+      });
+      setContests((currentContests) =>
+        currentContests.filter((contest) => contest.id !== contestId),
+      );
+      if (selectedContestId === contestId) {
+        setSelectedContestId(null);
+      }
+      if (editingContestId === contestId) {
+        resetContestForm();
+      }
+      setContestListStatus("삭제됨");
+    } catch {
+      setContestListStatus("삭제 실패");
+    }
+  }
+
   return (
     <section
       className="content-shell contest-calendar-section"
@@ -303,6 +406,94 @@ export function ContestCalendar() {
             <p>
               캡쳐해 둔 공모전 일정과 제출 준비를 이곳에서 확인합니다.
             </p>
+          </div>
+          <div className="contest-manager">
+            <div className="contest-manager-header">
+              <h3>{editingContestId ? "공모전 수정" : "공모전 등록"}</h3>
+              <span aria-live="polite">{contestListStatus}</span>
+            </div>
+            <div className="contest-manager-form">
+              <label htmlFor="contest-title">공모전 이름</label>
+              <input
+                id="contest-title"
+                value={contestForm.title}
+                onChange={(event) =>
+                  updateContestForm("title", event.target.value)
+                }
+                placeholder="예: 봄 정원 사진 공모전"
+              />
+              <label htmlFor="contest-deadline">제출 마감일</label>
+              <input
+                id="contest-deadline"
+                type="date"
+                value={contestForm.deadline}
+                onChange={(event) =>
+                  updateContestForm("deadline", event.target.value)
+                }
+              />
+              <label htmlFor="contest-prize">상금</label>
+              <input
+                id="contest-prize"
+                value={contestForm.prize}
+                onChange={(event) =>
+                  updateContestForm("prize", event.target.value)
+                }
+                placeholder="예: 총 상금 300만원"
+              />
+              <label htmlFor="contest-capture-key">캡쳐 이미지 object key</label>
+              <input
+                id="contest-capture-key"
+                value={contestForm.captureImageObjectKey}
+                onChange={(event) =>
+                  updateContestForm(
+                    "captureImageObjectKey",
+                    event.target.value,
+                  )
+                }
+                placeholder="contests/example/capture.png"
+              />
+              <div className="contest-manager-actions">
+                <button type="button" onClick={saveContest}>
+                  {editingContestId ? "수정 저장" : "공모전 등록"}
+                </button>
+                {editingContestId ? (
+                  <button type="button" onClick={resetContestForm}>
+                    취소
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            {contests.length > 0 ? (
+              <ul className="contest-manager-list">
+                {contests.map((contest) => (
+                  <li key={contest.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedContestId(contest.id)}
+                    >
+                      <strong>{contest.title}</strong>
+                      <span>{contest.deadline}</span>
+                    </button>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => startEditingContest(contest)}
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteContest(contest.id)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="contest-manager-empty">등록된 공모전이 없습니다.</p>
+            )}
           </div>
         </div>
 

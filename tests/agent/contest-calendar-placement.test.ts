@@ -44,7 +44,8 @@ describe("contest calendar placement", () => {
       "utf8",
     );
 
-    expect(calendarSource).toContain("contestScheduleItems");
+    expect(calendarSource).toContain('fetch("/api/contests")');
+    expect(calendarSource).toContain("contests");
     expect(calendarSource).toContain("is-contest-day");
     expect(calendarSource).toContain("contest-calendar-badge");
     expect(calendarSource).toContain("공모전 일정");
@@ -74,7 +75,6 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("상금");
     expect(calendarSource).toContain("<dd>{selectedContest.prize}</dd>");
     expect(calendarSource).toContain("captureImageObjectKey");
-    expect(calendarSource).toContain("contests/spring-garden-photo/capture.png");
     expect(calendarSource).toContain("NEXT_PUBLIC_CONTEST_CAPTURE_BASE_URL");
     expect(calendarSource).toContain("contest-calendar-capture");
     expect(calendarSource).toContain("캡쳐 이미지");
@@ -82,6 +82,26 @@ describe("contest calendar placement", () => {
     expect(globalStyles).toContain(".contest-calendar-detail");
     expect(globalStyles).toContain(".contest-calendar-capture");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day.is-selected");
+  });
+
+  test("registers, edits, and deletes contests through the contests API", () => {
+    const calendarSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-calendar.tsx"),
+      "utf8",
+    );
+    const globalStyles = fs.readFileSync(
+      path.join(rootDir, "src/app/globals.css"),
+      "utf8",
+    );
+
+    expect(calendarSource).toContain("공모전 등록");
+    expect(calendarSource).toContain("공모전 수정");
+    expect(calendarSource).toContain("saveContest");
+    expect(calendarSource).toContain("deleteContest");
+    expect(calendarSource).toContain('method = editingContestId ? "PUT" : "POST"');
+    expect(calendarSource).toContain('method: "DELETE"');
+    expect(globalStyles).toContain(".contest-manager");
+    expect(globalStyles).toContain(".contest-manager-list");
   });
 
   test("marks today and lets users return to the current month", () => {

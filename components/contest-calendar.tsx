@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  requestPresignedContestCaptureUpload,
+  uploadFileToPresignedUrl,
+} from "@/lib/upload-client";
+
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
 type ContestScheduleItem = {
@@ -96,6 +101,9 @@ export function ContestCalendar() {
     prize: "",
     captureImageObjectKey: "",
   });
+  const [contestCaptureFile, setContestCaptureFile] = useState<File | null>(
+    null,
+  );
   const [ideaMemo, setIdeaMemo] = useState("");
   const [ideaMemoStatus, setIdeaMemoStatus] = useState("불러오기 전");
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
@@ -324,6 +332,7 @@ export function ContestCalendar() {
 
   function resetContestForm() {
     setEditingContestId(null);
+    setContestCaptureFile(null);
     setContestForm({
       title: "",
       deadline: "",
@@ -334,12 +343,34 @@ export function ContestCalendar() {
 
   function startEditingContest(contest: ContestScheduleItem) {
     setEditingContestId(contest.id);
+    setContestCaptureFile(null);
     setContestForm({
       title: contest.title,
       deadline: contest.deadline,
       prize: contest.prize,
       captureImageObjectKey: contest.captureImageObjectKey,
     });
+  }
+
+  async function uploadContestCaptureIfNeeded() {
+    if (!contestCaptureFile) {
+      return contestForm.captureImageObjectKey;
+    }
+
+    setContestListStatus("캡쳐 이미지 업로드 중");
+    const presigned = await requestPresignedContestCaptureUpload({
+      fileName: contestCaptureFile.name,
+      contentType: contestCaptureFile.type,
+      size: contestCaptureFile.size,
+    });
+
+    await uploadFileToPresignedUrl({
+      uploadUrl: presigned.uploadUrl,
+      file: contestCaptureFile,
+      contentType: contestCaptureFile.type,
+    });
+
+    return presigned.objectKey;
   }
 
   async function saveContest() {
@@ -351,12 +382,17 @@ export function ContestCalendar() {
     setContestListStatus(editingContestId ? "수정 중" : "등록 중");
 
     try {
+      const captureImageObjectKey = await uploadContestCaptureIfNeeded();
+
       await fetch(endpoint, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(contestForm),
+        body: JSON.stringify({
+          ...contestForm,
+          captureImageObjectKey,
+        }),
       });
       const response = await fetch("/api/contests");
       const data = (await response.json()) as {
@@ -440,18 +476,22 @@ export function ContestCalendar() {
                 }
                 placeholder="예: 총 상금 300만원"
               />
-              <label htmlFor="contest-capture-key">캡쳐 이미지 object key</label>
+              <label htmlFor="contest-capture-file">캡쳐 이미지 파일</label>
               <input
-                id="contest-capture-key"
-                value={contestForm.captureImageObjectKey}
+                id="contest-capture-file"
+                type="file"
+                accept="image/*"
                 onChange={(event) =>
-                  updateContestForm(
-                    "captureImageObjectKey",
-                    event.target.value,
-                  )
+                  setContestCaptureFile(event.target.files?.[0] ?? null)
                 }
-                placeholder="contests/example/capture.png"
               />
+              <p className="contest-manager-capture-note">
+                {contestCaptureFile
+                  ? contestCaptureFile.name
+                  : contestForm.captureImageObjectKey
+                    ? `현재 캡쳐: ${contestForm.captureImageObjectKey}`
+                    : "등록할 공모전 캡쳐 이미지를 선택하세요."}
+              </p>
               <div className="contest-manager-actions">
                 <button type="button" onClick={saveContest}>
                   {editingContestId ? "수정 저장" : "공모전 등록"}

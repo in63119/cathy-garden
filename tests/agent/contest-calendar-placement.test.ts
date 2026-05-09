@@ -96,6 +96,10 @@ describe("contest calendar placement", () => {
 
     expect(calendarSource).toContain("공모전 등록");
     expect(calendarSource).toContain("공모전 수정");
+    expect(calendarSource).toContain("requestPresignedContestCaptureUpload");
+    expect(calendarSource).toContain("uploadFileToPresignedUrl");
+    expect(calendarSource).toContain("캡쳐 이미지 파일");
+    expect(calendarSource).toContain('accept="image/*"');
     expect(calendarSource).toContain("saveContest");
     expect(calendarSource).toContain("deleteContest");
     expect(calendarSource).toContain('method = editingContestId ? "PUT" : "POST"');

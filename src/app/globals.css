@@ -357,10 +357,16 @@ input {
 }
 
 .contest-manager-header span,
-.contest-manager-empty {
+.contest-manager-empty,
+.contest-manager-capture-note {
   color: var(--muted);
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.contest-manager-capture-note {
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .contest-manager-form {

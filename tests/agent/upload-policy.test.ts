@@ -1,9 +1,11 @@
 import {
   ALLOWED_UPLOAD_MIME_TYPES,
   MAX_UPLOAD_SIZE_BYTES,
+  buildContestCaptureObjectKey,
   buildThumbnailObjectKey,
   buildUploadObjectKey,
   sanitizeFileName,
+  validateContestCaptureUploadRequest,
   validateUploadRequest,
 } from "../../lib/upload-policy";
 
@@ -24,6 +26,16 @@ describe("upload policy", () => {
 
     expect(key.startsWith("uploads/2026/05/07/")).toBe(true);
     expect(key.endsWith("-garden.jpg")).toBe(true);
+  });
+
+  test("builds contest capture object keys under the contests prefix", () => {
+    const key = buildContestCaptureObjectKey(
+      "contest screen.png",
+      new Date("2026-05-07T12:30:00.000Z")
+    );
+
+    expect(key.startsWith("contests/captures/2026/05/07/")).toBe(true);
+    expect(key.endsWith("-contest-screen.png")).toBe(true);
   });
 
   test("builds thumbnail object keys under the thumbnails prefix", () => {
@@ -74,6 +86,27 @@ describe("upload policy", () => {
     ).toEqual({
       ok: false,
       reason: "file-too-large",
+    });
+  });
+
+  test("accepts only image uploads for contest captures", () => {
+    expect(
+      validateContestCaptureUploadRequest({
+        fileName: "capture.png",
+        contentType: "image/png",
+        size: 1024,
+      }).ok
+    ).toBe(true);
+
+    expect(
+      validateContestCaptureUploadRequest({
+        fileName: "capture.mp4",
+        contentType: "video/mp4",
+        size: 1024,
+      })
+    ).toEqual({
+      ok: false,
+      reason: "unsupported-content-type",
     });
   });
 

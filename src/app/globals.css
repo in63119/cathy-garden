@@ -294,7 +294,7 @@ input {
 
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
   padding: 0 0 40px;
 }
@@ -888,19 +888,33 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 20px;
+  min-height: 560px;
+}
+
+.hero-feature-panel {
+  display: grid;
   gap: 18px;
-  min-height: 420px;
+  width: min(560px, 100%);
+  margin-top: 10px;
 }
 
-.hero-media-card {
-  padding: 18px;
-  min-height: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.hero-media-frame {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  border-radius: 34px;
+  box-shadow: var(--shadow);
 }
 
-.hero-actions,
+.hero-media-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.45rem;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
 .action-row {
   display: flex;
   flex-wrap: wrap;
@@ -1157,20 +1171,32 @@ input {
     font-size: 0.54rem;
   }
 
-  .hero-copy-card,
-  .hero-media-card {
+  .hero-copy-card {
     min-height: unset;
     padding: 20px;
   }
 
-  .hero-actions,
+  .hero-feature-panel {
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  .hero-media-frame {
+    min-height: 520px;
+    border-radius: 28px;
+  }
+
+  .hero-media-caption {
+    font-size: 1.35rem;
+    line-height: 1.75;
+  }
+
   .action-row,
   .filter-toolbar,
   .filter-cluster {
     width: 100%;
   }
 
-  .hero-actions .button-link,
   .action-row .button-link,
   .action-row form,
   .action-row form .button-link,

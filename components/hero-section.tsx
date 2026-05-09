@@ -36,9 +36,9 @@ export function HeroSection({ title, description }: HeroSectionProps) {
 
         <div className="hero-actions">
           <Link href="/library" className="button-link primary">
-            보관함 열기
+            사진 열기
           </Link>
-          <Link href="/upload" className="button-link secondary">
+          <Link href="/library" className="button-link secondary">
             사진 올리기
           </Link>
         </div>

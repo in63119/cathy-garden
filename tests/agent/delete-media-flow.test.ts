@@ -50,7 +50,8 @@ describe("delete media flow scaffolding", () => {
     expect(libraryPage).toContain("normalizeMediaTagFilter");
     expect(libraryPage).toContain("normalizeMediaSortValue");
     expect(libraryPage).toContain("buildLibraryHref");
-    expect(libraryPage).toContain("보관함 검색");
+    expect(libraryPage).toContain("사진 검색");
+    expect(libraryPage).toContain("UploadRequestPanel");
     expect(libraryPage).toContain("파일 이름으로 검색");
     expect(libraryPage).toContain("최신순");
     expect(libraryPage).toContain("사진");

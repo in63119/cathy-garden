@@ -9,6 +9,7 @@ describe("next app skeleton", () => {
       "src/app/page.tsx",
       "src/app/login/page.tsx",
       "src/app/(private)/layout.tsx",
+      "src/app/(private)/contests/page.tsx",
       "src/app/(private)/library/page.tsx",
       "src/app/(private)/upload/page.tsx",
       "src/app/(private)/media/[id]/page.tsx",

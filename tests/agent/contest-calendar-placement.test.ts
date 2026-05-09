@@ -4,19 +4,24 @@ import path from "path";
 describe("contest calendar placement", () => {
   const rootDir = path.resolve(__dirname, "../..");
 
-  test("renders the contest calendar before the home hero content", () => {
+  test("renders the contest calendar on the protected contests page", () => {
+    const contestsPageSource = fs.readFileSync(
+      path.join(rootDir, "src/app/(private)/contests/page.tsx"),
+      "utf8",
+    );
     const homePageSource = fs.readFileSync(
       path.join(rootDir, "src/app/page.tsx"),
       "utf8",
     );
-
-    expect(homePageSource).toContain("isAuthenticated");
-    expect(homePageSource).toContain("authenticated ? <ContestCalendar /> : null");
-    expect(homePageSource).toContain("ContestCalendar");
-    expect(homePageSource.indexOf("<ContestCalendar />")).toBeGreaterThan(-1);
-    expect(homePageSource.indexOf("<ContestCalendar />")).toBeLessThan(
-      homePageSource.indexOf("<HeroSection"),
+    const headerSource = fs.readFileSync(
+      path.join(rootDir, "components/site-header.tsx"),
+      "utf8",
     );
+
+    expect(contestsPageSource).toContain("ContestCalendar");
+    expect(contestsPageSource).toContain("<ContestCalendar />");
+    expect(homePageSource).not.toContain("ContestCalendar");
+    expect(headerSource).toContain('{ href: "/contests", label: "공모전" }');
   });
 
   test("provides an accessible contest calendar section", () => {

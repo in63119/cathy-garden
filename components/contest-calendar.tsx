@@ -4,7 +4,13 @@ import { useMemo, useState } from "react";
 
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
-const contestScheduleItems = [
+type ContestScheduleItem = {
+  id: string;
+  title: string;
+  deadline: string;
+};
+
+const contestScheduleItems: ContestScheduleItem[] = [
   {
     id: "spring-garden-photo",
     title: "봄 정원 사진 공모전",
@@ -66,12 +72,15 @@ export function ContestCalendar() {
 
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
+  const [selectedContestId, setSelectedContestId] = useState<string | null>(
+    null,
+  );
   const calendarDays = useMemo(
     () => buildCalendarDays(visibleMonth),
     [visibleMonth],
   );
   const contestEventsByDate = useMemo(() => {
-    const eventsByDate = new Map<string, typeof contestScheduleItems>();
+    const eventsByDate = new Map<string, ContestScheduleItem[]>();
 
     for (const contestItem of contestScheduleItems) {
       const events = eventsByDate.get(contestItem.deadline) ?? [];
@@ -87,8 +96,14 @@ export function ContestCalendar() {
 
     return count + (contestEventsByDate.get(calendarDay.dateKey)?.length ?? 0);
   }, 0);
+  const selectedContest = selectedContestId
+    ? contestScheduleItems.find(
+        (contestItem) => contestItem.id === selectedContestId,
+      )
+    : null;
 
   function moveMonth(monthOffset: number) {
+    setSelectedContestId(null);
     setVisibleMonth(
       (currentMonth) =>
         new Date(
@@ -150,25 +165,43 @@ export function ContestCalendar() {
                 ? contestEventsByDate.get(calendarDay.dateKey) ?? []
                 : [];
               const hasContestEvents = contestEvents.length > 0;
+              const selectedContestIsOnDay = contestEvents.some(
+                (contestEvent) => contestEvent.id === selectedContestId,
+              );
+
+              if (calendarDay.day === null) {
+                return (
+                  <div
+                    key={calendarDay.key}
+                    className="contest-calendar-day is-empty"
+                    aria-hidden="true"
+                  />
+                );
+              }
 
               return (
-                <div
+                <button
+                  type="button"
                   key={calendarDay.key}
                   className={[
                     "contest-calendar-day",
-                    calendarDay.day === null ? "is-empty" : "",
                     hasContestEvents ? "is-contest-day" : "",
+                    selectedContestIsOnDay ? "is-selected" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
-                  aria-hidden={calendarDay.day === null}
+                  onClick={() => {
+                    if (contestEvents[0]) {
+                      setSelectedContestId(contestEvents[0].id);
+                    }
+                  }}
+                  disabled={!hasContestEvents}
                   aria-label={
-                    calendarDay.day === null
-                      ? undefined
-                      : hasContestEvents
-                        ? `${calendarDay.day}일, 공모전 일정 ${contestEvents.length}건`
-                        : `${calendarDay.day}일`
+                    hasContestEvents
+                      ? `${calendarDay.day}일, 공모전 일정 ${contestEvents.length}건 상세 보기`
+                      : `${calendarDay.day}일`
                   }
+                  aria-pressed={selectedContestIsOnDay}
                 >
                   <span>{calendarDay.day}</span>
                   {hasContestEvents ? (
@@ -176,7 +209,7 @@ export function ContestCalendar() {
                       일정 {contestEvents.length}
                     </span>
                   ) : null}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -186,6 +219,25 @@ export function ContestCalendar() {
               ? `이번 달 공모전 일정 ${visibleMonthContestCount}건`
               : "아직 등록된 공모전 일정이 없습니다."}
           </p>
+
+          {selectedContest ? (
+            <article
+              className="contest-calendar-detail"
+              aria-labelledby="contest-calendar-detail-title"
+            >
+              <span className="eyebrow">Selected Contest</span>
+              <h3 id="contest-calendar-detail-title">
+                {selectedContest.title}
+              </h3>
+              <p>선택한 공모전 상세 정보를 확인합니다.</p>
+              <dl>
+                <div>
+                  <dt>마감일</dt>
+                  <dd>{selectedContest.deadline}</dd>
+                </div>
+              </dl>
+            </article>
+          ) : null}
         </div>
       </div>
     </section>

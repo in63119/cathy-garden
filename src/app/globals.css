@@ -398,10 +398,16 @@ input {
   display: grid;
   place-items: center;
   color: var(--foreground);
+  cursor: default;
+  font: inherit;
   font-weight: 700;
   font-size: 0.9rem;
   position: relative;
   overflow: hidden;
+}
+
+.contest-calendar-day:disabled {
+  color: var(--foreground);
 }
 
 .contest-calendar-day.is-empty {
@@ -427,6 +433,20 @@ input {
   background: var(--accent-strong);
 }
 
+.contest-calendar-day.is-contest-day:not(:disabled) {
+  cursor: pointer;
+}
+
+.contest-calendar-day.is-contest-day:hover,
+.contest-calendar-day.is-contest-day.is-selected {
+  border-color: rgba(76, 105, 66, 0.62);
+  background:
+    linear-gradient(180deg, rgba(224, 240, 215, 0.98), rgba(255, 252, 246, 0.9));
+  box-shadow:
+    inset 0 0 0 2px rgba(111, 139, 98, 0.24),
+    0 8px 18px rgba(55, 74, 48, 0.1);
+}
+
 .contest-calendar-badge {
   position: absolute;
   bottom: 6px;
@@ -448,6 +468,54 @@ input {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.contest-calendar-detail {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 246, 0.72);
+}
+
+.contest-calendar-detail h3 {
+  margin: 0;
+  font-size: 1.16rem;
+  line-height: 1.35;
+}
+
+.contest-calendar-detail p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.contest-calendar-detail dl,
+.contest-calendar-detail dd {
+  margin: 0;
+}
+
+.contest-calendar-detail dl {
+  display: grid;
+  gap: 6px;
+}
+
+.contest-calendar-detail dl > div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.contest-calendar-detail dt {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.contest-calendar-detail dd {
+  font-weight: 800;
 }
 
 .hero-copy-card {

@@ -29,6 +29,7 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain('aria-label="다음 달 보기"');
     expect(calendarSource).toContain("moveMonth(-1)");
     expect(calendarSource).toContain("moveMonth(1)");
+    expect(calendarSource).toContain("moveToToday");
     expect(calendarSource).toContain("공모전 달력");
     expect(calendarSource).toContain("아직 등록된 공모전 일정이 없습니다.");
   });
@@ -70,5 +71,25 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day.is-selected");
+  });
+
+  test("marks today and lets users return to the current month", () => {
+    const calendarSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-calendar.tsx"),
+      "utf8",
+    );
+    const globalStyles = fs.readFileSync(
+      path.join(rootDir, "src/app/globals.css"),
+      "utf8",
+    );
+
+    expect(calendarSource).toContain("todayDateKey");
+    expect(calendarSource).toContain("is-today");
+    expect(calendarSource).toContain("contest-calendar-today-badge");
+    expect(calendarSource).toContain("contest-calendar-today-button");
+    expect(calendarSource).toContain("오늘");
+    expect(globalStyles).toContain(".contest-calendar-day.is-today");
+    expect(globalStyles).toContain(".contest-calendar-today-badge");
+    expect(globalStyles).toContain(".contest-calendar-today-button");
   });
 });

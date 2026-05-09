@@ -67,6 +67,11 @@ function formatMonthLabel(monthDate: Date) {
 }
 
 export function ContestCalendar() {
+  const todayDateKey = useMemo(() => {
+    const today = new Date();
+
+    return formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  }, []);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
 
@@ -114,6 +119,13 @@ export function ContestCalendar() {
     );
   }
 
+  function moveToToday() {
+    const today = new Date();
+
+    setSelectedContestId(null);
+    setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+  }
+
   return (
     <section
       className="content-shell contest-calendar-section"
@@ -152,6 +164,13 @@ export function ContestCalendar() {
               다음
             </button>
           </div>
+          <button
+            type="button"
+            className="contest-calendar-today-button"
+            onClick={moveToToday}
+          >
+            오늘
+          </button>
 
           <div className="contest-calendar-grid contest-calendar-weekdays">
             {weekdayLabels.map((label) => (
@@ -165,6 +184,7 @@ export function ContestCalendar() {
                 ? contestEventsByDate.get(calendarDay.dateKey) ?? []
                 : [];
               const hasContestEvents = contestEvents.length > 0;
+              const isToday = calendarDay.dateKey === todayDateKey;
               const selectedContestIsOnDay = contestEvents.some(
                 (contestEvent) => contestEvent.id === selectedContestId,
               );
@@ -187,6 +207,7 @@ export function ContestCalendar() {
                     "contest-calendar-day",
                     hasContestEvents ? "is-contest-day" : "",
                     selectedContestIsOnDay ? "is-selected" : "",
+                    isToday ? "is-today" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -199,11 +220,16 @@ export function ContestCalendar() {
                   aria-label={
                     hasContestEvents
                       ? `${calendarDay.day}일, 공모전 일정 ${contestEvents.length}건 상세 보기`
-                      : `${calendarDay.day}일`
+                      : isToday
+                        ? `${calendarDay.day}일, 오늘`
+                        : `${calendarDay.day}일`
                   }
                   aria-pressed={selectedContestIsOnDay}
                 >
                   <span>{calendarDay.day}</span>
+                  {isToday ? (
+                    <span className="contest-calendar-today-badge">오늘</span>
+                  ) : null}
                   {hasContestEvents ? (
                     <span className="contest-calendar-badge">
                       일정 {contestEvents.length}

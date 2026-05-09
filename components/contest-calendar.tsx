@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
 type CalendarDay = {
@@ -32,8 +36,26 @@ function formatMonthLabel(monthDate: Date) {
 }
 
 export function ContestCalendar() {
-  const monthDate = new Date();
-  const calendarDays = buildCalendarDays(monthDate);
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const today = new Date();
+
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+  const calendarDays = useMemo(
+    () => buildCalendarDays(visibleMonth),
+    [visibleMonth],
+  );
+
+  function moveMonth(monthOffset: number) {
+    setVisibleMonth(
+      (currentMonth) =>
+        new Date(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth() + monthOffset,
+          1,
+        ),
+    );
+  }
 
   return (
     <section
@@ -52,8 +74,26 @@ export function ContestCalendar() {
         </div>
 
         <div className="contest-calendar-board" aria-label="공모전 월간 달력">
-          <div className="contest-calendar-month">
-            {formatMonthLabel(monthDate)}
+          <div className="contest-calendar-toolbar">
+            <button
+              type="button"
+              className="contest-calendar-nav-button"
+              onClick={() => moveMonth(-1)}
+              aria-label="이전 달 보기"
+            >
+              이전
+            </button>
+            <div className="contest-calendar-month">
+              {formatMonthLabel(visibleMonth)}
+            </div>
+            <button
+              type="button"
+              className="contest-calendar-nav-button"
+              onClick={() => moveMonth(1)}
+              aria-label="다음 달 보기"
+            >
+              다음
+            </button>
           </div>
 
           <div className="contest-calendar-grid contest-calendar-weekdays">

@@ -23,7 +23,12 @@ describe("contest calendar placement", () => {
       "utf8",
     );
 
+    expect(calendarSource).toContain('"use client"');
     expect(calendarSource).toContain('aria-labelledby="contest-calendar-title"');
+    expect(calendarSource).toContain('aria-label="이전 달 보기"');
+    expect(calendarSource).toContain('aria-label="다음 달 보기"');
+    expect(calendarSource).toContain("moveMonth(-1)");
+    expect(calendarSource).toContain("moveMonth(1)");
     expect(calendarSource).toContain("공모전 달력");
     expect(calendarSource).toContain("아직 등록된 공모전 일정이 없습니다.");
   });

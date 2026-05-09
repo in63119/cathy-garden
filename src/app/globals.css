@@ -339,9 +339,41 @@ input {
   background: rgba(255, 255, 255, 0.5);
 }
 
+.contest-calendar-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .contest-calendar-month {
-  font-weight: 800;
+  min-width: 0;
   color: var(--accent-strong);
+  font-weight: 800;
+  text-align: center;
+}
+
+.contest-calendar-nav-button {
+  min-height: 38px;
+  padding: 0 0.78rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.contest-calendar-nav-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .contest-calendar-grid {
@@ -617,6 +649,12 @@ input {
 
   .contest-calendar-board {
     padding: 12px;
+  }
+
+  .contest-calendar-nav-button {
+    min-height: 36px;
+    padding: 0 0.68rem;
+    font-size: 0.82rem;
   }
 
   .contest-calendar-grid {

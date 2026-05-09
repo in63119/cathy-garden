@@ -3,8 +3,6 @@ import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/app-shell";
 
-import "@fontsource/gowun-batang/400.css";
-import "@fontsource/gowun-batang/700.css";
 import "@fontsource/pretendard/400.css";
 import "@fontsource/pretendard/500.css";
 import "@fontsource/pretendard/600.css";

@@ -9,6 +9,7 @@ type ContestScheduleItem = {
   title: string;
   deadline: string;
   prize: string;
+  captureImageObjectKey: string;
 };
 
 const contestScheduleItems: ContestScheduleItem[] = [
@@ -17,12 +18,14 @@ const contestScheduleItems: ContestScheduleItem[] = [
     title: "봄 정원 사진 공모전",
     deadline: "2026-05-18",
     prize: "총 상금 300만원",
+    captureImageObjectKey: "contests/spring-garden-photo/capture.png",
   },
   {
     id: "daily-idea-note",
     title: "생활 아이디어 메모 공모전",
     deadline: "2026-05-27",
     prize: "대상 100만원",
+    captureImageObjectKey: "contests/daily-idea-note/capture.png",
   },
 ];
 
@@ -69,6 +72,15 @@ function formatMonthLabel(monthDate: Date) {
   }).format(monthDate);
 }
 
+function getContestCaptureImageUrl(objectKey: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_CONTEST_CAPTURE_BASE_URL?.replace(
+    /\/$/,
+    "",
+  );
+
+  return baseUrl ? `${baseUrl}/${objectKey}` : null;
+}
+
 export function ContestCalendar() {
   const todayDateKey = useMemo(() => {
     const today = new Date();
@@ -108,6 +120,9 @@ export function ContestCalendar() {
     ? contestScheduleItems.find(
         (contestItem) => contestItem.id === selectedContestId,
       )
+    : null;
+  const selectedContestCaptureUrl = selectedContest
+    ? getContestCaptureImageUrl(selectedContest.captureImageObjectKey)
     : null;
 
   function moveMonth(monthOffset: number) {
@@ -259,6 +274,19 @@ export function ContestCalendar() {
                 {selectedContest.title}
               </h3>
               <p>선택한 공모전 상세 정보를 확인합니다.</p>
+              <figure className="contest-calendar-capture">
+                {selectedContestCaptureUrl ? (
+                  <img
+                    src={selectedContestCaptureUrl}
+                    alt={`${selectedContest.title} 캡쳐 이미지`}
+                    loading="lazy"
+                  />
+                ) : (
+                  <figcaption>
+                    캡쳐 이미지 경로: {selectedContest.captureImageObjectKey}
+                  </figcaption>
+                )}
+              </figure>
               <dl>
                 <div>
                   <dt>공모전 이름</dt>

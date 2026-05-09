@@ -73,8 +73,14 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("prize: string");
     expect(calendarSource).toContain("상금");
     expect(calendarSource).toContain("<dd>{selectedContest.prize}</dd>");
+    expect(calendarSource).toContain("captureImageObjectKey");
+    expect(calendarSource).toContain("contests/spring-garden-photo/capture.png");
+    expect(calendarSource).toContain("NEXT_PUBLIC_CONTEST_CAPTURE_BASE_URL");
+    expect(calendarSource).toContain("contest-calendar-capture");
+    expect(calendarSource).toContain("캡쳐 이미지");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
+    expect(globalStyles).toContain(".contest-calendar-capture");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day.is-selected");
   });
 

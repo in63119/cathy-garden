@@ -65,6 +65,8 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("setSelectedContestId(contestEvents[0].id)");
     expect(calendarSource).toContain("contest-calendar-detail");
     expect(calendarSource).toContain("선택한 공모전 상세 정보를 확인합니다.");
+    expect(calendarSource).toContain("공모전 이름");
+    expect(calendarSource).toContain("<dd>{selectedContest.title}</dd>");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day.is-selected");

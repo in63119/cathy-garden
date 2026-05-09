@@ -232,6 +232,10 @@ export function ContestCalendar() {
               <p>선택한 공모전 상세 정보를 확인합니다.</p>
               <dl>
                 <div>
+                  <dt>공모전 이름</dt>
+                  <dd>{selectedContest.title}</dd>
+                </div>
+                <div>
                   <dt>마감일</dt>
                   <dd>{selectedContest.deadline}</dd>
                 </div>

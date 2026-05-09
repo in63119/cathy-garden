@@ -7,6 +7,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import {
   PRESIGNED_URL_EXPIRES_IN_SECONDS,
+  buildContestCaptureObjectKey,
   buildThumbnailObjectKey,
   buildUploadObjectKey,
 } from "@/lib/upload-policy";
@@ -120,6 +121,38 @@ export async function createPresignedThumbnailUpload(params: {
     region: config.region,
     expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
     contentType: "image/jpeg",
+  };
+}
+
+export async function createPresignedContestCaptureUpload(params: {
+  fileName: string;
+  contentType: string;
+  size: number;
+}) {
+  const config = getS3Config();
+  const client = createS3Client();
+  const objectKey = buildContestCaptureObjectKey(params.fileName);
+
+  const command = new PutObjectCommand({
+    Bucket: config.bucket,
+    Key: objectKey,
+    ContentType: params.contentType,
+    ContentLength: params.size,
+  });
+
+  const uploadUrl = await getSignedUrl(client, command, {
+    expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+  });
+
+  return {
+    uploadUrl,
+    objectKey,
+    bucket: config.bucket,
+    region: config.region,
+    expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
+    contentType: params.contentType,
+    fileName: params.fileName,
+    size: params.size,
   };
 }
 

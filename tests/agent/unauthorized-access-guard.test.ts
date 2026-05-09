@@ -20,6 +20,7 @@ describe("unauthorized access guards", () => {
     expect(authSource).toContain('"/library"');
     expect(authSource).toContain('"/upload"');
     expect(authSource).toContain('"/media"');
+    expect(authSource).toContain('"/contests"');
   });
 
   test("blocks unauthenticated protected API routes with 401 responses", () => {

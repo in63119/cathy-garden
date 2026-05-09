@@ -7,7 +7,6 @@
     "@aws-sdk/s3-request-presigner": "^3.1044.0",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
-    "@fontsource/gowun-batang": "^5.2.8",
     "@fontsource/pretendard": "^5.2.5",
     "@mui/icons-material": "^6.1.8",
     "@mui/material": "^6.1.8",

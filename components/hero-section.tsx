@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 
 type HeroSectionProps = {
   title: string;
@@ -34,37 +33,21 @@ export function HeroSection({ title, description }: HeroSectionProps) {
           {description}
         </p>
 
-        <div className="hero-actions">
-          <Link href="/library" className="button-link primary">
-            보관함 열기
-          </Link>
-          <Link href="/upload" className="button-link secondary">
-            사진 올리기
-          </Link>
+        <div className="hero-feature-panel">
+          <div className="hero-media-frame">
+            <Image
+              src="/logo512.png"
+              alt="정원으로 둘러싸인 집"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 560px"
+              style={{ objectFit: "cover" }}
+            />
+          </div>
+          <p className="hero-media-caption">
+            한 사람만을 위한 일정, 사진, 공모전 기록을 조용히 모아두는 개인 기능 사이트입니다.
+          </p>
         </div>
-      </div>
-
-      <div className="card hero-media-card">
-        <div style={{ position: "relative", flex: 1, minHeight: "320px", overflow: "hidden", borderRadius: "22px" }}>
-          <Image
-            src="/logo512.png"
-            alt="정원으로 둘러싸인 집"
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-        <p
-          style={{
-            margin: 0,
-            color: "var(--muted)",
-            fontSize: "0.98rem",
-            lineHeight: 1.6,
-          }}
-        >
-          정원과 가족, 일상의 순간을 조용히 모아두는 개인 보관함입니다.
-        </p>
       </div>
     </section>
   );

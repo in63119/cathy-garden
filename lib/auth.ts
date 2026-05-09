@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 
 export const AUTH_COOKIE_NAME = "cathy-garden-session";
 export const DEFAULT_REDIRECT_PATH = "/library";
-export const PROTECTED_PATH_PREFIXES = ["/library", "/upload", "/media"];
+export const PROTECTED_PATH_PREFIXES = ["/library", "/upload", "/media", "/contests"];
 
 export function isProtectedPath(pathname: string) {
   return PROTECTED_PATH_PREFIXES.some(

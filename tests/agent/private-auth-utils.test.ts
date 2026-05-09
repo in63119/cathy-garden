@@ -14,6 +14,8 @@ describe("private auth helpers", () => {
     expect(isProtectedPath("/library/spring")).toBe(true);
     expect(isProtectedPath("/upload")).toBe(true);
     expect(isProtectedPath("/media/sample")).toBe(true);
+    expect(isProtectedPath("/contests")).toBe(true);
+    expect(isProtectedPath("/contests/spring")).toBe(true);
     expect(isProtectedPath("/")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);
   });

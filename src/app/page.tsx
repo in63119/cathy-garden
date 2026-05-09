@@ -1,13 +1,11 @@
-import { ContestCalendar } from "@/components/contest-calendar";
 import { HeroSection } from "@/components/hero-section";
 
 export default function HomePage() {
   return (
     <div style={{ paddingBottom: "48px" }}>
-      <ContestCalendar />
       <HeroSection
         title="Cathy Garden"
-        description="간직하고 싶은 사진과 영상을 올리고, 정리하고, 다시 꺼내 보는 개인 보관함입니다."
+        description="매일 쓰는 작은 기능들을 한 사람의 흐름에 맞춰 모아둔 개인 전용 사이트입니다."
       />
     </div>
   );

@@ -16,7 +16,7 @@
   --shadow: 0 18px 40px rgba(55, 74, 48, 0.12);
   --shadow-soft: 0 10px 26px rgba(55, 74, 48, 0.08);
   --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Gowun Batang", Georgia, "Times New Roman", serif;
+  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -294,7 +294,7 @@ input {
 
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
   padding: 0 0 40px;
 }
@@ -327,6 +327,144 @@ input {
   margin: 0;
   color: var(--muted);
   line-height: 1.7;
+}
+
+.contest-manager {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.contest-manager-header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.contest-manager h3,
+.contest-manager p,
+.contest-manager ul {
+  margin: 0;
+}
+
+.contest-manager h3 {
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+
+.contest-manager-header span,
+.contest-manager-empty,
+.contest-manager-capture-note {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.contest-manager-capture-note {
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.contest-manager-form {
+  display: grid;
+  gap: 8px;
+}
+
+.contest-manager-form label {
+  color: var(--foreground);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.contest-manager-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.contest-manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-manager-actions button,
+.contest-manager-list button {
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.contest-manager-actions button {
+  padding: 0 0.9rem;
+}
+
+.contest-manager-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.contest-manager-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.contest-manager-list li > button {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  color: var(--foreground);
+}
+
+.contest-manager-list li > button strong,
+.contest-manager-list li > button span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contest-manager-list li > button span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.contest-manager-list li > div {
+  display: flex;
+  gap: 6px;
+}
+
+.contest-manager-list li > div button {
+  min-height: 34px;
+  padding: 0 0.68rem;
+  font-size: 0.82rem;
 }
 
 .contest-calendar-board {
@@ -473,6 +611,16 @@ input {
   cursor: pointer;
 }
 
+.contest-calendar-day.is-selected {
+  border-color: rgba(76, 105, 66, 0.74);
+  background:
+    linear-gradient(180deg, rgba(224, 240, 215, 0.98), rgba(255, 252, 246, 0.92));
+  box-shadow:
+    inset 0 0 0 3px rgba(76, 105, 66, 0.28),
+    0 10px 22px rgba(55, 74, 48, 0.14);
+  color: var(--accent-strong);
+}
+
 .contest-calendar-day.is-contest-day:hover,
 .contest-calendar-day.is-contest-day.is-selected {
   border-color: rgba(76, 105, 66, 0.62);
@@ -525,6 +673,24 @@ input {
   margin: 0;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.contest-calendar-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-calendar-detail-actions button {
+  min-height: 36px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
 }
 
 .contest-calendar-capture {
@@ -583,24 +749,182 @@ input {
   font-weight: 800;
 }
 
+.contest-calendar-memo {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.contest-calendar-memo label {
+  color: var(--foreground);
+  font-weight: 900;
+}
+
+.contest-calendar-memo textarea {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--foreground);
+  font: inherit;
+  line-height: 1.6;
+}
+
+.contest-calendar-memo textarea:focus {
+  outline: 2px solid rgba(111, 139, 98, 0.28);
+  outline-offset: 2px;
+}
+
+.contest-calendar-memo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.contest-calendar-memo-actions button {
+  min-height: 38px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--accent-strong);
+  color: #fdfcf7;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.contest-calendar-memo-actions span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.contest-calendar-submissions {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.contest-calendar-submissions-header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.contest-calendar-submissions h4,
+.contest-calendar-submissions p,
+.contest-calendar-submissions ul {
+  margin: 0;
+}
+
+.contest-calendar-submissions h4 {
+  font-size: 1rem;
+}
+
+.contest-calendar-submissions p,
+.contest-calendar-submissions-header span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.contest-calendar-submissions ul {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.contest-calendar-submissions li {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.contest-calendar-submissions code,
+.contest-calendar-submissions li span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.contest-calendar-submission-form {
+  display: grid;
+  gap: 8px;
+}
+
+.contest-calendar-submission-form label {
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.contest-calendar-submission-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.contest-calendar-submission-form button {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
 .hero-copy-card {
   padding: 28px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 20px;
+  min-height: 560px;
+}
+
+.hero-feature-panel {
+  display: grid;
   gap: 18px;
-  min-height: 420px;
+  width: min(560px, 100%);
+  margin-top: 10px;
 }
 
-.hero-media-card {
-  padding: 18px;
-  min-height: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.hero-media-frame {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  border-radius: 34px;
+  box-shadow: var(--shadow);
 }
 
-.hero-actions,
+.hero-media-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.45rem;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
 .action-row {
   display: flex;
   flex-wrap: wrap;
@@ -857,20 +1181,32 @@ input {
     font-size: 0.54rem;
   }
 
-  .hero-copy-card,
-  .hero-media-card {
+  .hero-copy-card {
     min-height: unset;
     padding: 20px;
   }
 
-  .hero-actions,
+  .hero-feature-panel {
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  .hero-media-frame {
+    min-height: 520px;
+    border-radius: 28px;
+  }
+
+  .hero-media-caption {
+    font-size: 1.35rem;
+    line-height: 1.75;
+  }
+
   .action-row,
   .filter-toolbar,
   .filter-cluster {
     width: 100%;
   }
 
-  .hero-actions .button-link,
   .action-row .button-link,
   .action-row form,
   .action-row form .button-link,

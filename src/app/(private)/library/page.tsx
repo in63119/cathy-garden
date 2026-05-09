@@ -3,6 +3,7 @@ import { FavoriteMediaButton } from "@/components/favorite-media-button";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/section-card";
+import { UploadRequestPanel } from "@/components/upload-request-panel";
 import { readMediaEntries } from "@/lib/media-store";
 import {
   filterAndSortMediaEntries,
@@ -108,10 +109,14 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   return (
     <div className="content-shell page-section">
       <SectionCard
-        eyebrow="보관함"
-        title="보관함 둘러보기"
-        description="사진과 영상을 종류, 날짜, 즐겨찾기, 앨범, 태그, 파일 이름으로 찾아볼 수 있습니다."
+        eyebrow="사진"
+        title="사진"
+        description="사진과 영상을 올리고, 종류, 날짜, 즐겨찾기, 앨범, 태그, 파일 이름으로 찾아볼 수 있습니다."
       >
+        <div className="panel">
+          <UploadRequestPanel />
+        </div>
+
         {uploaded ? (
           <div className="card-soft panel-success" style={{ display: "grid", gap: "6px", padding: "16px", lineHeight: 1.6 }}>
             <strong>업로드 완료</strong>
@@ -140,7 +145,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           <input type="hidden" name="album" value={album} />
           <input type="hidden" name="tag" value={tag} />
           <label htmlFor="library-search" style={{ fontWeight: 700 }}>
-            보관함 검색
+            사진 검색
           </label>
           <div
             style={{
@@ -235,7 +240,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
 
         {entries.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
-            아직 보관된 항목이 없습니다. 첫 사진이나 영상을 올려 보관함을 시작하세요.
+            아직 보관된 항목이 없습니다. 첫 사진이나 영상을 올려 사진 기록을 시작하세요.
           </div>
         ) : entriesWithPreview.length === 0 ? (
           <div className="panel panel-dashed panel-muted">
@@ -348,12 +353,6 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             ))}
           </div>
         )}
-
-        <div className="action-row">
-          <Link href="/upload" className="button-link primary">
-            사진 올리기
-          </Link>
-        </div>
       </SectionCard>
     </div>
   );

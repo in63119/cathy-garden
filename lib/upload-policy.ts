@@ -38,6 +38,16 @@ export function buildUploadObjectKey(fileName: string, now = new Date()) {
   return `uploads/${datePrefix}/${uniqueSuffix}-${safeFileName}`;
 }
 
+export function buildContestCaptureObjectKey(fileName: string, now = new Date()) {
+  const safeFileName = sanitizeFileName(fileName);
+  const datePrefix = now.toISOString().slice(0, 10).replace(/-/g, "/");
+  const uniqueSuffix = `${now.getTime()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+
+  return `contests/captures/${datePrefix}/${uniqueSuffix}-${safeFileName}`;
+}
+
 export function buildThumbnailObjectKey(objectKey: string) {
   const normalizedKey = objectKey.trim();
 
@@ -81,4 +91,18 @@ export function validateUploadRequest(input: UploadRequestInput) {
       size,
     },
   };
+}
+
+export function validateContestCaptureUploadRequest(input: UploadRequestInput) {
+  const validation = validateUploadRequest(input);
+
+  if (!validation.ok) {
+    return validation;
+  }
+
+  if (!validation.normalized.contentType.startsWith("image/")) {
+    return { ok: false as const, reason: "unsupported-content-type" };
+  }
+
+  return validation;
 }

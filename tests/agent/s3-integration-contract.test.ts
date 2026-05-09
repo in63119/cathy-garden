@@ -10,6 +10,7 @@ import {
 } from "../../lib/upload-policy";
 import {
   createPresignedDownload,
+  createPresignedContestCaptureUpload,
   createPresignedThumbnailUpload,
   createPresignedUpload,
   getS3Config,
@@ -118,5 +119,23 @@ describe("S3 storage integration contract", () => {
       expiresIn: PRESIGNED_URL_EXPIRES_IN_SECONDS,
     });
     expect(result.objectKey).toBe("thumbnails/2026/05/07/garden.jpg.jpg");
+  });
+
+  test("creates presigned contest capture uploads under the contests prefix", async () => {
+    const result = await createPresignedContestCaptureUpload({
+      fileName: "contest capture.png",
+      contentType: "image/png",
+      size: 2048,
+    });
+
+    const command = (getSignedUrl as jest.Mock).mock.calls[0][1] as PutObjectCommand;
+
+    expect(command).toBeInstanceOf(PutObjectCommand);
+    expect(command.input.Bucket).toBe("garden-bucket");
+    expect(command.input.Key).toMatch(/^contests\/captures\/\d{4}\/\d{2}\/\d{2}\//);
+    expect(command.input.Key).toContain("contest-capture.png");
+    expect(command.input.ContentType).toBe("image/png");
+    expect(command.input.ContentLength).toBe(2048);
+    expect(result.objectKey).toMatch(/^contests\/captures\//);
   });
 });

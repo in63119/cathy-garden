@@ -86,6 +86,26 @@ export async function requestPresignedThumbnailUpload(payload: {
   return data as PresignUploadResponse;
 }
 
+export async function requestPresignedContestCaptureUpload(
+  payload: PresignRequestPayload
+): Promise<PresignUploadResponse> {
+  const response = await fetch("/api/contests/capture", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error ?? "contest-capture-presign-failed");
+  }
+
+  return data as PresignUploadResponse;
+}
+
 export async function uploadFileToPresignedUrl(params: {
   uploadUrl: string;
   file: File | Blob;

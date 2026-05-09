@@ -4,8 +4,8 @@ import { isAuthenticated } from "@/lib/auth-server";
 
 const publicLinks = [{ href: "/", label: "홈" }];
 const privateLinks = [
-  { href: "/library", label: "보관함" },
-  { href: "/upload", label: "올리기" },
+  { href: "/library", label: "사진" },
+  { href: "/contests", label: "공모전" },
 ];
 
 export async function SiteHeader() {

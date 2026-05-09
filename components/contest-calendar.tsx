@@ -92,6 +92,7 @@ export function ContestCalendar() {
   const [selectedContestId, setSelectedContestId] = useState<string | null>(
     null,
   );
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [contests, setContests] = useState<ContestScheduleItem[]>([]);
   const [contestListStatus, setContestListStatus] = useState("불러오기 전");
   const [editingContestId, setEditingContestId] = useState<string | null>(null);
@@ -253,6 +254,8 @@ export function ContestCalendar() {
 
   function moveMonth(monthOffset: number) {
     setSelectedContestId(null);
+    setSelectedDateKey(null);
+    resetContestForm();
     setVisibleMonth(
       (currentMonth) =>
         new Date(
@@ -267,6 +270,8 @@ export function ContestCalendar() {
     const today = new Date();
 
     setSelectedContestId(null);
+    setSelectedDateKey(null);
+    resetContestForm();
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
   }
 
@@ -341,8 +346,22 @@ export function ContestCalendar() {
     });
   }
 
+  function startCreatingContest(dateKey: string) {
+    setSelectedContestId(null);
+    setSelectedDateKey(dateKey);
+    setEditingContestId(null);
+    setContestCaptureFile(null);
+    setContestForm({
+      title: "",
+      deadline: dateKey,
+      prize: "",
+      captureImageObjectKey: "",
+    });
+  }
+
   function startEditingContest(contest: ContestScheduleItem) {
     setEditingContestId(contest.id);
+    setSelectedDateKey(contest.deadline);
     setContestCaptureFile(null);
     setContestForm({
       title: contest.title,
@@ -384,7 +403,7 @@ export function ContestCalendar() {
     try {
       const captureImageObjectKey = await uploadContestCaptureIfNeeded();
 
-      await fetch(endpoint, {
+      const saveResponse = await fetch(endpoint, {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -394,12 +413,24 @@ export function ContestCalendar() {
           captureImageObjectKey,
         }),
       });
+
+      if (!saveResponse.ok) {
+        throw new Error("contest-save-failed");
+      }
+
+      const saveData = (await saveResponse.json()) as {
+        contest?: ContestScheduleItem;
+      };
       const response = await fetch("/api/contests");
       const data = (await response.json()) as {
         contests?: ContestScheduleItem[];
       };
 
       setContests(data.contests ?? []);
+      if (saveData.contest?.id) {
+        setSelectedContestId(saveData.contest.id);
+        setSelectedDateKey(saveData.contest.deadline);
+      }
       setContestListStatus(editingContestId ? "수정됨" : "등록됨");
       resetContestForm();
     } catch {
@@ -419,6 +450,7 @@ export function ContestCalendar() {
       );
       if (selectedContestId === contestId) {
         setSelectedContestId(null);
+        setSelectedDateKey(null);
       }
       if (editingContestId === contestId) {
         resetContestForm();
@@ -426,6 +458,13 @@ export function ContestCalendar() {
       setContestListStatus("삭제됨");
     } catch {
       setContestListStatus("삭제 실패");
+    }
+  }
+
+  function cancelContestForm() {
+    resetContestForm();
+    if (!selectedContestId) {
+      setSelectedDateKey(null);
     }
   }
 
@@ -442,98 +481,6 @@ export function ContestCalendar() {
             <p>
               캡쳐해 둔 공모전 일정과 제출 준비를 이곳에서 확인합니다.
             </p>
-          </div>
-          <div className="contest-manager">
-            <div className="contest-manager-header">
-              <h3>{editingContestId ? "공모전 수정" : "공모전 등록"}</h3>
-              <span aria-live="polite">{contestListStatus}</span>
-            </div>
-            <div className="contest-manager-form">
-              <label htmlFor="contest-title">공모전 이름</label>
-              <input
-                id="contest-title"
-                value={contestForm.title}
-                onChange={(event) =>
-                  updateContestForm("title", event.target.value)
-                }
-                placeholder="예: 봄 정원 사진 공모전"
-              />
-              <label htmlFor="contest-deadline">제출 마감일</label>
-              <input
-                id="contest-deadline"
-                type="date"
-                value={contestForm.deadline}
-                onChange={(event) =>
-                  updateContestForm("deadline", event.target.value)
-                }
-              />
-              <label htmlFor="contest-prize">상금</label>
-              <input
-                id="contest-prize"
-                value={contestForm.prize}
-                onChange={(event) =>
-                  updateContestForm("prize", event.target.value)
-                }
-                placeholder="예: 총 상금 300만원"
-              />
-              <label htmlFor="contest-capture-file">캡쳐 이미지 파일</label>
-              <input
-                id="contest-capture-file"
-                type="file"
-                accept="image/*"
-                onChange={(event) =>
-                  setContestCaptureFile(event.target.files?.[0] ?? null)
-                }
-              />
-              <p className="contest-manager-capture-note">
-                {contestCaptureFile
-                  ? contestCaptureFile.name
-                  : contestForm.captureImageObjectKey
-                    ? `현재 캡쳐: ${contestForm.captureImageObjectKey}`
-                    : "등록할 공모전 캡쳐 이미지를 선택하세요."}
-              </p>
-              <div className="contest-manager-actions">
-                <button type="button" onClick={saveContest}>
-                  {editingContestId ? "수정 저장" : "공모전 등록"}
-                </button>
-                {editingContestId ? (
-                  <button type="button" onClick={resetContestForm}>
-                    취소
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            {contests.length > 0 ? (
-              <ul className="contest-manager-list">
-                {contests.map((contest) => (
-                  <li key={contest.id}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedContestId(contest.id)}
-                    >
-                      <strong>{contest.title}</strong>
-                      <span>{contest.deadline}</span>
-                    </button>
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => startEditingContest(contest)}
-                      >
-                        수정
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteContest(contest.id)}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="contest-manager-empty">등록된 공모전이 없습니다.</p>
-            )}
           </div>
         </div>
 
@@ -608,16 +555,19 @@ export function ContestCalendar() {
                     .join(" ")}
                   onClick={() => {
                     if (contestEvents[0]) {
+                      resetContestForm();
                       setSelectedContestId(contestEvents[0].id);
+                      setSelectedDateKey(calendarDay.dateKey);
+                    } else if (calendarDay.dateKey) {
+                      startCreatingContest(calendarDay.dateKey);
                     }
                   }}
-                  disabled={!hasContestEvents}
                   aria-label={
                     hasContestEvents
                       ? `${calendarDay.day}일, 공모전 일정 ${contestEvents.length}건 상세 보기`
                       : isToday
-                        ? `${calendarDay.day}일, 오늘`
-                        : `${calendarDay.day}일`
+                        ? `${calendarDay.day}일, 오늘, 공모전 등록`
+                        : `${calendarDay.day}일, 공모전 등록`
                   }
                   aria-pressed={selectedContestIsOnDay}
                 >
@@ -641,6 +591,73 @@ export function ContestCalendar() {
               : "아직 등록된 공모전 일정이 없습니다."}
           </p>
 
+          {selectedDateKey && (!selectedContest || editingContestId) ? (
+            <article
+              className="contest-manager"
+              aria-labelledby="contest-manager-title"
+            >
+              <div className="contest-manager-header">
+                <h3 id="contest-manager-title">
+                  {editingContestId ? "공모전 수정" : "공모전 등록"}
+                </h3>
+                <span aria-live="polite">{contestListStatus}</span>
+              </div>
+              <div className="contest-manager-form">
+                <label htmlFor="contest-title">공모전 이름</label>
+                <input
+                  id="contest-title"
+                  value={contestForm.title}
+                  onChange={(event) =>
+                    updateContestForm("title", event.target.value)
+                  }
+                  placeholder="예: 봄 정원 사진 공모전"
+                />
+                <label htmlFor="contest-deadline">제출 마감일</label>
+                <input
+                  id="contest-deadline"
+                  type="date"
+                  value={contestForm.deadline}
+                  onChange={(event) =>
+                    updateContestForm("deadline", event.target.value)
+                  }
+                />
+                <label htmlFor="contest-prize">상금</label>
+                <input
+                  id="contest-prize"
+                  value={contestForm.prize}
+                  onChange={(event) =>
+                    updateContestForm("prize", event.target.value)
+                  }
+                  placeholder="예: 총 상금 300만원"
+                />
+                <label htmlFor="contest-capture-file">캡쳐 이미지 파일</label>
+                <input
+                  id="contest-capture-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) =>
+                    setContestCaptureFile(event.target.files?.[0] ?? null)
+                  }
+                />
+                <p className="contest-manager-capture-note">
+                  {contestCaptureFile
+                    ? contestCaptureFile.name
+                    : contestForm.captureImageObjectKey
+                      ? `현재 캡쳐: ${contestForm.captureImageObjectKey}`
+                      : "등록할 공모전 캡쳐 이미지를 선택하세요."}
+                </p>
+                <div className="contest-manager-actions">
+                  <button type="button" onClick={saveContest}>
+                    {editingContestId ? "수정 저장" : "공모전 등록"}
+                  </button>
+                  <button type="button" onClick={cancelContestForm}>
+                    취소
+                  </button>
+                </div>
+              </div>
+            </article>
+          ) : null}
+
           {selectedContest ? (
             <article
               className="contest-calendar-detail"
@@ -651,6 +668,20 @@ export function ContestCalendar() {
                 {selectedContest.title}
               </h3>
               <p>선택한 공모전 상세 정보를 확인합니다.</p>
+              <div className="contest-calendar-detail-actions">
+                <button
+                  type="button"
+                  onClick={() => startEditingContest(selectedContest)}
+                >
+                  수정
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteContest(selectedContest.id)}
+                >
+                  삭제
+                </button>
+              </div>
               <figure className="contest-calendar-capture">
                 {selectedContestCaptureUrl ? (
                   <img

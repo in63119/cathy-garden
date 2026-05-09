@@ -665,6 +665,24 @@ input {
   line-height: 1.55;
 }
 
+.contest-calendar-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-calendar-detail-actions button {
+  min-height: 36px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
 .contest-calendar-capture {
   margin: 2px 0 4px;
   min-height: 150px;

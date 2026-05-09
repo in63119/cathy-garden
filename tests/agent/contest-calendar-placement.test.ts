@@ -10,6 +10,8 @@ describe("contest calendar placement", () => {
       "utf8",
     );
 
+    expect(homePageSource).toContain("isAuthenticated");
+    expect(homePageSource).toContain("authenticated ? <ContestCalendar /> : null");
     expect(homePageSource).toContain("ContestCalendar");
     expect(homePageSource.indexOf("<ContestCalendar />")).toBeGreaterThan(-1);
     expect(homePageSource.indexOf("<ContestCalendar />")).toBeLessThan(
@@ -96,6 +98,7 @@ describe("contest calendar placement", () => {
 
     expect(calendarSource).toContain("공모전 등록");
     expect(calendarSource).toContain("공모전 수정");
+    expect(calendarSource).toContain("startCreatingContest(calendarDay.dateKey)");
     expect(calendarSource).toContain("requestPresignedContestCaptureUpload");
     expect(calendarSource).toContain("uploadFileToPresignedUrl");
     expect(calendarSource).toContain("캡쳐 이미지 파일");
@@ -104,8 +107,9 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("deleteContest");
     expect(calendarSource).toContain('method = editingContestId ? "PUT" : "POST"');
     expect(calendarSource).toContain('method: "DELETE"');
+    expect(calendarSource).toContain("contest-calendar-detail-actions");
     expect(globalStyles).toContain(".contest-manager");
-    expect(globalStyles).toContain(".contest-manager-list");
+    expect(globalStyles).toContain(".contest-calendar-detail-actions");
   });
 
   test("marks today and lets users return to the current month", () => {

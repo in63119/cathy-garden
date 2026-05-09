@@ -23,6 +23,7 @@ describe("next app skeleton", () => {
       "src/app/api/upload/thumbnail/route.ts",
       "src/app/globals.css",
       "components/app-shell.tsx",
+      "components/contest-calendar.tsx",
       "components/delete-media-button.tsx",
       "components/site-header.tsx",
       "components/hero-section.tsx",

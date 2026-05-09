@@ -103,4 +103,24 @@ describe("contest calendar placement", () => {
     expect(globalStyles).toContain(".contest-calendar-today-badge");
     expect(globalStyles).toContain(".contest-calendar-today-button");
   });
+
+  test("stores an idea memo separately for each contest", () => {
+    const calendarSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-calendar.tsx"),
+      "utf8",
+    );
+    const globalStyles = fs.readFileSync(
+      path.join(rootDir, "src/app/globals.css"),
+      "utf8",
+    );
+
+    expect(calendarSource).toContain("/api/contests/${selectedContestId}/idea-memo");
+    expect(calendarSource).toContain('method: "PUT"');
+    expect(calendarSource).toContain("JSON.stringify({ memo: ideaMemo })");
+    expect(calendarSource).toContain("아이디어 메모장");
+    expect(calendarSource).toContain("메모 저장");
+    expect(calendarSource).toContain('aria-live="polite"');
+    expect(globalStyles).toContain(".contest-calendar-memo");
+    expect(globalStyles).toContain(".contest-calendar-memo-actions");
+  });
 });

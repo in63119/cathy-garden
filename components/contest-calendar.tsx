@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -95,6 +95,8 @@ export function ContestCalendar() {
   const [selectedContestId, setSelectedContestId] = useState<string | null>(
     null,
   );
+  const [ideaMemo, setIdeaMemo] = useState("");
+  const [ideaMemoStatus, setIdeaMemoStatus] = useState("불러오기 전");
   const calendarDays = useMemo(
     () => buildCalendarDays(visibleMonth),
     [visibleMonth],
@@ -125,6 +127,45 @@ export function ContestCalendar() {
     ? getContestCaptureImageUrl(selectedContest.captureImageObjectKey)
     : null;
 
+  useEffect(() => {
+    let ignore = false;
+
+    if (!selectedContestId) {
+      setIdeaMemo("");
+      setIdeaMemoStatus("불러오기 전");
+      return;
+    }
+
+    async function loadIdeaMemo() {
+      setIdeaMemoStatus("불러오는 중");
+
+      try {
+        const response = await fetch(
+          `/api/contests/${selectedContestId}/idea-memo`,
+        );
+        const data = (await response.json()) as {
+          ideaMemo?: { memo?: string };
+        };
+
+        if (!ignore) {
+          setIdeaMemo(data.ideaMemo?.memo ?? "");
+          setIdeaMemoStatus("불러옴");
+        }
+      } catch {
+        if (!ignore) {
+          setIdeaMemo("");
+          setIdeaMemoStatus("불러오기 실패");
+        }
+      }
+    }
+
+    loadIdeaMemo();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedContestId]);
+
   function moveMonth(monthOffset: number) {
     setSelectedContestId(null);
     setVisibleMonth(
@@ -142,6 +183,27 @@ export function ContestCalendar() {
 
     setSelectedContestId(null);
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+  }
+
+  async function saveIdeaMemo() {
+    if (!selectedContestId) {
+      return;
+    }
+
+    setIdeaMemoStatus("저장 중");
+
+    try {
+      await fetch(`/api/contests/${selectedContestId}/idea-memo`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ memo: ideaMemo }),
+      });
+      setIdeaMemoStatus("저장됨");
+    } catch {
+      setIdeaMemoStatus("저장 실패");
+    }
   }
 
   return (
@@ -301,6 +363,25 @@ export function ContestCalendar() {
                   <dd>{selectedContest.prize}</dd>
                 </div>
               </dl>
+              <div className="contest-calendar-memo">
+                <label htmlFor="contest-idea-memo">아이디어 메모장</label>
+                <textarea
+                  id="contest-idea-memo"
+                  value={ideaMemo}
+                  onChange={(event) => {
+                    setIdeaMemo(event.target.value);
+                    setIdeaMemoStatus("수정 중");
+                  }}
+                  placeholder="공모전에 떠오른 아이디어를 적어두세요."
+                  rows={5}
+                />
+                <div className="contest-calendar-memo-actions">
+                  <button type="button" onClick={saveIdeaMemo}>
+                    메모 저장
+                  </button>
+                  <span aria-live="polite">{ideaMemoStatus}</span>
+                </div>
+              </div>
             </article>
           ) : null}
         </div>

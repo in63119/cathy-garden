@@ -583,6 +583,61 @@ input {
   font-weight: 800;
 }
 
+.contest-calendar-memo {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.contest-calendar-memo label {
+  color: var(--foreground);
+  font-weight: 900;
+}
+
+.contest-calendar-memo textarea {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--foreground);
+  font: inherit;
+  line-height: 1.6;
+}
+
+.contest-calendar-memo textarea:focus {
+  outline: 2px solid rgba(111, 139, 98, 0.28);
+  outline-offset: 2px;
+}
+
+.contest-calendar-memo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.contest-calendar-memo-actions button {
+  min-height: 38px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--accent-strong);
+  color: #fdfcf7;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.contest-calendar-memo-actions span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .hero-copy-card {
   padding: 28px;
   display: flex;

@@ -8,6 +8,7 @@ type ContestScheduleItem = {
   id: string;
   title: string;
   deadline: string;
+  prize: string;
 };
 
 const contestScheduleItems: ContestScheduleItem[] = [
@@ -15,11 +16,13 @@ const contestScheduleItems: ContestScheduleItem[] = [
     id: "spring-garden-photo",
     title: "봄 정원 사진 공모전",
     deadline: "2026-05-18",
+    prize: "총 상금 300만원",
   },
   {
     id: "daily-idea-note",
     title: "생활 아이디어 메모 공모전",
     deadline: "2026-05-27",
+    prize: "대상 100만원",
   },
 ];
 
@@ -264,6 +267,10 @@ export function ContestCalendar() {
                 <div>
                   <dt>제출 마감일</dt>
                   <dd>{selectedContest.deadline}</dd>
+                </div>
+                <div>
+                  <dt>상금</dt>
+                  <dd>{selectedContest.prize}</dd>
                 </div>
               </dl>
             </article>

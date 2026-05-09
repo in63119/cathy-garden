@@ -296,7 +296,89 @@ input {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
-  padding: 16px 0 40px;
+  padding: 0 0 40px;
+}
+
+.contest-calendar-section {
+  padding: 16px 0 18px;
+}
+
+.contest-calendar-card {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.15fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.contest-calendar-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.contest-calendar-copy h2 {
+  margin: 0 0 8px;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.contest-calendar-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.contest-calendar-board {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.contest-calendar-month {
+  font-weight: 800;
+  color: var(--accent-strong);
+}
+
+.contest-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.contest-calendar-weekdays {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.contest-calendar-day {
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 246, 0.78);
+  display: grid;
+  place-items: center;
+  color: var(--foreground);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.contest-calendar-day.is-empty {
+  visibility: hidden;
+}
+
+.contest-calendar-empty {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .hero-copy-card {
@@ -517,7 +599,33 @@ input {
 
   .hero-grid {
     gap: 16px;
-    padding: 12px 0 28px;
+    padding: 0 0 28px;
+  }
+
+  .contest-calendar-section {
+    padding: 12px 0 14px;
+  }
+
+  .contest-calendar-card {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .contest-calendar-copy h2 {
+    font-size: 1.55rem;
+  }
+
+  .contest-calendar-board {
+    padding: 12px;
+  }
+
+  .contest-calendar-grid {
+    gap: 4px;
+  }
+
+  .contest-calendar-day {
+    border-radius: 10px;
+    font-size: 0.82rem;
   }
 
   .hero-copy-card,

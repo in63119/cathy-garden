@@ -611,6 +611,16 @@ input {
   cursor: pointer;
 }
 
+.contest-calendar-day.is-selected {
+  border-color: rgba(76, 105, 66, 0.74);
+  background:
+    linear-gradient(180deg, rgba(224, 240, 215, 0.98), rgba(255, 252, 246, 0.92));
+  box-shadow:
+    inset 0 0 0 3px rgba(76, 105, 66, 0.28),
+    0 10px 22px rgba(55, 74, 48, 0.14);
+  color: var(--accent-strong);
+}
+
 .contest-calendar-day.is-contest-day:hover,
 .contest-calendar-day.is-contest-day.is-selected {
   border-color: rgba(76, 105, 66, 0.62);

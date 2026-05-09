@@ -104,6 +104,9 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("공모전 등록");
     expect(calendarSource).toContain("공모전 수정");
     expect(calendarSource).toContain("startCreatingContest(calendarDay.dateKey)");
+    expect(calendarSource).toContain("isSelectedDate");
+    expect(calendarSource).toContain("calendarDay.dateKey === selectedDateKey");
+    expect(calendarSource).toContain('isSelectedDate || selectedContestIsOnDay ? "is-selected" : ""');
     expect(calendarSource).toContain("requestPresignedContestCaptureUpload");
     expect(calendarSource).toContain("uploadFileToPresignedUrl");
     expect(calendarSource).toContain("캡쳐 이미지 파일");
@@ -115,6 +118,7 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("contest-calendar-detail-actions");
     expect(globalStyles).toContain(".contest-manager");
     expect(globalStyles).toContain(".contest-calendar-detail-actions");
+    expect(globalStyles).toContain(".contest-calendar-day.is-selected");
   });
 
   test("marks today and lets users return to the current month", () => {

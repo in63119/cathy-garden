@@ -527,6 +527,7 @@ export function ContestCalendar() {
                 : [];
               const hasContestEvents = contestEvents.length > 0;
               const isToday = calendarDay.dateKey === todayDateKey;
+              const isSelectedDate = calendarDay.dateKey === selectedDateKey;
               const selectedContestIsOnDay = contestEvents.some(
                 (contestEvent) => contestEvent.id === selectedContestId,
               );
@@ -548,7 +549,7 @@ export function ContestCalendar() {
                   className={[
                     "contest-calendar-day",
                     hasContestEvents ? "is-contest-day" : "",
-                    selectedContestIsOnDay ? "is-selected" : "",
+                    isSelectedDate || selectedContestIsOnDay ? "is-selected" : "",
                     isToday ? "is-today" : "",
                   ]
                     .filter(Boolean)

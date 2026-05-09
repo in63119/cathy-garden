@@ -262,7 +262,7 @@ export function ContestCalendar() {
                   <dd>{selectedContest.title}</dd>
                 </div>
                 <div>
-                  <dt>마감일</dt>
+                  <dt>제출 마감일</dt>
                   <dd>{selectedContest.deadline}</dd>
                 </div>
               </dl>

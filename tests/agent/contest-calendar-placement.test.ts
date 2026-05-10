@@ -47,6 +47,8 @@ describe("contest calendar placement", () => {
     expect(archiveSource).toContain("공모전 아카이브");
     expect(archiveSource).toContain('fetch("/api/contests")');
     expect(archiveSource).toContain("/api/contests/${contest.id}/submissions");
+    expect(archiveSource).toContain('submission.type === "youtube"');
+    expect(archiveSource).toContain("submission.url");
     expect(archiveSource).toContain("제출물");
     expect(archiveSource).toContain("contest-archive-row");
     expect(globalStyles).toContain(".contest-workspace-tabs");
@@ -232,6 +234,10 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("제출물 아카이브");
     expect(calendarSource).toContain("제출물 이름");
     expect(calendarSource).toContain("S3 object key");
+    expect(calendarSource).toContain("제출물 종류");
+    expect(calendarSource).toContain("YouTube URL");
+    expect(calendarSource).toContain("submissionType");
+    expect(calendarSource).toContain("type: submissionType");
     expect(calendarSource).toContain("제출물 추가");
     expect(globalStyles).toContain(".contest-calendar-submissions");
     expect(globalStyles).toContain(".contest-calendar-submission-form");

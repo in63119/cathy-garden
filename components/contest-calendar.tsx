@@ -41,7 +41,9 @@ type CalendarDay = {
 type ContestSubmission = {
   id: string;
   name: string;
+  type: "file" | "youtube";
   objectKey: string;
+  url: string;
   submittedAt: string;
 };
 
@@ -140,7 +142,11 @@ export function ContestCalendar() {
   const [activeCaptureImageIndex, setActiveCaptureImageIndex] = useState(0);
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
   const [submissionName, setSubmissionName] = useState("");
+  const [submissionType, setSubmissionType] = useState<"file" | "youtube">(
+    "file",
+  );
   const [submissionObjectKey, setSubmissionObjectKey] = useState("");
+  const [submissionUrl, setSubmissionUrl] = useState("");
   const [submissionStatus, setSubmissionStatus] = useState("불러오기 전");
   const calendarDays = useMemo(
     () => buildCalendarDays(visibleMonth),
@@ -283,7 +289,9 @@ export function ContestCalendar() {
     if (!selectedContestId) {
       setSubmissions([]);
       setSubmissionName("");
+      setSubmissionType("file");
       setSubmissionObjectKey("");
+      setSubmissionUrl("");
       setSubmissionStatus("불러오기 전");
       return;
     }
@@ -363,7 +371,10 @@ export function ContestCalendar() {
   }
 
   async function addSubmission() {
-    if (!selectedContestId || !submissionName.trim() || !submissionObjectKey.trim()) {
+    const submissionReference =
+      submissionType === "youtube" ? submissionUrl.trim() : submissionObjectKey.trim();
+
+    if (!selectedContestId || !submissionName.trim() || !submissionReference) {
       setSubmissionStatus("입력 필요");
       return;
     }
@@ -378,7 +389,9 @@ export function ContestCalendar() {
         },
         body: JSON.stringify({
           name: submissionName,
-          objectKey: submissionObjectKey,
+          type: submissionType,
+          objectKey: submissionType === "file" ? submissionObjectKey : "",
+          url: submissionType === "youtube" ? submissionUrl : "",
         }),
       });
       const data = (await response.json()) as {
@@ -387,7 +400,9 @@ export function ContestCalendar() {
 
       setSubmissions(data.archive?.submissions ?? []);
       setSubmissionName("");
+      setSubmissionType("file");
       setSubmissionObjectKey("");
+      setSubmissionUrl("");
       setSubmissionStatus("저장됨");
     } catch {
       setSubmissionStatus("저장 실패");
@@ -967,7 +982,20 @@ export function ContestCalendar() {
                     {submissions.map((submission) => (
                       <li key={submission.id}>
                         <strong>{submission.name}</strong>
-                        <code>{submission.objectKey}</code>
+                        <span className="contest-submission-kind">
+                          {submission.type === "youtube" ? "YouTube" : "파일"}
+                        </span>
+                        {submission.type === "youtube" ? (
+                          <a
+                            href={submission.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {submission.url}
+                          </a>
+                        ) : (
+                          <code>{submission.objectKey}</code>
+                        )}
                         <span>
                           등록일{" "}
                           {new Intl.DateTimeFormat("ko-KR", {
@@ -986,19 +1014,50 @@ export function ContestCalendar() {
                     id="contest-submission-name"
                     value={submissionName}
                     onChange={(event) => setSubmissionName(event.target.value)}
-                    placeholder="예: 최종 제출 이미지"
+                    placeholder="예: 최종 제출 영상"
                   />
-                  <label htmlFor="contest-submission-object-key">
-                    S3 object key
-                  </label>
-                  <input
-                    id="contest-submission-object-key"
-                    value={submissionObjectKey}
+                  <label htmlFor="contest-submission-type">제출물 종류</label>
+                  <select
+                    id="contest-submission-type"
+                    value={submissionType}
                     onChange={(event) =>
-                      setSubmissionObjectKey(event.target.value)
+                      setSubmissionType(
+                        event.target.value === "youtube" ? "youtube" : "file",
+                      )
                     }
-                    placeholder={`contests/${selectedContest.id}/submissions/final.png`}
-                  />
+                  >
+                    <option value="file">영상/파일 S3 경로</option>
+                    <option value="youtube">YouTube URL</option>
+                  </select>
+                  {submissionType === "youtube" ? (
+                    <>
+                      <label htmlFor="contest-submission-url">
+                        YouTube URL
+                      </label>
+                      <input
+                        id="contest-submission-url"
+                        value={submissionUrl}
+                        onChange={(event) =>
+                          setSubmissionUrl(event.target.value)
+                        }
+                        placeholder="https://www.youtube.com/watch?v=..."
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <label htmlFor="contest-submission-object-key">
+                        S3 object key
+                      </label>
+                      <input
+                        id="contest-submission-object-key"
+                        value={submissionObjectKey}
+                        onChange={(event) =>
+                          setSubmissionObjectKey(event.target.value)
+                        }
+                        placeholder={`contests/${selectedContest.id}/submissions/final.mp4`}
+                      />
+                    </>
+                  )}
                   <button type="button" onClick={addSubmission}>
                     제출물 추가
                   </button>

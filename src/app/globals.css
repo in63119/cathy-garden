@@ -422,7 +422,7 @@ input {
 
 .contest-archive-row li {
   display: grid;
-  grid-template-columns: minmax(100px, 0.9fr) minmax(140px, 1.2fr) auto;
+  grid-template-columns: minmax(100px, 0.9fr) auto minmax(140px, 1.2fr) auto;
   gap: 8px;
   align-items: center;
   padding: 8px;
@@ -431,11 +431,21 @@ input {
   background: rgba(255, 255, 255, 0.58);
 }
 
-.contest-archive-row code {
+.contest-archive-row code,
+.contest-archive-row a {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.contest-archive-row li > span:first-of-type {
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 900;
 }
 
 .contest-calendar-card {
@@ -1185,10 +1195,20 @@ input {
 }
 
 .contest-calendar-submissions code,
-.contest-calendar-submissions li span {
+.contest-calendar-submissions li span,
+.contest-calendar-submissions li a {
   color: var(--muted);
   font-size: 0.82rem;
   overflow-wrap: anywhere;
+}
+
+.contest-calendar-submissions .contest-submission-kind {
+  justify-self: start;
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 900;
 }
 
 .contest-calendar-submission-form {
@@ -1202,7 +1222,8 @@ input {
   font-weight: 900;
 }
 
-.contest-calendar-submission-form input {
+.contest-calendar-submission-form input,
+.contest-calendar-submission-form select {
   width: 100%;
   min-height: 42px;
   padding: 10px 12px;

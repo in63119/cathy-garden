@@ -12,7 +12,9 @@ type ContestScheduleItem = {
 type ContestSubmission = {
   id: string;
   name: string;
+  type: "file" | "youtube";
   objectKey: string;
+  url: string;
   submittedAt: string;
 };
 
@@ -130,7 +132,20 @@ export function ContestArchive() {
                     {row.submissions.map((submission) => (
                       <li key={submission.id}>
                         <strong>{submission.name}</strong>
-                        <code>{submission.objectKey}</code>
+                        <span>
+                          {submission.type === "youtube" ? "YouTube" : "파일"}
+                        </span>
+                        {submission.type === "youtube" ? (
+                          <a
+                            href={submission.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {submission.url}
+                          </a>
+                        ) : (
+                          <code>{submission.objectKey}</code>
+                        )}
                         <span>{formatSubmittedAt(submission.submittedAt)}</span>
                       </li>
                     ))}

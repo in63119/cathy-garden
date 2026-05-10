@@ -9,7 +9,9 @@ import { createS3Client, getS3Config, streamToString } from "@/lib/s3";
 export type ContestSubmission = {
   id: string;
   name: string;
+  type: "file" | "youtube";
   objectKey: string;
+  url: string;
   submittedAt: string;
 };
 
@@ -34,13 +36,19 @@ function normalizeSubmissions(value: unknown): ContestSubmission[] {
     return [];
   }
 
-  return value.filter(
-    (entry): entry is ContestSubmission =>
+  return value
+    .filter(
+      (entry): entry is ContestSubmission =>
       typeof entry?.id === "string" &&
       typeof entry.name === "string" &&
       typeof entry.objectKey === "string" &&
       typeof entry.submittedAt === "string",
-  );
+    )
+    .map((entry) => ({
+      ...entry,
+      type: entry.type === "youtube" ? "youtube" : "file",
+      url: typeof entry.url === "string" ? entry.url : "",
+    }));
 }
 
 export async function readContestSubmissionArchive(
@@ -102,14 +110,18 @@ async function writeContestSubmissionArchive(
 export async function addContestSubmission(params: {
   contestId: string;
   name: string;
-  objectKey: string;
+  type: "file" | "youtube";
+  objectKey?: string;
+  url?: string;
 }) {
   const archive = await readContestSubmissionArchive(params.contestId);
   const submittedAt = new Date().toISOString();
   const submission: ContestSubmission = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: params.name,
-    objectKey: params.objectKey,
+    type: params.type,
+    objectKey: params.objectKey ?? "",
+    url: params.url ?? "",
     submittedAt,
   };
 

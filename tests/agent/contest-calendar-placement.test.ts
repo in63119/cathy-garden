@@ -202,8 +202,10 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("is-today");
     expect(calendarSource).toContain("contest-calendar-today-badge");
     expect(calendarSource).toContain("contest-calendar-today-button");
+    expect(calendarSource).toContain("contest-calendar-date-number");
     expect(calendarSource).toContain("오늘");
     expect(globalStyles).toContain(".contest-calendar-day.is-today");
+    expect(globalStyles).toContain(".contest-calendar-date-number");
     expect(globalStyles).toContain(".contest-calendar-today-badge");
     expect(globalStyles).toContain(".contest-calendar-today-button");
   });

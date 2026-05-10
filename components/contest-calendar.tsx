@@ -765,7 +765,9 @@ export function ContestCalendar() {
                   }
                   aria-pressed={selectedContestIsOnDay}
                 >
-                  <span>{calendarDay.day}</span>
+                  <span className="contest-calendar-date-number">
+                    {calendarDay.day}
+                  </span>
                   {isToday ? (
                     <span className="contest-calendar-today-badge">오늘</span>
                   ) : null}

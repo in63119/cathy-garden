@@ -62,4 +62,28 @@ describe("private auth helpers", () => {
     expect(loginPage).toContain("/api/auth/kakao/start");
     expect(loginPage).toContain("isKakaoAuthConfigured");
   });
+
+  test("disables personal password login in production", () => {
+    const fs = require("fs");
+    const path = require("path");
+    const rootDir = path.resolve(__dirname, "../..");
+    const authServer = fs.readFileSync(
+      path.join(rootDir, "lib/auth-server.ts"),
+      "utf8"
+    );
+    const loginPage = fs.readFileSync(
+      path.join(rootDir, "src/app/login/page.tsx"),
+      "utf8"
+    );
+
+    expect(authServer).toContain("isPasswordLoginEnabled");
+    expect(authServer).toContain('process.env.NODE_ENV === "production"');
+    expect(authServer).toContain('process.env.VERCEL_ENV === "production"');
+    expect(authServer).toContain('loginMode !== "kakao-only"');
+    expect(authServer).toContain("password-login-disabled");
+    expect(loginPage).toContain("passwordLoginEnabled");
+    expect(loginPage).toContain("{passwordLoginEnabled ? (");
+    expect(loginPage).toContain("운영 환경에서는 허용된 카카오 계정으로만");
+    expect(loginPage).toContain("운영 환경에서는 카카오 로그인만 사용할 수 있습니다.");
+  });
 });

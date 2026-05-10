@@ -12,6 +12,7 @@ import { getKakaoOAuthConfig } from "@/lib/kakao-auth";
 
 const PASSWORD_ENV_NAME = "CATHY_GARDEN_PASSWORD";
 const SECRET_ENV_NAME = "CATHY_GARDEN_AUTH_SECRET";
+const LOGIN_MODE_ENV_NAME = "CATHY_GARDEN_LOGIN_MODE";
 
 function getConfiguredPassword() {
   return process.env[PASSWORD_ENV_NAME] ?? "";
@@ -23,6 +24,15 @@ function getConfiguredSecret() {
 
 export function isAuthConfigured() {
   return getConfiguredPassword().length > 0;
+}
+
+export function isPasswordLoginEnabled() {
+  const loginMode = process.env[LOGIN_MODE_ENV_NAME];
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
+
+  return !isProduction && loginMode !== "kakao-only";
 }
 
 export function isKakaoAuthConfigured() {
@@ -70,6 +80,13 @@ export async function clearAuthenticatedSession() {
 }
 
 export function validateLoginAttempt(password: string) {
+  if (!isPasswordLoginEnabled()) {
+    return {
+      ok: false,
+      reason: "password-login-disabled" as const,
+    };
+  }
+
   const expectedPassword = getConfiguredPassword();
 
   if (!expectedPassword) {

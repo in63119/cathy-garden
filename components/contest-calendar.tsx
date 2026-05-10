@@ -1081,7 +1081,9 @@ export function ContestCalendar() {
                     </>
                   ) : (
                     <>
-                      <label htmlFor="contest-submission-file">제출물</label>
+                      <label htmlFor="contest-submission-file">
+                        올릴 사진과 영상
+                      </label>
                       <input
                         id="contest-submission-file"
                         type="file"

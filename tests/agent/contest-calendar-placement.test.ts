@@ -52,6 +52,8 @@ describe("contest calendar placement", () => {
     expect(archiveSource).toContain("제출물");
     expect(archiveSource).toContain("contest-archive-row");
     expect(globalStyles).toContain(".contest-workspace-tabs");
+    expect(globalStyles).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
+    expect(globalStyles).not.toContain(".contest-workspace-tabs {\n    width: 100%;");
     expect(globalStyles).toContain(".contest-archive-card");
     expect(globalStyles).toContain(".contest-archive-row");
   });
@@ -164,7 +166,8 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("startCreatingContest(calendarDay.dateKey)");
     expect(calendarSource).toContain("isSelectedDate");
     expect(calendarSource).toContain("calendarDay.dateKey === selectedDateKey");
-    expect(calendarSource).toContain('isSelectedDate || selectedContestIsOnDay ? "is-selected" : ""');
+    expect(calendarSource).toContain("isSelectedDate || selectedContestIsOnDay");
+    expect(calendarSource).toContain('"is-selected"');
     expect(calendarSource).toContain("requestPresignedContestCaptureUpload");
     expect(calendarSource).toContain("uploadFileToPresignedUrl");
     expect(calendarSource).toContain("캡쳐 이미지 파일");

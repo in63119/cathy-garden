@@ -305,12 +305,14 @@ input {
 }
 
 .contest-workspace-tabs {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 0 0 4px;
 }
 
 .contest-workspace-tabs button {
+  width: 100%;
   min-height: 40px;
   padding: 0 1rem;
   border: 1px solid var(--border);
@@ -1487,14 +1489,6 @@ input {
   .contest-calendar-card {
     grid-template-columns: 1fr;
     padding: 16px;
-  }
-
-  .contest-workspace-tabs {
-    width: 100%;
-  }
-
-  .contest-workspace-tabs button {
-    flex: 1;
   }
 
   .contest-archive-card {

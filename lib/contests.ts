@@ -12,16 +12,26 @@ export type ContestEntry = {
   title: string;
   deadline: string;
   prize: string;
+  prizeItems: ContestPrizeItem[];
   captureImageObjectKey: string;
+  captureImageObjectKeys: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type ContestPrizeItem = {
+  title: string;
+  amount: string;
+  count: string;
 };
 
 export type ContestInput = {
   title: string;
   deadline: string;
-  prize: string;
-  captureImageObjectKey: string;
+  prize?: string;
+  prizeItems?: ContestPrizeItem[];
+  captureImageObjectKey?: string;
+  captureImageObjectKeys?: string[];
 };
 
 const CONTEST_INDEX_OBJECT_KEY = "contests/index.json";
@@ -57,10 +67,16 @@ export function buildContestId(title: string) {
 function normalizeContestInput(input: ContestInput) {
   const title = input.title.trim();
   const deadline = input.deadline.trim();
-  const prize = input.prize.trim();
-  const captureImageObjectKey = input.captureImageObjectKey.trim();
+  const prizeItems = normalizeContestPrizeItems(input.prizeItems ?? []);
+  const prize = (input.prize ?? buildContestPrizeSummary(prizeItems)).trim();
+  const captureImageObjectKeys = [
+    ...(input.captureImageObjectKeys ?? []),
+    input.captureImageObjectKey ?? "",
+  ]
+    .map((objectKey) => objectKey.trim())
+    .filter(Boolean);
 
-  if (!title || !deadline || !prize || !captureImageObjectKey) {
+  if (!title || !deadline || !prize || captureImageObjectKeys.length === 0) {
     throw new Error("invalid-contest");
   }
 
@@ -68,16 +84,52 @@ function normalizeContestInput(input: ContestInput) {
     throw new Error("invalid-contest-deadline");
   }
 
-  if (!captureImageObjectKey.startsWith("contests/")) {
+  if (
+    captureImageObjectKeys.some(
+      (captureImageObjectKey) => !captureImageObjectKey.startsWith("contests/"),
+    )
+  ) {
     throw new Error("invalid-contest-capture-key");
   }
+
+  const uniqueCaptureImageObjectKeys = Array.from(new Set(captureImageObjectKeys))
+    .slice(0, 12)
+    .map((captureImageObjectKey) => captureImageObjectKey.slice(0, 1024));
 
   return {
     title: title.slice(0, 160),
     deadline,
     prize: prize.slice(0, 160),
-    captureImageObjectKey: captureImageObjectKey.slice(0, 1024),
+    prizeItems,
+    captureImageObjectKey: uniqueCaptureImageObjectKeys[0],
+    captureImageObjectKeys: uniqueCaptureImageObjectKeys,
   };
+}
+
+function normalizeContestPrizeItems(prizeItems: ContestPrizeItem[]) {
+  return prizeItems
+    .map((prizeItem) => ({
+      title: prizeItem.title.trim().slice(0, 80),
+      amount: prizeItem.amount.trim().slice(0, 80),
+      count: prizeItem.count.trim().slice(0, 40),
+    }))
+    .filter(
+      (prizeItem) => prizeItem.title || prizeItem.amount || prizeItem.count,
+    )
+    .slice(0, 20);
+}
+
+function buildContestPrizeSummary(prizeItems: ContestPrizeItem[]) {
+  return prizeItems
+    .map((prizeItem) => {
+      const title = prizeItem.title.trim();
+      const amount = prizeItem.amount.trim();
+      const count = prizeItem.count.trim();
+
+      return [title, amount, count].filter(Boolean).join(" ");
+    })
+    .filter(Boolean)
+    .join(", ");
 }
 
 function normalizeContestEntries(value: unknown): ContestEntry[] {
@@ -96,6 +148,19 @@ function normalizeContestEntries(value: unknown): ContestEntry[] {
         typeof entry.createdAt === "string" &&
         typeof entry.updatedAt === "string",
     )
+    .map((entry) => ({
+      ...entry,
+      prizeItems: Array.isArray(entry.prizeItems)
+        ? normalizeContestPrizeItems(entry.prizeItems)
+        : [],
+      captureImageObjectKeys:
+        Array.isArray(entry.captureImageObjectKeys) &&
+        entry.captureImageObjectKeys.every(
+          (captureImageObjectKey) => typeof captureImageObjectKey === "string",
+        )
+          ? entry.captureImageObjectKeys
+          : [entry.captureImageObjectKey],
+    }))
     .sort((left, right) => left.deadline.localeCompare(right.deadline));
 }
 

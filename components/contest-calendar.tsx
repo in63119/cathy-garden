@@ -101,6 +101,7 @@ export function ContestCalendar() {
   const [contestCaptureImageUrl, setContestCaptureImageUrl] = useState<
     string | null
   >(null);
+  const [isCapturePreviewOpen, setIsCapturePreviewOpen] = useState(false);
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
   const [submissionName, setSubmissionName] = useState("");
   const [submissionObjectKey, setSubmissionObjectKey] = useState("");
@@ -206,6 +207,7 @@ export function ContestCalendar() {
 
     if (!selectedContestId) {
       setContestCaptureImageUrl(null);
+      setIsCapturePreviewOpen(false);
       return;
     }
 
@@ -709,11 +711,18 @@ export function ContestCalendar() {
               </div>
               <figure className="contest-calendar-capture">
                 {contestCaptureImageUrl ? (
-                  <img
-                    src={contestCaptureImageUrl}
-                    alt={`${selectedContest.title} 캡쳐 이미지`}
-                    loading="lazy"
-                  />
+                  <button
+                    type="button"
+                    className="contest-calendar-capture-button"
+                    onClick={() => setIsCapturePreviewOpen(true)}
+                    aria-label={`${selectedContest.title} 캡쳐 이미지 크게 보기`}
+                  >
+                    <img
+                      src={contestCaptureImageUrl}
+                      alt={`${selectedContest.title} 캡쳐 이미지`}
+                      loading="lazy"
+                    />
+                  </button>
                 ) : (
                   <figcaption>
                     캡쳐 이미지 경로: {selectedContest.captureImageObjectKey}
@@ -801,6 +810,33 @@ export function ContestCalendar() {
                 </div>
               </div>
             </article>
+          ) : null}
+
+          {selectedContest && contestCaptureImageUrl && isCapturePreviewOpen ? (
+            <div
+              className="contest-capture-lightbox"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="contest-capture-lightbox-title"
+            >
+              <div className="contest-capture-lightbox-panel">
+                <div className="contest-capture-lightbox-header">
+                  <h3 id="contest-capture-lightbox-title">
+                    {selectedContest.title}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsCapturePreviewOpen(false)}
+                  >
+                    닫기
+                  </button>
+                </div>
+                <img
+                  src={contestCaptureImageUrl}
+                  alt={`${selectedContest.title} 캡쳐 이미지 크게 보기`}
+                />
+              </div>
+            </div>
           ) : null}
         </div>
       </div>

@@ -713,6 +713,21 @@ input {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.contest-calendar-capture-button {
+  width: 100%;
+  min-height: 150px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  font: inherit;
+}
+
+.contest-calendar-capture-button:focus-visible {
+  outline: 3px solid rgba(76, 105, 66, 0.42);
+  outline-offset: -3px;
+}
+
 .contest-calendar-capture figcaption {
   padding: 14px;
   color: var(--muted);
@@ -747,6 +762,64 @@ input {
 
 .contest-calendar-detail dd {
   font-weight: 800;
+}
+
+.contest-capture-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(31, 42, 32, 0.74);
+}
+
+.contest-capture-lightbox-panel {
+  width: min(1040px, 100%);
+  max-height: calc(100vh - 48px);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 252, 246, 0.96);
+  box-shadow: 0 24px 60px rgba(20, 30, 22, 0.28);
+}
+
+.contest-capture-lightbox-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.contest-capture-lightbox-header h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+}
+
+.contest-capture-lightbox-header button {
+  min-height: 36px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.contest-capture-lightbox-panel img {
+  width: 100%;
+  max-height: calc(100vh - 132px);
+  object-fit: contain;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .contest-calendar-memo {

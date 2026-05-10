@@ -84,11 +84,18 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("captureImageObjectKey");
     expect(calendarSource).toContain("contestCaptureImageUrl");
     expect(calendarSource).toContain("/api/contests/${selectedContestId}/capture");
+    expect(calendarSource).toContain("isCapturePreviewOpen");
+    expect(calendarSource).toContain("setIsCapturePreviewOpen(true)");
+    expect(calendarSource).toContain('role="dialog"');
+    expect(calendarSource).toContain("aria-modal=\"true\"");
+    expect(calendarSource).toContain("캡쳐 이미지 크게 보기");
     expect(calendarSource).toContain("contest-calendar-capture");
     expect(calendarSource).toContain("캡쳐 이미지");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
     expect(globalStyles).toContain(".contest-calendar-capture");
+    expect(globalStyles).toContain(".contest-calendar-capture-button");
+    expect(globalStyles).toContain(".contest-capture-lightbox");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day.is-selected");
   });
 

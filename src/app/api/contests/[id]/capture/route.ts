@@ -23,12 +23,19 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "not-found" }, { status: 404 });
   }
 
-  const imageUrl = await createPresignedDownload({
-    objectKey: contest.captureImageObjectKey,
-  });
+  const objectKeys = contest.captureImageObjectKeys ?? [
+    contest.captureImageObjectKey,
+  ];
+  const images = await Promise.all(
+    objectKeys.map(async (objectKey) => ({
+      objectKey,
+      imageUrl: await createPresignedDownload({ objectKey }),
+    })),
+  );
 
   return NextResponse.json({
-    imageUrl,
-    objectKey: contest.captureImageObjectKey,
+    imageUrl: images[0]?.imageUrl ?? null,
+    objectKey: images[0]?.objectKey ?? contest.captureImageObjectKey,
+    images,
   });
 }

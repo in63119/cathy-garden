@@ -26,6 +26,9 @@ describe("contest capture upload route", () => {
     expect(routeSource).toContain("readContestEntries");
     expect(routeSource).toContain("createPresignedDownload");
     expect(routeSource).toContain("captureImageObjectKey");
+    expect(routeSource).toContain("captureImageObjectKeys");
+    expect(routeSource).toContain("Promise.all");
+    expect(routeSource).toContain("images");
     expect(routeSource).toContain("imageUrl");
   });
 });

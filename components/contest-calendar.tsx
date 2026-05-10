@@ -15,8 +15,14 @@ type ContestScheduleItem = {
   deadline: string;
   prize: string;
   captureImageObjectKey: string;
+  captureImageObjectKeys: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+type ContestCaptureImage = {
+  objectKey: string;
+  imageUrl: string;
 };
 
 type CalendarDay = {
@@ -92,16 +98,16 @@ export function ContestCalendar() {
     deadline: "",
     prize: "",
     captureImageObjectKey: "",
+    captureImageObjectKeys: [] as string[],
   });
-  const [contestCaptureFile, setContestCaptureFile] = useState<File | null>(
-    null,
-  );
+  const [contestCaptureFiles, setContestCaptureFiles] = useState<File[]>([]);
   const [ideaMemo, setIdeaMemo] = useState("");
   const [ideaMemoStatus, setIdeaMemoStatus] = useState("불러오기 전");
-  const [contestCaptureImageUrl, setContestCaptureImageUrl] = useState<
-    string | null
-  >(null);
+  const [contestCaptureImages, setContestCaptureImages] = useState<
+    ContestCaptureImage[]
+  >([]);
   const [isCapturePreviewOpen, setIsCapturePreviewOpen] = useState(false);
+  const [activeCaptureImageIndex, setActiveCaptureImageIndex] = useState(0);
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
   const [submissionName, setSubmissionName] = useState("");
   const [submissionObjectKey, setSubmissionObjectKey] = useState("");
@@ -206,8 +212,9 @@ export function ContestCalendar() {
     let ignore = false;
 
     if (!selectedContestId) {
-      setContestCaptureImageUrl(null);
+      setContestCaptureImages([]);
       setIsCapturePreviewOpen(false);
+      setActiveCaptureImageIndex(0);
       return;
     }
 
@@ -218,14 +225,17 @@ export function ContestCalendar() {
         );
         const data = (await response.json()) as {
           imageUrl?: string;
+          images?: ContestCaptureImage[];
         };
 
         if (!ignore) {
-          setContestCaptureImageUrl(data.imageUrl ?? null);
+          setContestCaptureImages(data.images ?? []);
+          setActiveCaptureImageIndex(0);
         }
       } catch {
         if (!ignore) {
-          setContestCaptureImageUrl(null);
+          setContestCaptureImages([]);
+          setActiveCaptureImageIndex(0);
         }
       }
     }
@@ -363,12 +373,13 @@ export function ContestCalendar() {
 
   function resetContestForm() {
     setEditingContestId(null);
-    setContestCaptureFile(null);
+    setContestCaptureFiles([]);
     setContestForm({
       title: "",
       deadline: "",
       prize: "",
       captureImageObjectKey: "",
+      captureImageObjectKeys: [],
     });
   }
 
@@ -376,46 +387,58 @@ export function ContestCalendar() {
     setSelectedContestId(null);
     setSelectedDateKey(dateKey);
     setEditingContestId(null);
-    setContestCaptureFile(null);
+    setContestCaptureFiles([]);
     setContestForm({
       title: "",
       deadline: dateKey,
       prize: "",
       captureImageObjectKey: "",
+      captureImageObjectKeys: [],
     });
   }
 
   function startEditingContest(contest: ContestScheduleItem) {
     setEditingContestId(contest.id);
     setSelectedDateKey(contest.deadline);
-    setContestCaptureFile(null);
+    setContestCaptureFiles([]);
     setContestForm({
       title: contest.title,
       deadline: contest.deadline,
       prize: contest.prize,
       captureImageObjectKey: contest.captureImageObjectKey,
+      captureImageObjectKeys: contest.captureImageObjectKeys ?? [
+        contest.captureImageObjectKey,
+      ],
     });
   }
 
   async function uploadContestCaptureIfNeeded() {
-    if (!contestCaptureFile) {
-      return contestForm.captureImageObjectKey;
+    if (contestCaptureFiles.length === 0) {
+      return contestForm.captureImageObjectKeys.length > 0
+        ? contestForm.captureImageObjectKeys
+        : [contestForm.captureImageObjectKey].filter(Boolean);
     }
 
     setContestListStatus("캡쳐 이미지 업로드 중");
-    const presigned = await requestPresignedContestCaptureUpload({
-      fileName: contestCaptureFile.name,
-      contentType: contestCaptureFile.type,
-      size: contestCaptureFile.size,
-    });
+    const uploadedObjectKeys = [];
 
-    await uploadFileToPresignedUrl({
-      uploadUrl: presigned.uploadUrl,
-      file: contestCaptureFile,
-      contentType: contestCaptureFile.type,
-    });
+    for (const contestCaptureFile of contestCaptureFiles) {
+      const presigned = await requestPresignedContestCaptureUpload({
+        fileName: contestCaptureFile.name,
+        contentType: contestCaptureFile.type,
+        size: contestCaptureFile.size,
+      });
 
-    return presigned.objectKey;
+      await uploadFileToPresignedUrl({
+        uploadUrl: presigned.uploadUrl,
+        file: contestCaptureFile,
+        contentType: contestCaptureFile.type,
+      });
+
+      uploadedObjectKeys.push(presigned.objectKey);
+    }
+
+    return uploadedObjectKeys;
   }
 
   async function saveContest() {
@@ -427,7 +450,7 @@ export function ContestCalendar() {
     setContestListStatus(editingContestId ? "수정 중" : "등록 중");
 
     try {
-      const captureImageObjectKey = await uploadContestCaptureIfNeeded();
+      const captureImageObjectKeys = await uploadContestCaptureIfNeeded();
 
       const saveResponse = await fetch(endpoint, {
         method,
@@ -436,7 +459,8 @@ export function ContestCalendar() {
         },
         body: JSON.stringify({
           ...contestForm,
-          captureImageObjectKey,
+          captureImageObjectKey: captureImageObjectKeys[0] ?? "",
+          captureImageObjectKeys,
         }),
       });
 
@@ -662,15 +686,18 @@ export function ContestCalendar() {
                   id="contest-capture-file"
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={(event) =>
-                    setContestCaptureFile(event.target.files?.[0] ?? null)
+                    setContestCaptureFiles(
+                      Array.from(event.target.files ?? []),
+                    )
                   }
                 />
                 <p className="contest-manager-capture-note">
-                  {contestCaptureFile
-                    ? contestCaptureFile.name
-                    : contestForm.captureImageObjectKey
-                      ? `현재 캡쳐: ${contestForm.captureImageObjectKey}`
+                  {contestCaptureFiles.length > 0
+                    ? `선택한 캡쳐 ${contestCaptureFiles.length}장`
+                    : contestForm.captureImageObjectKeys.length > 0
+                      ? `현재 캡쳐 ${contestForm.captureImageObjectKeys.length}장`
                       : "등록할 공모전 캡쳐 이미지를 선택하세요."}
                 </p>
                 <div className="contest-manager-actions">
@@ -710,19 +737,27 @@ export function ContestCalendar() {
                 </button>
               </div>
               <figure className="contest-calendar-capture">
-                {contestCaptureImageUrl ? (
-                  <button
-                    type="button"
-                    className="contest-calendar-capture-button"
-                    onClick={() => setIsCapturePreviewOpen(true)}
-                    aria-label={`${selectedContest.title} 캡쳐 이미지 크게 보기`}
-                  >
-                    <img
-                      src={contestCaptureImageUrl}
-                      alt={`${selectedContest.title} 캡쳐 이미지`}
-                      loading="lazy"
-                    />
-                  </button>
+                {contestCaptureImages.length > 0 ? (
+                  <div className="contest-calendar-capture-grid">
+                    {contestCaptureImages.map((captureImage, imageIndex) => (
+                      <button
+                        key={captureImage.objectKey}
+                        type="button"
+                        className="contest-calendar-capture-button"
+                        onClick={() => {
+                          setActiveCaptureImageIndex(imageIndex);
+                          setIsCapturePreviewOpen(true);
+                        }}
+                        aria-label={`${selectedContest.title} 캡쳐 이미지 ${imageIndex + 1} 크게 보기`}
+                      >
+                        <img
+                          src={captureImage.imageUrl}
+                          alt={`${selectedContest.title} 캡쳐 이미지 ${imageIndex + 1}`}
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 ) : (
                   <figcaption>
                     캡쳐 이미지 경로: {selectedContest.captureImageObjectKey}
@@ -812,7 +847,9 @@ export function ContestCalendar() {
             </article>
           ) : null}
 
-          {selectedContest && contestCaptureImageUrl && isCapturePreviewOpen ? (
+          {selectedContest &&
+          contestCaptureImages[activeCaptureImageIndex] &&
+          isCapturePreviewOpen ? (
             <div
               className="contest-capture-lightbox"
               role="dialog"
@@ -832,8 +869,8 @@ export function ContestCalendar() {
                   </button>
                 </div>
                 <img
-                  src={contestCaptureImageUrl}
-                  alt={`${selectedContest.title} 캡쳐 이미지 크게 보기`}
+                  src={contestCaptureImages[activeCaptureImageIndex].imageUrl}
+                  alt={`${selectedContest.title} 캡쳐 이미지 ${activeCaptureImageIndex + 1} 크게 보기`}
                 />
               </div>
             </div>

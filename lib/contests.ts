@@ -13,6 +13,7 @@ export type ContestEntry = {
   deadline: string;
   prize: string;
   captureImageObjectKey: string;
+  captureImageObjectKeys: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -21,7 +22,8 @@ export type ContestInput = {
   title: string;
   deadline: string;
   prize: string;
-  captureImageObjectKey: string;
+  captureImageObjectKey?: string;
+  captureImageObjectKeys?: string[];
 };
 
 const CONTEST_INDEX_OBJECT_KEY = "contests/index.json";
@@ -58,9 +60,14 @@ function normalizeContestInput(input: ContestInput) {
   const title = input.title.trim();
   const deadline = input.deadline.trim();
   const prize = input.prize.trim();
-  const captureImageObjectKey = input.captureImageObjectKey.trim();
+  const captureImageObjectKeys = [
+    ...(input.captureImageObjectKeys ?? []),
+    input.captureImageObjectKey ?? "",
+  ]
+    .map((objectKey) => objectKey.trim())
+    .filter(Boolean);
 
-  if (!title || !deadline || !prize || !captureImageObjectKey) {
+  if (!title || !deadline || !prize || captureImageObjectKeys.length === 0) {
     throw new Error("invalid-contest");
   }
 
@@ -68,15 +75,24 @@ function normalizeContestInput(input: ContestInput) {
     throw new Error("invalid-contest-deadline");
   }
 
-  if (!captureImageObjectKey.startsWith("contests/")) {
+  if (
+    captureImageObjectKeys.some(
+      (captureImageObjectKey) => !captureImageObjectKey.startsWith("contests/"),
+    )
+  ) {
     throw new Error("invalid-contest-capture-key");
   }
+
+  const uniqueCaptureImageObjectKeys = Array.from(new Set(captureImageObjectKeys))
+    .slice(0, 12)
+    .map((captureImageObjectKey) => captureImageObjectKey.slice(0, 1024));
 
   return {
     title: title.slice(0, 160),
     deadline,
     prize: prize.slice(0, 160),
-    captureImageObjectKey: captureImageObjectKey.slice(0, 1024),
+    captureImageObjectKey: uniqueCaptureImageObjectKeys[0],
+    captureImageObjectKeys: uniqueCaptureImageObjectKeys,
   };
 }
 
@@ -96,6 +112,16 @@ function normalizeContestEntries(value: unknown): ContestEntry[] {
         typeof entry.createdAt === "string" &&
         typeof entry.updatedAt === "string",
     )
+    .map((entry) => ({
+      ...entry,
+      captureImageObjectKeys:
+        Array.isArray(entry.captureImageObjectKeys) &&
+        entry.captureImageObjectKeys.every(
+          (captureImageObjectKey) => typeof captureImageObjectKey === "string",
+        )
+          ? entry.captureImageObjectKeys
+          : [entry.captureImageObjectKey],
+    }))
     .sort((left, right) => left.deadline.localeCompare(right.deadline));
 }
 

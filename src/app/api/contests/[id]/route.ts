@@ -12,6 +12,7 @@ type RouteContext = {
 function normalizeContestBody(body: unknown) {
   const payload = body as {
     captureImageObjectKey?: unknown;
+    captureImageObjectKeys?: unknown;
     deadline?: unknown;
     prize?: unknown;
     title?: unknown;
@@ -25,6 +26,11 @@ function normalizeContestBody(body: unknown) {
       typeof payload?.captureImageObjectKey === "string"
         ? payload.captureImageObjectKey
         : "",
+    captureImageObjectKeys: Array.isArray(payload?.captureImageObjectKeys)
+      ? payload.captureImageObjectKeys.filter(
+          (objectKey): objectKey is string => typeof objectKey === "string",
+        )
+      : [],
   };
 }
 

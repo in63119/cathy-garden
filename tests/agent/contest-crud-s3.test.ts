@@ -15,6 +15,9 @@ describe("contest CRUD S3 storage", () => {
     expect(storeSource).toContain("createContestEntry");
     expect(storeSource).toContain("updateContestEntry");
     expect(storeSource).toContain("deleteContestEntry");
+    expect(storeSource).toContain("captureImageObjectKeys: string[]");
+    expect(storeSource).toContain("captureImageObjectKeys?: string[]");
+    expect(storeSource).toContain("captureImageObjectKeys.length === 0");
     expect(storeSource).toContain('ContentType: "application/json"');
     expect(storeSource).toContain("NoSuchKey");
   });
@@ -32,10 +35,12 @@ describe("contest CRUD S3 storage", () => {
     expect(collectionRoute).toContain("isAuthenticated");
     expect(collectionRoute).toContain("readContestEntries");
     expect(collectionRoute).toContain("createContestEntry");
+    expect(collectionRoute).toContain("captureImageObjectKeys");
     expect(collectionRoute).toContain("export async function GET");
     expect(collectionRoute).toContain("export async function POST");
     expect(itemRoute).toContain("updateContestEntry");
     expect(itemRoute).toContain("deleteContestEntry");
+    expect(itemRoute).toContain("captureImageObjectKeys");
     expect(itemRoute).toContain("export async function PUT");
     expect(itemRoute).toContain("export async function DELETE");
   });

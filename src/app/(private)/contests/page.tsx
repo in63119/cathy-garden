@@ -1,5 +1,5 @@
-import { ContestCalendar } from "@/components/contest-calendar";
+import { ContestWorkspace } from "@/components/contest-workspace";
 
 export default function ContestsPage() {
-  return <ContestCalendar />;
+  return <ContestWorkspace />;
 }

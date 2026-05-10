@@ -12,6 +12,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Cathy Garden",
   description: "사진과 영상을 간직하는 개인 보관함입니다.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Cathy Garden",
+    statusBarStyle: "default",
+  },
 };
 
 type RootLayoutProps = {

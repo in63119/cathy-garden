@@ -12,6 +12,9 @@ describe("contest submission archive S3 storage", () => {
 
     expect(storeSource).toContain("buildContestSubmissionsObjectKey");
     expect(storeSource).toContain("contests/${normalizedContestId}/submissions.json");
+    expect(storeSource).toContain('type: "file" | "youtube"');
+    expect(storeSource).toContain("url: string");
+    expect(storeSource).toContain('entry.type === "youtube" ? "youtube" : "file"');
     expect(storeSource).toContain("PutObjectCommand");
     expect(storeSource).toContain('ContentType: "application/json"');
     expect(storeSource).toContain("NoSuchKey");
@@ -26,6 +29,8 @@ describe("contest submission archive S3 storage", () => {
     expect(routeSource).toContain("isAuthenticated");
     expect(routeSource).toContain("readContestSubmissionArchive");
     expect(routeSource).toContain("addContestSubmission");
+    expect(routeSource).toContain('payload?.type === "youtube" ? "youtube" : "file"');
+    expect(routeSource).toContain("url.slice(0, 1024)");
     expect(routeSource).toContain("export async function GET");
     expect(routeSource).toContain("export async function POST");
     expect(routeSource).toContain("invalid-submission");

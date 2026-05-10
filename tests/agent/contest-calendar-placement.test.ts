@@ -18,10 +18,44 @@ describe("contest calendar placement", () => {
       "utf8",
     );
 
-    expect(contestsPageSource).toContain("ContestCalendar");
-    expect(contestsPageSource).toContain("<ContestCalendar />");
+    expect(contestsPageSource).toContain("ContestWorkspace");
+    expect(contestsPageSource).toContain("<ContestWorkspace />");
     expect(homePageSource).not.toContain("ContestCalendar");
     expect(headerSource).toContain('{ href: "/contests", label: "공모전" }');
+  });
+
+  test("provides calendar and archive tabs on the contests page", () => {
+    const workspaceSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-workspace.tsx"),
+      "utf8",
+    );
+    const archiveSource = fs.readFileSync(
+      path.join(rootDir, "components/contest-archive.tsx"),
+      "utf8",
+    );
+    const globalStyles = fs.readFileSync(
+      path.join(rootDir, "src/app/globals.css"),
+      "utf8",
+    );
+
+    expect(workspaceSource).toContain("ContestCalendar");
+    expect(workspaceSource).toContain("ContestArchive");
+    expect(workspaceSource).toContain('role="tablist"');
+    expect(workspaceSource).toContain('role="tab"');
+    expect(workspaceSource).toContain("달력");
+    expect(workspaceSource).toContain("아카이브");
+    expect(archiveSource).toContain("공모전 아카이브");
+    expect(archiveSource).toContain('fetch("/api/contests")');
+    expect(archiveSource).toContain("/api/contests/${contest.id}/submissions");
+    expect(archiveSource).toContain('submission.type === "youtube"');
+    expect(archiveSource).toContain("submission.url");
+    expect(archiveSource).toContain("제출물");
+    expect(archiveSource).toContain("contest-archive-row");
+    expect(globalStyles).toContain(".contest-workspace-tabs");
+    expect(globalStyles).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
+    expect(globalStyles).not.toContain(".contest-workspace-tabs {\n    width: 100%;");
+    expect(globalStyles).toContain(".contest-archive-card");
+    expect(globalStyles).toContain(".contest-archive-row");
   });
 
   test("provides an accessible contest calendar section", () => {
@@ -72,6 +106,9 @@ describe("contest calendar placement", () => {
 
     expect(calendarSource).toContain("selectedContestId");
     expect(calendarSource).toContain("setSelectedContestId(contestEvents[0].id)");
+    expect(calendarSource).toContain("selectedDateContests");
+    expect(calendarSource).toContain("contest-date-list");
+    expect(calendarSource).toContain("같은 날 공모전 추가");
     expect(calendarSource).toContain("contest-calendar-detail");
     expect(calendarSource).toContain("선택한 공모전 상세 정보를 확인합니다.");
     expect(calendarSource).toContain("공모전 이름");
@@ -105,6 +142,7 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("캡쳐 이미지");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
+    expect(globalStyles).toContain(".contest-date-list");
     expect(globalStyles).toContain(".contest-prize-editor");
     expect(globalStyles).toContain(".contest-prize-panel");
     expect(globalStyles).toContain(".contest-prize-summary");
@@ -130,9 +168,12 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("공모전 등록");
     expect(calendarSource).toContain("공모전 수정");
     expect(calendarSource).toContain("startCreatingContest(calendarDay.dateKey)");
+    expect(calendarSource).toContain("isCreatingContest");
+    expect(calendarSource).toContain("contestEvents.length > 1");
     expect(calendarSource).toContain("isSelectedDate");
     expect(calendarSource).toContain("calendarDay.dateKey === selectedDateKey");
-    expect(calendarSource).toContain('isSelectedDate || selectedContestIsOnDay ? "is-selected" : ""');
+    expect(calendarSource).toContain("isSelectedDate || selectedContestIsOnDay");
+    expect(calendarSource).toContain('"is-selected"');
     expect(calendarSource).toContain("requestPresignedContestCaptureUpload");
     expect(calendarSource).toContain("uploadFileToPresignedUrl");
     expect(calendarSource).toContain("캡쳐 이미지 파일");
@@ -161,8 +202,10 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("is-today");
     expect(calendarSource).toContain("contest-calendar-today-badge");
     expect(calendarSource).toContain("contest-calendar-today-button");
+    expect(calendarSource).toContain("contest-calendar-date-number");
     expect(calendarSource).toContain("오늘");
     expect(globalStyles).toContain(".contest-calendar-day.is-today");
+    expect(globalStyles).toContain(".contest-calendar-date-number");
     expect(globalStyles).toContain(".contest-calendar-today-badge");
     expect(globalStyles).toContain(".contest-calendar-today-button");
   });
@@ -201,7 +244,15 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain('method: "POST"');
     expect(calendarSource).toContain("제출물 아카이브");
     expect(calendarSource).toContain("제출물 이름");
-    expect(calendarSource).toContain("S3 object key");
+    expect(calendarSource).toContain("requestPresignedUpload");
+    expect(calendarSource).toContain('type="file"');
+    expect(calendarSource).toContain('accept="image/*,video/*"');
+    expect(calendarSource).toContain("올릴 사진과 영상");
+    expect(calendarSource).toContain("submissionFile");
+    expect(calendarSource).toContain("제출물 종류");
+    expect(calendarSource).toContain("YouTube URL");
+    expect(calendarSource).toContain("submissionType");
+    expect(calendarSource).toContain("type: submissionType");
     expect(calendarSource).toContain("제출물 추가");
     expect(globalStyles).toContain(".contest-calendar-submissions");
     expect(globalStyles).toContain(".contest-calendar-submission-form");

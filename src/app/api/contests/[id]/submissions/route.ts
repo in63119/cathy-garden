@@ -12,22 +12,33 @@ type RouteContext = {
   }>;
 };
 
-function normalizeSubmissionPayload(body: unknown) {
+function normalizeSubmissionPayload(body: unknown): {
+  name: string;
+  type: "file" | "youtube";
+  objectKey: string;
+  url: string;
+} | null {
   const payload = body as {
     name?: unknown;
     objectKey?: unknown;
+    type?: unknown;
+    url?: unknown;
   } | null;
   const name = typeof payload?.name === "string" ? payload.name.trim() : "";
+  const type = payload?.type === "youtube" ? "youtube" : "file";
   const objectKey =
     typeof payload?.objectKey === "string" ? payload.objectKey.trim() : "";
+  const url = typeof payload?.url === "string" ? payload.url.trim() : "";
 
-  if (!name || !objectKey) {
+  if (!name || (type === "file" && !objectKey) || (type === "youtube" && !url)) {
     return null;
   }
 
   return {
     name: name.slice(0, 160),
+    type,
     objectKey: objectKey.slice(0, 1024),
+    url: url.slice(0, 1024),
   };
 }
 

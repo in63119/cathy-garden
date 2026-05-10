@@ -24,7 +24,8 @@ const errorMessages: Record<string, string> = {
   "kakao-not-configured": "카카오 로그인이 아직 설정되지 않았습니다.",
   "kakao-user-not-allowed": "허용된 카카오 계정만 들어올 수 있습니다.",
   "not-configured": "아직 개인 비밀번호가 설정되지 않았습니다.",
-  "password-login-disabled": "운영 환경에서는 카카오 로그인만 사용할 수 있습니다.",
+  "password-login-disabled":
+    "운영 환경에서는 카카오 로그인만 사용할 수 있습니다.",
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -43,11 +44,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <div className="content-shell" style={{ padding: "16px 0 48px" }}>
       <SectionCard
         eyebrow="로그인"
-        title="개인 보관함에 들어가기"
+        title="Garden 들어가기"
         description={
           passwordLoginEnabled
             ? "비밀번호나 허용된 카카오 계정으로 보관함에 들어갈 수 있습니다."
-            : "운영 환경에서는 허용된 카카오 계정으로만 보관함에 들어갈 수 있습니다."
+            : "허용된 Cathy 카카오 계정으로만 보관함에 들어갈 수 있습니다."
         }
       >
         {passwordLoginEnabled ? (
@@ -95,9 +96,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               type="submit"
               className="button-link primary"
               disabled={!configured}
-              style={{ width: "fit-content", border: "none", cursor: "pointer" }}
+              style={{
+                width: "fit-content",
+                border: "none",
+                cursor: "pointer",
+              }}
             >
-              보관함 들어가기
+              Garden 들어가기
             </button>
           </form>
         ) : errorMessage ? (
@@ -112,7 +117,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         >
           <strong>카카오 로그인</strong>
           <span style={{ color: "var(--muted)", lineHeight: 1.7 }}>
-            허용된 카카오 계정으로 비밀번호 없이 들어갈 수 있습니다.
+            Cathy 카카오 계정으로만 들어갈 수 있습니다.
           </span>
           <a
             href={`/api/auth/kakao/start?next=${encodeURIComponent(nextPath)}`}

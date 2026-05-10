@@ -82,7 +82,8 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("상금");
     expect(calendarSource).toContain("<dd>{selectedContest.prize}</dd>");
     expect(calendarSource).toContain("captureImageObjectKey");
-    expect(calendarSource).toContain("NEXT_PUBLIC_CONTEST_CAPTURE_BASE_URL");
+    expect(calendarSource).toContain("contestCaptureImageUrl");
+    expect(calendarSource).toContain("/api/contests/${selectedContestId}/capture");
     expect(calendarSource).toContain("contest-calendar-capture");
     expect(calendarSource).toContain("캡쳐 이미지");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");

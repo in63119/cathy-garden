@@ -15,4 +15,17 @@ describe("contest capture upload route", () => {
     expect(routeSource).toContain("createPresignedContestCaptureUpload");
     expect(routeSource).toContain("contest-capture-presign-failed");
   });
+
+  test("creates an authenticated presigned display route for contest screenshots", () => {
+    const routeSource = fs.readFileSync(
+      path.join(rootDir, "src/app/api/contests/[id]/capture/route.ts"),
+      "utf8",
+    );
+
+    expect(routeSource).toContain("isAuthenticated");
+    expect(routeSource).toContain("readContestEntries");
+    expect(routeSource).toContain("createPresignedDownload");
+    expect(routeSource).toContain("captureImageObjectKey");
+    expect(routeSource).toContain("imageUrl");
+  });
 });

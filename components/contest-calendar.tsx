@@ -69,15 +69,6 @@ function formatMonthLabel(monthDate: Date) {
   }).format(monthDate);
 }
 
-function getContestCaptureImageUrl(objectKey: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_CONTEST_CAPTURE_BASE_URL?.replace(
-    /\/$/,
-    "",
-  );
-
-  return baseUrl ? `${baseUrl}/${objectKey}` : null;
-}
-
 export function ContestCalendar() {
   const todayDateKey = useMemo(() => {
     const today = new Date();
@@ -107,6 +98,9 @@ export function ContestCalendar() {
   );
   const [ideaMemo, setIdeaMemo] = useState("");
   const [ideaMemoStatus, setIdeaMemoStatus] = useState("불러오기 전");
+  const [contestCaptureImageUrl, setContestCaptureImageUrl] = useState<
+    string | null
+  >(null);
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
   const [submissionName, setSubmissionName] = useState("");
   const [submissionObjectKey, setSubmissionObjectKey] = useState("");
@@ -137,10 +131,6 @@ export function ContestCalendar() {
         (contestItem) => contestItem.id === selectedContestId,
       )
     : null;
-  const selectedContestCaptureUrl = selectedContest
-    ? getContestCaptureImageUrl(selectedContest.captureImageObjectKey)
-    : null;
-
   useEffect(() => {
     let ignore = false;
 
@@ -205,6 +195,40 @@ export function ContestCalendar() {
     }
 
     loadIdeaMemo();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedContestId]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    if (!selectedContestId) {
+      setContestCaptureImageUrl(null);
+      return;
+    }
+
+    async function loadContestCaptureImageUrl() {
+      try {
+        const response = await fetch(
+          `/api/contests/${selectedContestId}/capture`,
+        );
+        const data = (await response.json()) as {
+          imageUrl?: string;
+        };
+
+        if (!ignore) {
+          setContestCaptureImageUrl(data.imageUrl ?? null);
+        }
+      } catch {
+        if (!ignore) {
+          setContestCaptureImageUrl(null);
+        }
+      }
+    }
+
+    loadContestCaptureImageUrl();
 
     return () => {
       ignore = true;
@@ -684,9 +708,9 @@ export function ContestCalendar() {
                 </button>
               </div>
               <figure className="contest-calendar-capture">
-                {selectedContestCaptureUrl ? (
+                {contestCaptureImageUrl ? (
                   <img
-                    src={selectedContestCaptureUrl}
+                    src={contestCaptureImageUrl}
                     alt={`${selectedContest.title} 캡쳐 이미지`}
                     loading="lazy"
                   />

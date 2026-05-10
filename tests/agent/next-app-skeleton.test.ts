@@ -20,6 +20,7 @@ describe("next app skeleton", () => {
       "src/app/api/auth/kakao/start/route.ts",
       "src/app/api/contests/route.ts",
       "src/app/api/contests/[id]/route.ts",
+      "src/app/api/contests/[id]/capture/route.ts",
       "src/app/api/contests/capture/route.ts",
       "src/app/api/contests/[id]/idea-memo/route.ts",
       "src/app/api/contests/[id]/submissions/route.ts",

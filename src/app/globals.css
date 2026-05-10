@@ -299,8 +299,143 @@ input {
   padding: 0 0 40px;
 }
 
+.contest-workspace {
+  display: grid;
+  gap: 12px;
+}
+
+.contest-workspace-tabs {
+  display: inline-flex;
+  gap: 8px;
+  padding: 0 0 4px;
+}
+
+.contest-workspace-tabs button {
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.contest-workspace-tabs button.is-active {
+  border-color: rgba(76, 105, 66, 0.34);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 .contest-calendar-section {
   padding: 16px 0 18px;
+}
+
+.contest-archive-section {
+  padding: 16px 0 18px;
+}
+
+.contest-archive-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.contest-archive-header {
+  display: flex;
+  gap: 14px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.contest-archive-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.contest-archive-header p,
+.contest-archive-empty {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.contest-archive-header > span,
+.contest-archive-summary {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.contest-archive-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-archive-list {
+  display: grid;
+  gap: 10px;
+}
+
+.contest-archive-row {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.contest-archive-row h3,
+.contest-archive-row p,
+.contest-archive-row ul {
+  margin: 0;
+}
+
+.contest-archive-row h3 {
+  font-size: 1.04rem;
+  line-height: 1.35;
+}
+
+.contest-archive-row p,
+.contest-archive-row-meta span {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.contest-archive-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.contest-archive-row ul {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.contest-archive-row li {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.9fr) minmax(140px, 1.2fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.contest-archive-row code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contest-calendar-card {
@@ -1331,6 +1466,26 @@ input {
   .contest-calendar-card {
     grid-template-columns: 1fr;
     padding: 16px;
+  }
+
+  .contest-workspace-tabs {
+    width: 100%;
+  }
+
+  .contest-workspace-tabs button {
+    flex: 1;
+  }
+
+  .contest-archive-card {
+    padding: 16px;
+  }
+
+  .contest-archive-header {
+    display: grid;
+  }
+
+  .contest-archive-row li {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .contest-calendar-copy h2 {

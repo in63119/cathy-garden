@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  requestPresignedUpload,
   requestPresignedContestCaptureUpload,
   uploadFileToPresignedUrl,
 } from "@/lib/upload-client";
@@ -100,7 +101,10 @@ function getPrizeItemCountLabel(prizeItems: ContestPrizeItem[]) {
   return `${prizeItems.length}개 수상 항목`;
 }
 
-function getPrizeSummaryLabel(prizeItems: ContestPrizeItem[], fallback: string) {
+function getPrizeSummaryLabel(
+  prizeItems: ContestPrizeItem[],
+  fallback: string,
+) {
   return buildPrizeSummary(prizeItems) || fallback;
 }
 
@@ -108,7 +112,11 @@ export function ContestCalendar() {
   const todayDateKey = useMemo(() => {
     const today = new Date();
 
-    return formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    return formatDateKey(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
   }, []);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
@@ -146,6 +154,7 @@ export function ContestCalendar() {
     "file",
   );
   const [submissionObjectKey, setSubmissionObjectKey] = useState("");
+  const [submissionFile, setSubmissionFile] = useState<File | null>(null);
   const [submissionUrl, setSubmissionUrl] = useState("");
   const [submissionStatus, setSubmissionStatus] = useState("불러오기 전");
   const calendarDays = useMemo(
@@ -170,9 +179,7 @@ export function ContestCalendar() {
     return count + (contestEventsByDate.get(calendarDay.dateKey)?.length ?? 0);
   }, 0);
   const selectedContest = selectedContestId
-    ? contests.find(
-        (contestItem) => contestItem.id === selectedContestId,
-      )
+    ? contests.find((contestItem) => contestItem.id === selectedContestId)
     : null;
   useEffect(() => {
     let ignore = false;
@@ -291,6 +298,7 @@ export function ContestCalendar() {
       setSubmissionName("");
       setSubmissionType("file");
       setSubmissionObjectKey("");
+      setSubmissionFile(null);
       setSubmissionUrl("");
       setSubmissionStatus("불러오기 전");
       return;
@@ -372,28 +380,59 @@ export function ContestCalendar() {
 
   async function addSubmission() {
     const submissionReference =
-      submissionType === "youtube" ? submissionUrl.trim() : submissionObjectKey.trim();
+      submissionType === "youtube"
+        ? submissionUrl.trim()
+        : (submissionFile?.name ?? "");
+    const normalizedSubmissionName =
+      submissionName.trim() || submissionFile?.name || "";
 
-    if (!selectedContestId || !submissionName.trim() || !submissionReference) {
+    if (
+      !selectedContestId ||
+      !normalizedSubmissionName ||
+      !submissionReference
+    ) {
       setSubmissionStatus("입력 필요");
       return;
     }
 
-    setSubmissionStatus("저장 중");
+    setSubmissionStatus(
+      submissionType === "file" ? "파일 업로드 중" : "저장 중",
+    );
 
     try {
-      const response = await fetch(`/api/contests/${selectedContestId}/submissions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      let submissionObjectKey = "";
+
+      if (submissionType === "file" && submissionFile) {
+        const presigned = await requestPresignedUpload({
+          fileName: submissionFile.name,
+          contentType: submissionFile.type,
+          size: submissionFile.size,
+        });
+
+        await uploadFileToPresignedUrl({
+          uploadUrl: presigned.uploadUrl,
+          file: submissionFile,
+          contentType: submissionFile.type,
+        });
+
+        submissionObjectKey = presigned.objectKey;
+      }
+
+      const response = await fetch(
+        `/api/contests/${selectedContestId}/submissions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: normalizedSubmissionName,
+            type: submissionType,
+            objectKey: submissionType === "file" ? submissionObjectKey : "",
+            url: submissionType === "youtube" ? submissionUrl : "",
+          }),
         },
-        body: JSON.stringify({
-          name: submissionName,
-          type: submissionType,
-          objectKey: submissionType === "file" ? submissionObjectKey : "",
-          url: submissionType === "youtube" ? submissionUrl : "",
-        }),
-      });
+      );
       const data = (await response.json()) as {
         archive?: { submissions?: ContestSubmission[] };
       };
@@ -402,6 +441,7 @@ export function ContestCalendar() {
       setSubmissionName("");
       setSubmissionType("file");
       setSubmissionObjectKey("");
+      setSubmissionFile(null);
       setSubmissionUrl("");
       setSubmissionStatus("저장됨");
     } catch {
@@ -427,9 +467,7 @@ export function ContestCalendar() {
     setContestForm((currentForm) => ({
       ...currentForm,
       prizeItems: currentForm.prizeItems.map((prizeItem, prizeItemIndex) =>
-        prizeItemIndex === index
-          ? { ...prizeItem, [field]: value }
-          : prizeItem,
+        prizeItemIndex === index ? { ...prizeItem, [field]: value } : prizeItem,
       ),
     }));
   }
@@ -620,9 +658,7 @@ export function ContestCalendar() {
           <span className="eyebrow">Contest Calendar</span>
           <div>
             <h2 id="contest-calendar-title">공모전 달력</h2>
-            <p>
-              캡쳐해 둔 공모전 일정과 제출 준비를 이곳에서 확인합니다.
-            </p>
+            <p>캡쳐해 둔 공모전 일정과 제출 준비를 이곳에서 확인합니다.</p>
           </div>
         </div>
 
@@ -665,7 +701,7 @@ export function ContestCalendar() {
           <div className="contest-calendar-grid">
             {calendarDays.map((calendarDay) => {
               const contestEvents = calendarDay.dateKey
-                ? contestEventsByDate.get(calendarDay.dateKey) ?? []
+                ? (contestEventsByDate.get(calendarDay.dateKey) ?? [])
                 : [];
               const hasContestEvents = contestEvents.length > 0;
               const isToday = calendarDay.dateKey === todayDateKey;
@@ -691,7 +727,9 @@ export function ContestCalendar() {
                   className={[
                     "contest-calendar-day",
                     hasContestEvents ? "is-contest-day" : "",
-                    isSelectedDate || selectedContestIsOnDay ? "is-selected" : "",
+                    isSelectedDate || selectedContestIsOnDay
+                      ? "is-selected"
+                      : "",
                     isToday ? "is-today" : "",
                   ]
                     .filter(Boolean)
@@ -831,9 +869,7 @@ export function ContestCalendar() {
                   accept="image/*"
                   multiple
                   onChange={(event) =>
-                    setContestCaptureFiles(
-                      Array.from(event.target.files ?? []),
-                    )
+                    setContestCaptureFiles(Array.from(event.target.files ?? []))
                   }
                 />
                 <p className="contest-manager-capture-note">
@@ -1026,7 +1062,7 @@ export function ContestCalendar() {
                       )
                     }
                   >
-                    <option value="file">영상/파일 S3 경로</option>
+                    <option value="file">영상/파일</option>
                     <option value="youtube">YouTube URL</option>
                   </select>
                   {submissionType === "youtube" ? (
@@ -1045,17 +1081,26 @@ export function ContestCalendar() {
                     </>
                   ) : (
                     <>
-                      <label htmlFor="contest-submission-object-key">
-                        S3 object key
-                      </label>
+                      <label htmlFor="contest-submission-file">제출물</label>
                       <input
-                        id="contest-submission-object-key"
-                        value={submissionObjectKey}
-                        onChange={(event) =>
-                          setSubmissionObjectKey(event.target.value)
-                        }
-                        placeholder={`contests/${selectedContest.id}/submissions/final.mp4`}
+                        id="contest-submission-file"
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] ?? null;
+
+                          setSubmissionFile(file);
+                          setSubmissionObjectKey("");
+                          if (file && !submissionName.trim()) {
+                            setSubmissionName(file.name);
+                          }
+                        }}
                       />
+                      <p>
+                        {submissionFile
+                          ? `선택된 파일: ${submissionFile.name}`
+                          : "모바일 사진함에서 제출할 사진이나 영상을 선택하세요."}
+                      </p>
                     </>
                   )}
                   <button type="button" onClick={addSubmission}>

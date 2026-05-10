@@ -233,7 +233,11 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain('method: "POST"');
     expect(calendarSource).toContain("제출물 아카이브");
     expect(calendarSource).toContain("제출물 이름");
-    expect(calendarSource).toContain("S3 object key");
+    expect(calendarSource).toContain("requestPresignedUpload");
+    expect(calendarSource).toContain('type="file"');
+    expect(calendarSource).toContain('accept="image/*,video/*"');
+    expect(calendarSource).toContain("올릴 사진과 영상");
+    expect(calendarSource).toContain("submissionFile");
     expect(calendarSource).toContain("제출물 종류");
     expect(calendarSource).toContain("YouTube URL");
     expect(calendarSource).toContain("submissionType");

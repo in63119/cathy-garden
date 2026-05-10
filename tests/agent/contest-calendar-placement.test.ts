@@ -106,6 +106,9 @@ describe("contest calendar placement", () => {
 
     expect(calendarSource).toContain("selectedContestId");
     expect(calendarSource).toContain("setSelectedContestId(contestEvents[0].id)");
+    expect(calendarSource).toContain("selectedDateContests");
+    expect(calendarSource).toContain("contest-date-list");
+    expect(calendarSource).toContain("같은 날 공모전 추가");
     expect(calendarSource).toContain("contest-calendar-detail");
     expect(calendarSource).toContain("선택한 공모전 상세 정보를 확인합니다.");
     expect(calendarSource).toContain("공모전 이름");
@@ -139,6 +142,7 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("캡쳐 이미지");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
+    expect(globalStyles).toContain(".contest-date-list");
     expect(globalStyles).toContain(".contest-prize-editor");
     expect(globalStyles).toContain(".contest-prize-panel");
     expect(globalStyles).toContain(".contest-prize-summary");
@@ -164,6 +168,8 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("공모전 등록");
     expect(calendarSource).toContain("공모전 수정");
     expect(calendarSource).toContain("startCreatingContest(calendarDay.dateKey)");
+    expect(calendarSource).toContain("isCreatingContest");
+    expect(calendarSource).toContain("contestEvents.length > 1");
     expect(calendarSource).toContain("isSelectedDate");
     expect(calendarSource).toContain("calendarDay.dateKey === selectedDateKey");
     expect(calendarSource).toContain("isSelectedDate || selectedContestIsOnDay");

@@ -130,6 +130,7 @@ export function ContestCalendar() {
   const [contests, setContests] = useState<ContestScheduleItem[]>([]);
   const [contestListStatus, setContestListStatus] = useState("불러오기 전");
   const [editingContestId, setEditingContestId] = useState<string | null>(null);
+  const [isCreatingContest, setIsCreatingContest] = useState(false);
   const [contestForm, setContestForm] = useState({
     title: "",
     deadline: "",
@@ -181,6 +182,9 @@ export function ContestCalendar() {
   const selectedContest = selectedContestId
     ? contests.find((contestItem) => contestItem.id === selectedContestId)
     : null;
+  const selectedDateContests = selectedDateKey
+    ? (contestEventsByDate.get(selectedDateKey) ?? [])
+    : [];
   useEffect(() => {
     let ignore = false;
 
@@ -496,6 +500,7 @@ export function ContestCalendar() {
 
   function resetContestForm() {
     setEditingContestId(null);
+    setIsCreatingContest(false);
     setContestCaptureFiles([]);
     setContestForm({
       title: "",
@@ -511,6 +516,7 @@ export function ContestCalendar() {
     setSelectedContestId(null);
     setSelectedDateKey(dateKey);
     setEditingContestId(null);
+    setIsCreatingContest(true);
     setContestCaptureFiles([]);
     setContestForm({
       title: "",
@@ -524,6 +530,7 @@ export function ContestCalendar() {
 
   function startEditingContest(contest: ContestScheduleItem) {
     setEditingContestId(contest.id);
+    setIsCreatingContest(false);
     setSelectedDateKey(contest.deadline);
     setContestCaptureFiles([]);
     setContestForm({
@@ -735,10 +742,16 @@ export function ContestCalendar() {
                     .filter(Boolean)
                     .join(" ")}
                   onClick={() => {
-                    if (contestEvents[0]) {
+                    if (calendarDay.dateKey) {
+                      setSelectedDateKey(calendarDay.dateKey);
+                    }
+
+                    if (contestEvents.length === 1) {
                       resetContestForm();
                       setSelectedContestId(contestEvents[0].id);
-                      setSelectedDateKey(calendarDay.dateKey);
+                    } else if (contestEvents.length > 1) {
+                      resetContestForm();
+                      setSelectedContestId(null);
                     } else if (calendarDay.dateKey) {
                       startCreatingContest(calendarDay.dateKey);
                     }
@@ -772,7 +785,44 @@ export function ContestCalendar() {
               : "아직 등록된 공모전 일정이 없습니다."}
           </p>
 
-          {selectedDateKey && (!selectedContest || editingContestId) ? (
+          {selectedDateKey && selectedDateContests.length > 0 ? (
+            <article
+              className="contest-date-list"
+              aria-labelledby="contest-date-list-title"
+            >
+              <div className="contest-date-list-header">
+                <h3 id="contest-date-list-title">
+                  {selectedDateKey} 일정
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => startCreatingContest(selectedDateKey)}
+                >
+                  같은 날 공모전 추가
+                </button>
+              </div>
+              <ul>
+                {selectedDateContests.map((contestEvent) => (
+                  <li key={contestEvent.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetContestForm();
+                        setSelectedContestId(contestEvent.id);
+                        setSelectedDateKey(contestEvent.deadline);
+                      }}
+                    >
+                      <strong>{contestEvent.title}</strong>
+                      <span>{contestEvent.prize}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+
+          {selectedDateKey &&
+          (isCreatingContest || editingContestId || selectedDateContests.length === 0) ? (
             <article
               className="contest-manager"
               aria-labelledby="contest-manager-title"

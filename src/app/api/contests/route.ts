@@ -9,6 +9,7 @@ function normalizeContestBody(body: unknown) {
     captureImageObjectKeys?: unknown;
     deadline?: unknown;
     prize?: unknown;
+    prizeItems?: unknown;
     title?: unknown;
   } | null;
 
@@ -16,6 +17,23 @@ function normalizeContestBody(body: unknown) {
     title: typeof payload?.title === "string" ? payload.title : "",
     deadline: typeof payload?.deadline === "string" ? payload.deadline : "",
     prize: typeof payload?.prize === "string" ? payload.prize : "",
+    prizeItems: Array.isArray(payload?.prizeItems)
+      ? payload.prizeItems
+          .filter((prizeItem) => typeof prizeItem === "object" && prizeItem)
+          .map((prizeItem) => {
+            const item = prizeItem as {
+              amount?: unknown;
+              count?: unknown;
+              title?: unknown;
+            };
+
+            return {
+              title: typeof item.title === "string" ? item.title : "",
+              amount: typeof item.amount === "string" ? item.amount : "",
+              count: typeof item.count === "string" ? item.count : "",
+            };
+          })
+      : [],
     captureImageObjectKey:
       typeof payload?.captureImageObjectKey === "string"
         ? payload.captureImageObjectKey

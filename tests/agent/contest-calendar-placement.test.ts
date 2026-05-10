@@ -79,8 +79,13 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("제출 마감일");
     expect(calendarSource).toContain("<dd>{selectedContest.deadline}</dd>");
     expect(calendarSource).toContain("prize: string");
+    expect(calendarSource).toContain("prizeItems: ContestPrizeItem[]");
+    expect(calendarSource).toContain("buildPrizeSummary");
     expect(calendarSource).toContain("상금");
-    expect(calendarSource).toContain("<dd>{selectedContest.prize}</dd>");
+    expect(calendarSource).toContain("contest-prize-editor");
+    expect(calendarSource).toContain("contest-prize-row");
+    expect(calendarSource).toContain("상금 항목 추가");
+    expect(calendarSource).toContain("contest-prize-list");
     expect(calendarSource).toContain("captureImageObjectKey");
     expect(calendarSource).toContain("contestCaptureImages");
     expect(calendarSource).toContain("/api/contests/${selectedContestId}/capture");
@@ -96,6 +101,8 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("캡쳐 이미지");
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
+    expect(globalStyles).toContain(".contest-prize-editor");
+    expect(globalStyles).toContain(".contest-prize-list");
     expect(globalStyles).toContain(".contest-calendar-capture");
     expect(globalStyles).toContain(".contest-calendar-capture-grid");
     expect(globalStyles).toContain(".contest-calendar-capture-button");

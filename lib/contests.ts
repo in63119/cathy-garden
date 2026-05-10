@@ -12,16 +12,24 @@ export type ContestEntry = {
   title: string;
   deadline: string;
   prize: string;
+  prizeItems: ContestPrizeItem[];
   captureImageObjectKey: string;
   captureImageObjectKeys: string[];
   createdAt: string;
   updatedAt: string;
 };
 
+export type ContestPrizeItem = {
+  title: string;
+  amount: string;
+  count: string;
+};
+
 export type ContestInput = {
   title: string;
   deadline: string;
-  prize: string;
+  prize?: string;
+  prizeItems?: ContestPrizeItem[];
   captureImageObjectKey?: string;
   captureImageObjectKeys?: string[];
 };
@@ -59,7 +67,8 @@ export function buildContestId(title: string) {
 function normalizeContestInput(input: ContestInput) {
   const title = input.title.trim();
   const deadline = input.deadline.trim();
-  const prize = input.prize.trim();
+  const prizeItems = normalizeContestPrizeItems(input.prizeItems ?? []);
+  const prize = (input.prize ?? buildContestPrizeSummary(prizeItems)).trim();
   const captureImageObjectKeys = [
     ...(input.captureImageObjectKeys ?? []),
     input.captureImageObjectKey ?? "",
@@ -91,9 +100,36 @@ function normalizeContestInput(input: ContestInput) {
     title: title.slice(0, 160),
     deadline,
     prize: prize.slice(0, 160),
+    prizeItems,
     captureImageObjectKey: uniqueCaptureImageObjectKeys[0],
     captureImageObjectKeys: uniqueCaptureImageObjectKeys,
   };
+}
+
+function normalizeContestPrizeItems(prizeItems: ContestPrizeItem[]) {
+  return prizeItems
+    .map((prizeItem) => ({
+      title: prizeItem.title.trim().slice(0, 80),
+      amount: prizeItem.amount.trim().slice(0, 80),
+      count: prizeItem.count.trim().slice(0, 40),
+    }))
+    .filter(
+      (prizeItem) => prizeItem.title || prizeItem.amount || prizeItem.count,
+    )
+    .slice(0, 20);
+}
+
+function buildContestPrizeSummary(prizeItems: ContestPrizeItem[]) {
+  return prizeItems
+    .map((prizeItem) => {
+      const title = prizeItem.title.trim();
+      const amount = prizeItem.amount.trim();
+      const count = prizeItem.count.trim();
+
+      return [title, amount, count].filter(Boolean).join(" ");
+    })
+    .filter(Boolean)
+    .join(", ");
 }
 
 function normalizeContestEntries(value: unknown): ContestEntry[] {
@@ -114,6 +150,9 @@ function normalizeContestEntries(value: unknown): ContestEntry[] {
     )
     .map((entry) => ({
       ...entry,
+      prizeItems: Array.isArray(entry.prizeItems)
+        ? normalizeContestPrizeItems(entry.prizeItems)
+        : [],
       captureImageObjectKeys:
         Array.isArray(entry.captureImageObjectKeys) &&
         entry.captureImageObjectKeys.every(

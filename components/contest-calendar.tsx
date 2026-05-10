@@ -14,10 +14,17 @@ type ContestScheduleItem = {
   title: string;
   deadline: string;
   prize: string;
+  prizeItems: ContestPrizeItem[];
   captureImageObjectKey: string;
   captureImageObjectKeys: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+type ContestPrizeItem = {
+  title: string;
+  amount: string;
+  count: string;
 };
 
 type ContestCaptureImage = {
@@ -75,6 +82,18 @@ function formatMonthLabel(monthDate: Date) {
   }).format(monthDate);
 }
 
+function buildPrizeSummary(prizeItems: ContestPrizeItem[]) {
+  return prizeItems
+    .map((prizeItem) =>
+      [prizeItem.title, prizeItem.amount, prizeItem.count]
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .join(" "),
+    )
+    .filter(Boolean)
+    .join(", ");
+}
+
 export function ContestCalendar() {
   const todayDateKey = useMemo(() => {
     const today = new Date();
@@ -97,6 +116,9 @@ export function ContestCalendar() {
     title: "",
     deadline: "",
     prize: "",
+    prizeItems: [
+      { title: "대상", amount: "", count: "1명" },
+    ] as ContestPrizeItem[],
     captureImageObjectKey: "",
     captureImageObjectKeys: [] as string[],
   });
@@ -364,10 +386,50 @@ export function ContestCalendar() {
     }
   }
 
-  function updateContestForm(field: keyof typeof contestForm, value: string) {
+  function updateContestForm(
+    field: "title" | "deadline" | "prize" | "captureImageObjectKey",
+    value: string,
+  ) {
     setContestForm((currentForm) => ({
       ...currentForm,
       [field]: value,
+    }));
+  }
+
+  function updatePrizeItem(
+    index: number,
+    field: keyof ContestPrizeItem,
+    value: string,
+  ) {
+    setContestForm((currentForm) => ({
+      ...currentForm,
+      prizeItems: currentForm.prizeItems.map((prizeItem, prizeItemIndex) =>
+        prizeItemIndex === index
+          ? { ...prizeItem, [field]: value }
+          : prizeItem,
+      ),
+    }));
+  }
+
+  function addPrizeItem() {
+    setContestForm((currentForm) => ({
+      ...currentForm,
+      prizeItems: [
+        ...currentForm.prizeItems,
+        { title: "", amount: "", count: "1명" },
+      ],
+    }));
+  }
+
+  function removePrizeItem(index: number) {
+    setContestForm((currentForm) => ({
+      ...currentForm,
+      prizeItems:
+        currentForm.prizeItems.length > 1
+          ? currentForm.prizeItems.filter(
+              (_prizeItem, prizeItemIndex) => prizeItemIndex !== index,
+            )
+          : [{ title: "", amount: "", count: "1명" }],
     }));
   }
 
@@ -378,6 +440,7 @@ export function ContestCalendar() {
       title: "",
       deadline: "",
       prize: "",
+      prizeItems: [{ title: "대상", amount: "", count: "1명" }],
       captureImageObjectKey: "",
       captureImageObjectKeys: [],
     });
@@ -392,6 +455,7 @@ export function ContestCalendar() {
       title: "",
       deadline: dateKey,
       prize: "",
+      prizeItems: [{ title: "대상", amount: "", count: "1명" }],
       captureImageObjectKey: "",
       captureImageObjectKeys: [],
     });
@@ -405,6 +469,10 @@ export function ContestCalendar() {
       title: contest.title,
       deadline: contest.deadline,
       prize: contest.prize,
+      prizeItems:
+        contest.prizeItems && contest.prizeItems.length > 0
+          ? contest.prizeItems
+          : [{ title: "", amount: contest.prize, count: "" }],
       captureImageObjectKey: contest.captureImageObjectKey,
       captureImageObjectKeys: contest.captureImageObjectKeys ?? [
         contest.captureImageObjectKey,
@@ -459,6 +527,7 @@ export function ContestCalendar() {
         },
         body: JSON.stringify({
           ...contestForm,
+          prize: buildPrizeSummary(contestForm.prizeItems) || contestForm.prize,
           captureImageObjectKey: captureImageObjectKeys[0] ?? "",
           captureImageObjectKeys,
         }),
@@ -672,15 +741,66 @@ export function ContestCalendar() {
                     updateContestForm("deadline", event.target.value)
                   }
                 />
-                <label htmlFor="contest-prize">상금</label>
-                <input
-                  id="contest-prize"
-                  value={contestForm.prize}
-                  onChange={(event) =>
-                    updateContestForm("prize", event.target.value)
-                  }
-                  placeholder="예: 총 상금 300만원"
-                />
+                <fieldset className="contest-prize-editor">
+                  <legend>상금</legend>
+                  {contestForm.prizeItems.map((prizeItem, prizeItemIndex) => (
+                    <div
+                      key={`prize-item-${prizeItemIndex}`}
+                      className="contest-prize-row"
+                    >
+                      <input
+                        value={prizeItem.title}
+                        onChange={(event) =>
+                          updatePrizeItem(
+                            prizeItemIndex,
+                            "title",
+                            event.target.value,
+                          )
+                        }
+                        aria-label={`상금 항목 ${prizeItemIndex + 1} 상 이름`}
+                        placeholder="대상"
+                      />
+                      <input
+                        value={prizeItem.amount}
+                        onChange={(event) =>
+                          updatePrizeItem(
+                            prizeItemIndex,
+                            "amount",
+                            event.target.value,
+                          )
+                        }
+                        aria-label={`상금 항목 ${prizeItemIndex + 1} 금액`}
+                        placeholder="500만원"
+                      />
+                      <input
+                        value={prizeItem.count}
+                        onChange={(event) =>
+                          updatePrizeItem(
+                            prizeItemIndex,
+                            "count",
+                            event.target.value,
+                          )
+                        }
+                        aria-label={`상금 항목 ${prizeItemIndex + 1} 인원`}
+                        placeholder="1명"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePrizeItem(prizeItemIndex)}
+                        aria-label={`상금 항목 ${prizeItemIndex + 1} 삭제`}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addPrizeItem}>
+                    상금 항목 추가
+                  </button>
+                  <p>
+                    {buildPrizeSummary(contestForm.prizeItems) ||
+                      "상 이름, 금액, 인원을 행으로 나누어 입력하세요."}
+                  </p>
+                </fieldset>
                 <label htmlFor="contest-capture-file">캡쳐 이미지 파일</label>
                 <input
                   id="contest-capture-file"
@@ -775,7 +895,24 @@ export function ContestCalendar() {
                 </div>
                 <div>
                   <dt>상금</dt>
-                  <dd>{selectedContest.prize}</dd>
+                  <dd>
+                    {selectedContest.prizeItems &&
+                    selectedContest.prizeItems.length > 0 ? (
+                      <ul className="contest-prize-list">
+                        {selectedContest.prizeItems.map(
+                          (prizeItem, prizeItemIndex) => (
+                            <li key={`${prizeItem.title}-${prizeItemIndex}`}>
+                              <strong>{prizeItem.title || "상금"}</strong>
+                              <span>{prizeItem.amount}</span>
+                              <span>{prizeItem.count}</span>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    ) : (
+                      selectedContest.prize
+                    )}
+                  </dd>
                 </div>
               </dl>
               <div className="contest-calendar-memo">

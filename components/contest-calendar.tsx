@@ -94,6 +94,14 @@ function buildPrizeSummary(prizeItems: ContestPrizeItem[]) {
     .join(", ");
 }
 
+function getPrizeItemCountLabel(prizeItems: ContestPrizeItem[]) {
+  return `${prizeItems.length}개 수상 항목`;
+}
+
+function getPrizeSummaryLabel(prizeItems: ContestPrizeItem[], fallback: string) {
+  return buildPrizeSummary(prizeItems) || fallback;
+}
+
 export function ContestCalendar() {
   const todayDateKey = useMemo(() => {
     const today = new Date();
@@ -898,19 +906,34 @@ export function ContestCalendar() {
                   <dd>
                     {selectedContest.prizeItems &&
                     selectedContest.prizeItems.length > 0 ? (
-                      <ul className="contest-prize-list">
-                        {selectedContest.prizeItems.map(
-                          (prizeItem, prizeItemIndex) => (
-                            <li key={`${prizeItem.title}-${prizeItemIndex}`}>
-                              <strong>{prizeItem.title || "상금"}</strong>
-                              <span>{prizeItem.amount}</span>
-                              <span>{prizeItem.count}</span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
+                      <div className="contest-prize-panel">
+                        <div className="contest-prize-summary">
+                          <strong>
+                            {getPrizeItemCountLabel(selectedContest.prizeItems)}
+                          </strong>
+                          <span>
+                            {getPrizeSummaryLabel(
+                              selectedContest.prizeItems,
+                              selectedContest.prize,
+                            )}
+                          </span>
+                        </div>
+                        <ul className="contest-prize-list">
+                          {selectedContest.prizeItems.map(
+                            (prizeItem, prizeItemIndex) => (
+                              <li key={`${prizeItem.title}-${prizeItemIndex}`}>
+                                <strong>{prizeItem.title || "상금"}</strong>
+                                <span>{prizeItem.amount || "금액 미정"}</span>
+                                <span>{prizeItem.count || "인원 미정"}</span>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
                     ) : (
-                      selectedContest.prize
+                      <p className="contest-prize-plain">
+                        {selectedContest.prize}
+                      </p>
                     )}
                   </dd>
                 </div>

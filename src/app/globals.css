@@ -825,6 +825,40 @@ input {
   font-weight: 800;
 }
 
+.contest-prize-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.contest-prize-summary {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(76, 105, 66, 0.18);
+  background: rgba(240, 248, 236, 0.82);
+}
+
+.contest-prize-summary strong {
+  color: var(--accent-strong);
+  font-size: 0.88rem;
+}
+
+.contest-prize-summary span,
+.contest-prize-plain {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.contest-prize-plain {
+  margin: 0;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.52);
+}
+
 .contest-prize-list {
   display: grid;
   gap: 6px;
@@ -842,6 +876,10 @@ input {
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.52);
+}
+
+.contest-prize-list strong {
+  color: var(--foreground);
 }
 
 .contest-prize-list span {

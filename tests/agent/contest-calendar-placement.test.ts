@@ -81,10 +81,14 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("prize: string");
     expect(calendarSource).toContain("prizeItems: ContestPrizeItem[]");
     expect(calendarSource).toContain("buildPrizeSummary");
+    expect(calendarSource).toContain("getPrizeItemCountLabel");
+    expect(calendarSource).toContain("getPrizeSummaryLabel");
     expect(calendarSource).toContain("상금");
     expect(calendarSource).toContain("contest-prize-editor");
     expect(calendarSource).toContain("contest-prize-row");
     expect(calendarSource).toContain("상금 항목 추가");
+    expect(calendarSource).toContain("contest-prize-panel");
+    expect(calendarSource).toContain("contest-prize-summary");
     expect(calendarSource).toContain("contest-prize-list");
     expect(calendarSource).toContain("captureImageObjectKey");
     expect(calendarSource).toContain("contestCaptureImages");
@@ -102,6 +106,9 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("aria-pressed={selectedContestIsOnDay}");
     expect(globalStyles).toContain(".contest-calendar-detail");
     expect(globalStyles).toContain(".contest-prize-editor");
+    expect(globalStyles).toContain(".contest-prize-panel");
+    expect(globalStyles).toContain(".contest-prize-summary");
+    expect(globalStyles).toContain(".contest-prize-plain");
     expect(globalStyles).toContain(".contest-prize-list");
     expect(globalStyles).toContain(".contest-calendar-capture");
     expect(globalStyles).toContain(".contest-calendar-capture-grid");

@@ -83,7 +83,7 @@ describe("private auth helpers", () => {
     expect(authServer).toContain("password-login-disabled");
     expect(loginPage).toContain("passwordLoginEnabled");
     expect(loginPage).toContain("{passwordLoginEnabled ? (");
-    expect(loginPage).toContain("운영 환경에서는 허용된 카카오 계정으로만");
+    expect(loginPage).toContain("허용된 Cathy 카카오 계정으로만");
     expect(loginPage).toContain("운영 환경에서는 카카오 로그인만 사용할 수 있습니다.");
   });
 });

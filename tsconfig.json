@@ -17,7 +17,6 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
@@ -34,7 +33,7 @@
         "./src/components/*"
       ],
       "@recoil/*": [
-        "src/common/recoil/*"
+        "./src/common/recoil/*"
       ],
       "@pages/*": [
         "./src/legacy-pages/*"
@@ -43,13 +42,13 @@
         "./src/common/images/*"
       ],
       "@utils/*": [
-        "src/common/utils/*"
+        "./src/common/utils/*"
       ],
       "@types/*": [
-        "src/common/types/*"
+        "./src/common/types/*"
       ],
       "@common/*": [
-        "src/common/*"
+        "./src/common/*"
       ]
     }
   },

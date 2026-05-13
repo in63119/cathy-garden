@@ -89,9 +89,14 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("contests");
     expect(calendarSource).toContain("is-contest-day");
     expect(calendarSource).toContain("contest-calendar-badge");
+    expect(calendarSource).toContain("contestCalendarLabel");
+    expect(calendarSource).toContain("contestCalendarAriaLabel");
+    expect(calendarSource).toContain("contestEvents[0].title");
+    expect(calendarSource).toContain("title={contestCalendarAriaLabel}");
     expect(calendarSource).toContain("공모전 일정");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day");
     expect(globalStyles).toContain(".contest-calendar-badge");
+    expect(globalStyles).toContain("text-overflow: ellipsis");
   });
 
   test("shows selected contest details after clicking a scheduled date", () => {
@@ -123,7 +128,13 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("상금");
     expect(calendarSource).toContain("contest-prize-editor");
     expect(calendarSource).toContain("contest-prize-row");
-    expect(calendarSource).toContain("상금 항목 추가");
+    expect(calendarSource).toContain("presetPrizeTitles");
+    expect(calendarSource).toContain("최우수상");
+    expect(calendarSource).toContain("입상");
+    expect(calendarSource).toContain("contest-prize-stepper");
+    expect(calendarSource).toContain("formatPrizeAmountFromDigits");
+    expect(calendarSource).toContain("adjustPrizeAmount");
+    expect(calendarSource).toContain("추가 입력");
     expect(calendarSource).toContain("contest-prize-panel");
     expect(calendarSource).toContain("contest-prize-summary");
     expect(calendarSource).toContain("contest-prize-list");
@@ -144,6 +155,8 @@ describe("contest calendar placement", () => {
     expect(globalStyles).toContain(".contest-calendar-detail");
     expect(globalStyles).toContain(".contest-date-list");
     expect(globalStyles).toContain(".contest-prize-editor");
+    expect(globalStyles).toContain(".contest-prize-stepper");
+    expect(globalStyles).toContain(".contest-prize-heading");
     expect(globalStyles).toContain(".contest-prize-panel");
     expect(globalStyles).toContain(".contest-prize-summary");
     expect(globalStyles).toContain(".contest-prize-plain");

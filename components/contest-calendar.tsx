@@ -9,6 +9,7 @@ import {
 } from "@/lib/upload-client";
 
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+const presetPrizeTitles = ["대상", "최우수상", "우수상", "장려상", "입상"];
 
 type ContestScheduleItem = {
   id: string;
@@ -48,6 +49,62 @@ type ContestSubmission = {
   submittedAt: string;
 };
 
+function createPresetPrizeItems() {
+  return presetPrizeTitles.map((title) => ({
+    title,
+    amount: "",
+    count: "",
+  }));
+}
+
+function getDigits(value: string, maxLength: number) {
+  return value.replace(/\D/g, "").slice(0, maxLength);
+}
+
+function getPrizeAmountDigits(amount: string) {
+  return getDigits(amount, 4);
+}
+
+function getPrizeCountDigits(count: string) {
+  return getDigits(count, 2);
+}
+
+function formatPrizeAmountFromDigits(value: string) {
+  const digits = getPrizeAmountDigits(value);
+
+  return digits ? `${Number(digits)}만원` : "";
+}
+
+function formatPrizeCountFromDigits(value: string) {
+  const digits = getPrizeCountDigits(value);
+
+  return digits ? `${Number(digits)}명` : "";
+}
+
+function hasPrizeItemDetail(prizeItem: ContestPrizeItem) {
+  return Boolean(prizeItem.amount.trim() || prizeItem.count.trim());
+}
+
+function getVisiblePrizeItems(prizeItems: ContestPrizeItem[]) {
+  return prizeItems.filter(hasPrizeItemDetail);
+}
+
+function mergePrizeItemsWithPresets(prizeItems: ContestPrizeItem[]) {
+  const presetItems = presetPrizeTitles.map(
+    (title) =>
+      prizeItems.find((prizeItem) => prizeItem.title.trim() === title) ?? {
+        title,
+        amount: "",
+        count: "",
+      },
+  );
+  const customItems = prizeItems.filter(
+    (prizeItem) => !presetPrizeTitles.includes(prizeItem.title.trim()),
+  );
+
+  return [...presetItems, ...customItems];
+}
+
 function buildCalendarDays(monthDate: Date): CalendarDay[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -86,7 +143,7 @@ function formatMonthLabel(monthDate: Date) {
 }
 
 function buildPrizeSummary(prizeItems: ContestPrizeItem[]) {
-  return prizeItems
+  return getVisiblePrizeItems(prizeItems)
     .map((prizeItem) =>
       [prizeItem.title, prizeItem.amount, prizeItem.count]
         .map((value) => value.trim())
@@ -98,14 +155,14 @@ function buildPrizeSummary(prizeItems: ContestPrizeItem[]) {
 }
 
 function getPrizeItemCountLabel(prizeItems: ContestPrizeItem[]) {
-  return `${prizeItems.length}개 수상 항목`;
+  return `${getVisiblePrizeItems(prizeItems).length}개 수상 항목`;
 }
 
 function getPrizeSummaryLabel(
   prizeItems: ContestPrizeItem[],
   fallback: string,
 ) {
-  return buildPrizeSummary(prizeItems) || fallback;
+  return buildPrizeSummary(getVisiblePrizeItems(prizeItems)) || fallback;
 }
 
 export function ContestCalendar() {
@@ -135,9 +192,7 @@ export function ContestCalendar() {
     title: "",
     deadline: "",
     prize: "",
-    prizeItems: [
-      { title: "대상", amount: "", count: "1명" },
-    ] as ContestPrizeItem[],
+    prizeItems: createPresetPrizeItems() as ContestPrizeItem[],
     captureImageObjectKey: "",
     captureImageObjectKeys: [] as string[],
   });
@@ -182,6 +237,9 @@ export function ContestCalendar() {
   const selectedContest = selectedContestId
     ? contests.find((contestItem) => contestItem.id === selectedContestId)
     : null;
+  const selectedContestPrizeItems = selectedContest
+    ? getVisiblePrizeItems(selectedContest.prizeItems)
+    : [];
   const selectedDateContests = selectedDateKey
     ? (contestEventsByDate.get(selectedDateKey) ?? [])
     : [];
@@ -476,25 +534,64 @@ export function ContestCalendar() {
     }));
   }
 
+  function updatePrizeAmount(index: number, value: string) {
+    updatePrizeItem(index, "amount", formatPrizeAmountFromDigits(value));
+  }
+
+  function updatePrizeCount(index: number, value: string) {
+    updatePrizeItem(index, "count", formatPrizeCountFromDigits(value));
+  }
+
+  function adjustPrizeAmount(index: number, change: number) {
+    const currentAmount = Number(
+      getPrizeAmountDigits(contestForm.prizeItems[index]?.amount ?? ""),
+    );
+    const nextAmount = Math.max(0, Math.min(9999, currentAmount + change));
+
+    updatePrizeItem(index, "amount", nextAmount ? `${nextAmount}만원` : "");
+  }
+
+  function adjustPrizeCount(index: number, change: number) {
+    const currentCount = Number(
+      getPrizeCountDigits(contestForm.prizeItems[index]?.count ?? ""),
+    );
+    const nextCount = Math.max(0, Math.min(99, currentCount + change));
+
+    updatePrizeItem(index, "count", nextCount ? `${nextCount}명` : "");
+  }
+
+  function clearPrizeItem(index: number) {
+    setContestForm((currentForm) => ({
+      ...currentForm,
+      prizeItems: currentForm.prizeItems.map((prizeItem, prizeItemIndex) =>
+        prizeItemIndex === index
+          ? { ...prizeItem, amount: "", count: "" }
+          : prizeItem,
+      ),
+    }));
+  }
+
   function addPrizeItem() {
     setContestForm((currentForm) => ({
       ...currentForm,
       prizeItems: [
         ...currentForm.prizeItems,
-        { title: "", amount: "", count: "1명" },
+        { title: "", amount: "", count: "" },
       ],
     }));
   }
 
   function removePrizeItem(index: number) {
+    if (index < presetPrizeTitles.length) {
+      clearPrizeItem(index);
+      return;
+    }
+
     setContestForm((currentForm) => ({
       ...currentForm,
-      prizeItems:
-        currentForm.prizeItems.length > 1
-          ? currentForm.prizeItems.filter(
-              (_prizeItem, prizeItemIndex) => prizeItemIndex !== index,
-            )
-          : [{ title: "", amount: "", count: "1명" }],
+      prizeItems: currentForm.prizeItems.filter(
+        (_prizeItem, prizeItemIndex) => prizeItemIndex !== index,
+      ),
     }));
   }
 
@@ -506,7 +603,7 @@ export function ContestCalendar() {
       title: "",
       deadline: "",
       prize: "",
-      prizeItems: [{ title: "대상", amount: "", count: "1명" }],
+      prizeItems: createPresetPrizeItems(),
       captureImageObjectKey: "",
       captureImageObjectKeys: [],
     });
@@ -522,7 +619,7 @@ export function ContestCalendar() {
       title: "",
       deadline: dateKey,
       prize: "",
-      prizeItems: [{ title: "대상", amount: "", count: "1명" }],
+      prizeItems: createPresetPrizeItems(),
       captureImageObjectKey: "",
       captureImageObjectKeys: [],
     });
@@ -537,10 +634,11 @@ export function ContestCalendar() {
       title: contest.title,
       deadline: contest.deadline,
       prize: contest.prize,
-      prizeItems:
+      prizeItems: mergePrizeItemsWithPresets(
         contest.prizeItems && contest.prizeItems.length > 0
           ? contest.prizeItems
           : [{ title: "", amount: contest.prize, count: "" }],
+      ),
       captureImageObjectKey: contest.captureImageObjectKey,
       captureImageObjectKeys: contest.captureImageObjectKeys ?? [
         contest.captureImageObjectKey,
@@ -587,6 +685,7 @@ export function ContestCalendar() {
 
     try {
       const captureImageObjectKeys = await uploadContestCaptureIfNeeded();
+      const prizeItems = getVisiblePrizeItems(contestForm.prizeItems);
 
       const saveResponse = await fetch(endpoint, {
         method,
@@ -595,7 +694,8 @@ export function ContestCalendar() {
         },
         body: JSON.stringify({
           ...contestForm,
-          prize: buildPrizeSummary(contestForm.prizeItems) || contestForm.prize,
+          prizeItems,
+          prize: buildPrizeSummary(prizeItems) || contestForm.prize,
           captureImageObjectKey: captureImageObjectKeys[0] ?? "",
           captureImageObjectKeys,
         }),
@@ -867,62 +967,106 @@ export function ContestCalendar() {
                 />
                 <fieldset className="contest-prize-editor">
                   <legend>상금</legend>
+                  <div className="contest-prize-row contest-prize-heading">
+                    <span>상 이름</span>
+                    <span>상금</span>
+                    <span>인원</span>
+                    <span>관리</span>
+                  </div>
                   {contestForm.prizeItems.map((prizeItem, prizeItemIndex) => (
                     <div
                       key={`prize-item-${prizeItemIndex}`}
                       className="contest-prize-row"
                     >
-                      <input
-                        value={prizeItem.title}
-                        onChange={(event) =>
-                          updatePrizeItem(
-                            prizeItemIndex,
-                            "title",
-                            event.target.value,
-                          )
-                        }
-                        aria-label={`상금 항목 ${prizeItemIndex + 1} 상 이름`}
-                        placeholder="대상"
-                      />
-                      <input
-                        value={prizeItem.amount}
-                        onChange={(event) =>
-                          updatePrizeItem(
-                            prizeItemIndex,
-                            "amount",
-                            event.target.value,
-                          )
-                        }
-                        aria-label={`상금 항목 ${prizeItemIndex + 1} 금액`}
-                        placeholder="500만원"
-                      />
-                      <input
-                        value={prizeItem.count}
-                        onChange={(event) =>
-                          updatePrizeItem(
-                            prizeItemIndex,
-                            "count",
-                            event.target.value,
-                          )
-                        }
-                        aria-label={`상금 항목 ${prizeItemIndex + 1} 인원`}
-                        placeholder="1명"
-                      />
+                      {prizeItemIndex < presetPrizeTitles.length ? (
+                        <strong className="contest-prize-label">
+                          {prizeItem.title}
+                        </strong>
+                      ) : (
+                        <input
+                          value={prizeItem.title}
+                          onChange={(event) =>
+                            updatePrizeItem(
+                              prizeItemIndex,
+                              "title",
+                              event.target.value,
+                            )
+                          }
+                          aria-label={`상금 항목 ${prizeItemIndex + 1} 상 이름`}
+                          placeholder="직접 입력"
+                        />
+                      )}
+                      <div className="contest-prize-stepper">
+                        <button
+                          type="button"
+                          onClick={() => adjustPrizeAmount(prizeItemIndex, -10)}
+                          aria-label={`${prizeItem.title || "상금"} 10만원 내리기`}
+                        >
+                          -
+                        </button>
+                        <input
+                          value={getPrizeAmountDigits(prizeItem.amount)}
+                          onChange={(event) =>
+                            updatePrizeAmount(prizeItemIndex, event.target.value)
+                          }
+                          inputMode="numeric"
+                          maxLength={4}
+                          aria-label={`상금 항목 ${prizeItemIndex + 1} 금액`}
+                          placeholder="0000"
+                        />
+                        <span>만원</span>
+                        <button
+                          type="button"
+                          onClick={() => adjustPrizeAmount(prizeItemIndex, 10)}
+                          aria-label={`${prizeItem.title || "상금"} 10만원 올리기`}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="contest-prize-stepper">
+                        <button
+                          type="button"
+                          onClick={() => adjustPrizeCount(prizeItemIndex, -1)}
+                          aria-label={`${prizeItem.title || "상금"} 인원 줄이기`}
+                        >
+                          -
+                        </button>
+                        <input
+                          value={getPrizeCountDigits(prizeItem.count)}
+                          onChange={(event) =>
+                            updatePrizeCount(prizeItemIndex, event.target.value)
+                          }
+                          inputMode="numeric"
+                          maxLength={2}
+                          aria-label={`상금 항목 ${prizeItemIndex + 1} 인원`}
+                          placeholder="0"
+                        />
+                        <span>명</span>
+                        <button
+                          type="button"
+                          onClick={() => adjustPrizeCount(prizeItemIndex, 1)}
+                          aria-label={`${prizeItem.title || "상금"} 인원 늘리기`}
+                        >
+                          +
+                        </button>
+                      </div>
                       <button
                         type="button"
                         onClick={() => removePrizeItem(prizeItemIndex)}
                         aria-label={`상금 항목 ${prizeItemIndex + 1} 삭제`}
                       >
-                        삭제
+                        {prizeItemIndex < presetPrizeTitles.length
+                          ? "비움"
+                          : "삭제"}
                       </button>
                     </div>
                   ))}
                   <button type="button" onClick={addPrizeItem}>
-                    상금 항목 추가
+                    추가 입력
                   </button>
                   <p>
                     {buildPrizeSummary(contestForm.prizeItems) ||
-                      "상 이름, 금액, 인원을 행으로 나누어 입력하세요."}
+                      "상 이름은 준비되어 있습니다. 금액은 만원 단위 숫자만 입력하세요."}
                   </p>
                 </fieldset>
                 <label htmlFor="contest-capture-file">캡쳐 이미지 파일</label>
@@ -1018,22 +1162,21 @@ export function ContestCalendar() {
                 <div>
                   <dt>상금</dt>
                   <dd>
-                    {selectedContest.prizeItems &&
-                    selectedContest.prizeItems.length > 0 ? (
+                    {selectedContestPrizeItems.length > 0 ? (
                       <div className="contest-prize-panel">
                         <div className="contest-prize-summary">
                           <strong>
-                            {getPrizeItemCountLabel(selectedContest.prizeItems)}
+                            {getPrizeItemCountLabel(selectedContestPrizeItems)}
                           </strong>
                           <span>
                             {getPrizeSummaryLabel(
-                              selectedContest.prizeItems,
+                              selectedContestPrizeItems,
                               selectedContest.prize,
                             )}
                           </span>
                         </div>
                         <ul className="contest-prize-list">
-                          {selectedContest.prizeItems.map(
+                          {selectedContestPrizeItems.map(
                             (prizeItem, prizeItemIndex) => (
                               <li key={`${prizeItem.title}-${prizeItemIndex}`}>
                                 <strong>{prizeItem.title || "상금"}</strong>

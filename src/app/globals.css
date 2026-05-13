@@ -557,7 +557,8 @@ input {
 }
 
 .contest-prize-editor > button,
-.contest-prize-row button {
+.contest-prize-row > button,
+.contest-prize-stepper button {
   min-height: 36px;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -581,14 +582,51 @@ input {
 
 .contest-prize-row {
   display: grid;
-  grid-template-columns: minmax(74px, 0.8fr) minmax(90px, 1fr) minmax(64px, 0.7fr) auto;
+  grid-template-columns: minmax(84px, 0.8fr) minmax(164px, 1.35fr) minmax(132px, 1fr) auto;
   gap: 6px;
   align-items: center;
 }
 
-.contest-prize-row button {
+.contest-prize-heading {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.contest-prize-label {
+  color: var(--foreground);
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.contest-prize-row > button {
   padding: 0 0.68rem;
   font-size: 0.82rem;
+}
+
+.contest-prize-stepper {
+  display: grid;
+  grid-template-columns: 32px minmax(46px, 1fr) auto 32px;
+  gap: 4px;
+  align-items: center;
+}
+
+.contest-prize-stepper button {
+  width: 32px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.contest-prize-stepper input {
+  min-height: 36px;
+  padding: 7px 8px;
+  text-align: center;
+}
+
+.contest-prize-stepper span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .contest-manager-actions {
@@ -1630,8 +1668,12 @@ input {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .contest-prize-row button {
+  .contest-prize-row > button {
     width: 100%;
+  }
+
+  .contest-prize-heading {
+    display: none;
   }
 
   .hero-copy-card {

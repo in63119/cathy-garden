@@ -89,9 +89,14 @@ describe("contest calendar placement", () => {
     expect(calendarSource).toContain("contests");
     expect(calendarSource).toContain("is-contest-day");
     expect(calendarSource).toContain("contest-calendar-badge");
+    expect(calendarSource).toContain("contestCalendarLabel");
+    expect(calendarSource).toContain("contestCalendarAriaLabel");
+    expect(calendarSource).toContain("contestEvents[0].title");
+    expect(calendarSource).toContain("title={contestCalendarAriaLabel}");
     expect(calendarSource).toContain("공모전 일정");
     expect(globalStyles).toContain(".contest-calendar-day.is-contest-day");
     expect(globalStyles).toContain(".contest-calendar-badge");
+    expect(globalStyles).toContain("text-overflow: ellipsis");
   });
 
   test("shows selected contest details after clicking a scheduled date", () => {

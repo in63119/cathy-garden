@@ -711,6 +711,14 @@ export function ContestCalendar() {
                 ? (contestEventsByDate.get(calendarDay.dateKey) ?? [])
                 : [];
               const hasContestEvents = contestEvents.length > 0;
+              const contestCalendarLabel = hasContestEvents
+                ? contestEvents.length > 1
+                  ? `${contestEvents[0].title} 외 ${contestEvents.length - 1}`
+                  : contestEvents[0].title
+                : "";
+              const contestCalendarAriaLabel = hasContestEvents
+                ? contestEvents.map((contestEvent) => contestEvent.title).join(", ")
+                : "";
               const isToday = calendarDay.dateKey === todayDateKey;
               const isSelectedDate = calendarDay.dateKey === selectedDateKey;
               const selectedContestIsOnDay = contestEvents.some(
@@ -758,7 +766,7 @@ export function ContestCalendar() {
                   }}
                   aria-label={
                     hasContestEvents
-                      ? `${calendarDay.day}일, 공모전 일정 ${contestEvents.length}건 상세 보기`
+                      ? `${calendarDay.day}일, ${contestCalendarAriaLabel} 상세 보기`
                       : isToday
                         ? `${calendarDay.day}일, 오늘, 공모전 등록`
                         : `${calendarDay.day}일, 공모전 등록`
@@ -772,8 +780,11 @@ export function ContestCalendar() {
                     <span className="contest-calendar-today-badge">오늘</span>
                   ) : null}
                   {hasContestEvents ? (
-                    <span className="contest-calendar-badge">
-                      일정 {contestEvents.length}
+                    <span
+                      className="contest-calendar-badge"
+                      title={contestCalendarAriaLabel}
+                    >
+                      {contestCalendarLabel}
                     </span>
                   ) : null}
                 </button>
